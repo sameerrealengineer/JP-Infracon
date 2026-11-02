@@ -1,14 +1,17 @@
 /** @type {const} */
+// JP Infracon "Midnight & Gold": deep sapphire navy for actions, champagne gold for
+// emphasis, warm ivory paper in light mode and ink-navy in dark mode.
 const themeColors = {
-  primary: { light: '#0F766E', dark: '#5ED9C7' },
-  background: { light: '#F6F3EC', dark: '#172322' },
-  surface: { light: '#FFFDF8', dark: '#21302E' },
-  foreground: { light: '#1D2B29', dark: '#F4EBDD' },
-  muted: { light: '#6A7773', dark: '#AAB9B3' },
-  border: { light: '#D9DFD9', dark: '#3A504B' },
-  success: { light: '#277A5A', dark: '#7BD9A9' },
-  warning: { light: '#B36B12', dark: '#E6A23C' },
-  error: { light: '#B7433B', dark: '#FF8F83' },
+  primary: { light: "#16324F", dark: "#D9B76A" },
+  accent: { light: "#B08A3E", dark: "#E6C987" },
+  background: { light: "#F4F1EA", dark: "#0A121B" },
+  surface: { light: "#FFFFFF", dark: "#121D29" },
+  foreground: { light: "#0E1A26", dark: "#F3EEE4" },
+  muted: { light: "#68717D", dark: "#97A3B0" },
+  border: { light: "#E5DFD3", dark: "#22303E" },
+  success: { light: "#1D7A55", dark: "#6CD3A1" },
+  warning: { light: "#B06A00", dark: "#F0B44C" },
+  error: { light: "#B2372E", dark: "#FF8A80" },
 };
 
 module.exports = { themeColors };

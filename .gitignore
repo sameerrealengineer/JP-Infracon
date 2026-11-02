@@ -65,3 +65,11 @@ Thumbs.db
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
+
+# Playwright
+dist-web/
+test-results/
+playwright-report/
+
+# server secrets
+.env

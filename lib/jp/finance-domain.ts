@@ -8,14 +8,19 @@ export function parseRupeesToMinor(value: string, allowZero = false): string {
   const [wholePart, fractionPart = ""] = normalized.split(".");
   const amount = BigInt(wholePart) * 100n + BigInt(fractionPart.padEnd(2, "0") || "0");
   if ((!allowZero && amount <= 0n) || (allowZero && amount < 0n) || amount > MAX_MINOR_AMOUNT) {
-    throw new Error(allowZero ? "The amount is outside the supported range." : "The amount must be positive and within the supported range.");
+    throw new Error(
+      allowZero
+        ? "The amount is outside the supported range."
+        : "The amount must be positive and within the supported range.",
+    );
   }
   return amount.toString();
 }
 
 export function normalizeMinorAmount(value: string, allowZero = false): string {
   const normalized = value.trim();
-  if (!/^\d{1,18}$/.test(normalized)) throw new Error("Minor-unit amount must be an integer string.");
+  if (!/^\d{1,18}$/.test(normalized))
+    throw new Error("Minor-unit amount must be an integer string.");
   const amount = BigInt(normalized);
   if ((!allowZero && amount <= 0n) || amount > MAX_MINOR_AMOUNT) {
     throw new Error("Minor-unit amount is outside the supported range.");
@@ -62,7 +67,10 @@ export function calculateInvoiceTotals(
   chargesMinor: string,
 ) {
   if (lines.length === 0) throw new Error("An invoice needs at least one line item.");
-  const subtotal = lines.reduce((sum, line) => sum + BigInt(normalizeMinorAmount(line.lineTotalMinor)), 0n);
+  const subtotal = lines.reduce(
+    (sum, line) => sum + BigInt(normalizeMinorAmount(line.lineTotalMinor)),
+    0n,
+  );
   const tax = BigInt(normalizeMinorAmount(taxMinor, true));
   const charges = BigInt(normalizeMinorAmount(chargesMinor, true));
   const total = subtotal + tax + charges;
@@ -93,18 +101,24 @@ export function calculatePaymentAllocationTotal(
   let total = 0n;
   for (const allocation of allocations) {
     const invoiceId = allocation.invoiceId.trim();
-    if (!invoiceId || seen.has(invoiceId)) throw new Error("Each invoice can appear only once in a payment allocation.");
+    if (!invoiceId || seen.has(invoiceId))
+      throw new Error("Each invoice can appear only once in a payment allocation.");
     seen.add(invoiceId);
     const amount = BigInt(normalizeMinorAmount(allocation.amountMinor));
     const available = availableBalanceByInvoice.get(invoiceId);
-    if (available === undefined) throw new Error("Choose an approved invoice with a positive available balance.");
+    if (available === undefined)
+      throw new Error("Choose an approved invoice with a positive available balance.");
     const balance = BigInt(normalizeMinorAmount(available, true));
-    if (balance === 0n || amount > balance) throw new Error("An allocation exceeds the invoice's available posted-payment balance.");
+    if (balance === 0n || amount > balance)
+      throw new Error("An allocation exceeds the invoice's available posted-payment balance.");
     total += amount;
-    if (total > paymentAmount) throw new Error("Invoice allocations cannot exceed the payment amount.");
+    if (total > paymentAmount)
+      throw new Error("Invoice allocations cannot exceed the payment amount.");
   }
   if (total !== paymentAmount) {
-    throw new Error("Allocate the full payment amount; supplier advances and unallocated funds use a separate workflow.");
+    throw new Error(
+      "Allocate the full payment amount; supplier advances and unallocated funds use a separate workflow.",
+    );
   }
   return total.toString();
 }
@@ -118,8 +132,12 @@ export function calculateInvoicePaymentBalance(
     (sum, value) => sum + BigInt(normalizeMinorAmount(value)),
     0n,
   );
-  if (allocated > invoiceTotal) throw new Error("Posted payment allocations exceed the approved invoice total.");
-  return { postedAllocatedMinor: allocated.toString(), balanceMinor: (invoiceTotal - allocated).toString() };
+  if (allocated > invoiceTotal)
+    throw new Error("Posted payment allocations exceed the approved invoice total.");
+  return {
+    postedAllocatedMinor: allocated.toString(),
+    balanceMinor: (invoiceTotal - allocated).toString(),
+  };
 }
 
 export type PettyCashMovementForBalance = {
@@ -163,11 +181,13 @@ export function assertPettyCashPostingWithinLimits(args: {
   const balance = BigInt(normalizeMinorAmount(args.balanceMinor, true));
   const limit = BigInt(normalizeMinorAmount(args.authorizedLimitMinor));
   if (args.movementType === "Expense") {
-    if (amount > balance) throw new Error("The expense exceeds the fund's posted available cash balance.");
+    if (amount > balance)
+      throw new Error("The expense exceeds the fund's posted available cash balance.");
     return (balance - amount).toString();
   }
   const nextBalance = balance + amount;
-  if (nextBalance > limit) throw new Error("The posting would exceed this fund's authorised limit.");
+  if (nextBalance > limit)
+    throw new Error("The posting would exceed this fund's authorised limit.");
   return nextBalance.toString();
 }
 

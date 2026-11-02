@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { dateRangesOverlap, formatPaiseAsRupees, isCalendarDate, parseRupeesToPaise, previousCalendarDate } from "./workforce-domain";
+import {
+  dateRangesOverlap,
+  formatPaiseAsRupees,
+  isCalendarDate,
+  parseRupeesToPaise,
+  previousCalendarDate,
+} from "./workforce-domain";
 
 describe("workforce effective dates and rate amounts", () => {
   it("converts INR strings to integer paise without floating point", () => {
@@ -16,9 +22,15 @@ describe("workforce effective dates and rate amounts", () => {
   });
 
   it("treats effective endpoints as inclusive and preserves non-overlapping ranges", () => {
-    expect(dateRangesOverlap({ from: "2026-01-01", to: null }, { from: "2026-01-02", to: null })).toBe(true);
-    expect(dateRangesOverlap({ from: "2026-01-01", to: "2026-01-31" }, { from: "2026-02-01", to: null })).toBe(false);
-    expect(dateRangesOverlap({ from: "2026-01-01", to: "2026-01-31" }, { from: "2026-01-31", to: null })).toBe(true);
+    expect(
+      dateRangesOverlap({ from: "2026-01-01", to: null }, { from: "2026-01-02", to: null }),
+    ).toBe(true);
+    expect(
+      dateRangesOverlap({ from: "2026-01-01", to: "2026-01-31" }, { from: "2026-02-01", to: null }),
+    ).toBe(false);
+    expect(
+      dateRangesOverlap({ from: "2026-01-01", to: "2026-01-31" }, { from: "2026-01-31", to: null }),
+    ).toBe(true);
   });
 
   it("validates real calendar dates and closes a prior rate on the previous calendar day", () => {

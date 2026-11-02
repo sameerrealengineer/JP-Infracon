@@ -1,5 +1,10 @@
 import "@/global.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@/lib/geofence-task";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { parse as superjsonParse, stringify as superjsonStringify } from "superjson";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -9,6 +14,12 @@ import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import {
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+  useFonts,
+} from "@expo-google-fonts/playfair-display";
+import { LanguageProvider } from "@/lib/i18n";
+import {
   SafeAreaFrameContext,
   SafeAreaInsetsContext,
   SafeAreaProvider,
@@ -17,7 +28,17 @@ import {
 import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
+import { useConnectivity } from "@/hooks/use-connectivity";
+import { loadServerAddress } from "@/lib/server-address";
+import { useIssueDraftSync } from "@/hooks/use-issue-draft-sync";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+
+function ConnectivitySync() {
+  const { online } = useConnectivity();
+  // Drafts saved offline are sent as soon as the phone reconnects.
+  useIssueDraftSync(online);
+  return null;
+}
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -27,6 +48,8 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  // Headings switch to the serif once loaded; the app never waits on the font.
+  useFonts({ PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold });
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 
@@ -59,11 +82,34 @@ export default function RootLayout() {
             refetchOnWindowFocus: false,
             // Retry failed requests once
             retry: 1,
+            // Keep previously loaded records for offline viewing (restored from device storage).
+            gcTime: 7 * 24 * 60 * 60 * 1000,
+            staleTime: 30_000,
           },
         },
       }),
   );
   const [trpcClient] = useState(() => createTRPCClient());
+  // The saved server address must be known before the first request.
+  const [addressReady, setAddressReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void loadServerAddress().then(() => {
+      if (active) setAddressReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const [persister] = useState(() =>
+    createAsyncStoragePersister({
+      storage: AsyncStorage,
+      key: "jp-infracon.query-cache.v1",
+      serialize: (data) => superjsonStringify(data),
+      deserialize: (data) => superjsonParse(data),
+      throttleTime: 2000,
+    }),
+  );
 
   // Ensure minimum 8px padding for top and bottom on mobile
   const providerInitialMetrics = useMemo(() => {
@@ -78,18 +124,32 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
-  const content = (
+  const content = !addressReady ? null : (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            buster: "jp-1",
+            dehydrateOptions: {
+              // Only successful reads are kept; bootstrap/setup state is always fetched fresh.
+              shouldDehydrateQuery: (query) =>
+                query.state.status === "success" &&
+                !JSON.stringify(query.queryKey).includes("bootstrapStatus"),
+            },
+          }}
+        >
+          <ConnectivitySync />
           {/* Default to hiding native headers so raw route segments don't appear (e.g. "(tabs)", "products/[id]"). */}
           {/* If a screen needs the native header, explicitly enable it and set a human title via Stack.Screen options. */}
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
             <Stack.Screen name="(tabs)" />
           </Stack>
           <StatusBar style="auto" />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
   );
@@ -99,20 +159,24 @@ export default function RootLayout() {
   if (shouldOverrideSafeArea) {
     return (
       <ThemeProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext.Provider value={frame}>
-            <SafeAreaInsetsContext.Provider value={insets}>
-              {content}
-            </SafeAreaInsetsContext.Provider>
-          </SafeAreaFrameContext.Provider>
-        </SafeAreaProvider>
+        <LanguageProvider>
+          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+            <SafeAreaFrameContext.Provider value={frame}>
+              <SafeAreaInsetsContext.Provider value={insets}>
+                {content}
+              </SafeAreaInsetsContext.Provider>
+            </SafeAreaFrameContext.Provider>
+          </SafeAreaProvider>
+        </LanguageProvider>
       </ThemeProvider>
     );
   }
 
   return (
     <ThemeProvider>
-      <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      <LanguageProvider>
+        <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

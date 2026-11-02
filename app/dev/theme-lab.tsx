@@ -16,7 +16,10 @@ function ColorSwatch({ name, value }: { name: PaletteName; value: string }) {
   return (
     <View className="flex-row items-center justify-between rounded-xl border border-border px-3 py-2">
       <View className="flex-row items-center gap-3">
-        <View className="h-6 w-6 rounded-full border border-border" style={{ backgroundColor: value }} />
+        <View
+          className="h-6 w-6 rounded-full border border-border"
+          style={{ backgroundColor: value }}
+        />
         <Text className="text-sm font-semibold text-foreground">{name}</Text>
       </View>
       <Text className="text-xs font-mono text-muted">{value}</Text>
@@ -111,9 +114,7 @@ export default function ThemeLabScreen() {
           </View>
 
           <ThemedView className="rounded-2xl border border-border p-4">
-            <Text className="text-lg font-bold text-foreground">
-              Tailwind tokens
-            </Text>
+            <Text className="text-lg font-bold text-foreground">Tailwind tokens</Text>
             <Text className="mt-1 text-sm text-muted">
               Buttons and badges driven by global {colorScheme} palette
             </Text>
@@ -137,9 +138,7 @@ export default function ThemeLabScreen() {
                   setLastAction("Pressed Surface token");
                 }}
               >
-                <Text className="text-sm font-semibold text-foreground">
-                  Surface
-                </Text>
+                <Text className="text-sm font-semibold text-foreground">Surface</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="rounded-full px-4 py-2"
@@ -149,9 +148,7 @@ export default function ThemeLabScreen() {
                   setLastAction("Pressed Success token");
                 }}
               >
-                <Text className="text-sm font-semibold text-background">
-                  Success
-                </Text>
+                <Text className="text-sm font-semibold text-background">Success</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="rounded-full px-4 py-2"
@@ -161,9 +158,7 @@ export default function ThemeLabScreen() {
                   setLastAction("Pressed Warning token");
                 }}
               >
-                <Text className="text-sm font-semibold text-background">
-                  Warning
-                </Text>
+                <Text className="text-sm font-semibold text-background">Warning</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="rounded-full px-4 py-2"
@@ -173,16 +168,12 @@ export default function ThemeLabScreen() {
                   setLastAction("Pressed Error token");
                 }}
               >
-                <Text className="text-sm font-semibold text-background">
-                  Error
-                </Text>
+                <Text className="text-sm font-semibold text-background">Error</Text>
               </TouchableOpacity>
             </View>
 
             <View className="mt-4 rounded-xl bg-background p-4 border border-border">
-              <Text className="text-base font-semibold text-foreground">
-                useColors()
-              </Text>
+              <Text className="text-base font-semibold text-foreground">useColors()</Text>
               <Text className="mt-1 text-sm text-muted">
                 Background: {colors.background} • Text: {colors.text} • Tint: {colors.tint}
               </Text>
@@ -192,24 +183,16 @@ export default function ThemeLabScreen() {
               <View className="mt-3 gap-2">
                 <View className="flex-row items-center gap-2">
                   <IconSymbol name="house.fill" color={colors.tint} size={20} />
-                  <Text className="text-sm text-foreground">
-                    Press count: {pressCount}
-                  </Text>
+                  <Text className="text-sm text-foreground">Press count: {pressCount}</Text>
                 </View>
-                <Text className="text-sm text-muted">
-                  Last action: {lastAction}
-                </Text>
+                <Text className="text-sm text-muted">Last action: {lastAction}</Text>
               </View>
             </View>
           </ThemedView>
 
           <ThemedView className="rounded-2xl border border-border p-4">
-            <Text className="text-lg font-bold text-foreground">
-              Palette values
-            </Text>
-            <Text className="mt-1 text-sm text-muted">
-              Live values for the selected scheme
-            </Text>
+            <Text className="text-lg font-bold text-foreground">Palette values</Text>
+            <Text className="mt-1 text-sm text-muted">Live values for the selected scheme</Text>
             <View className="mt-3 gap-2">
               {swatches.map((item) => (
                 <ColorSwatch key={item.name} name={item.name} value={item.value} />

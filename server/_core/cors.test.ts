@@ -18,16 +18,30 @@ function invokeCors(origin?: string, method = "OPTIONS") {
     headers: {},
     statusCode: 200,
     vary: () => response,
-    header: (name, value) => { response.headers[name.toLowerCase()] = value; return response; },
-    status: (code) => { response.statusCode = code; return response; },
-    json: (body) => { response.body = body; return response; },
-    sendStatus: (code) => { response.statusCode = code; return response; },
+    header: (name, value) => {
+      response.headers[name.toLowerCase()] = value;
+      return response;
+    },
+    status: (code) => {
+      response.statusCode = code;
+      return response;
+    },
+    json: (body) => {
+      response.body = body;
+      return response;
+    },
+    sendStatus: (code) => {
+      response.statusCode = code;
+      return response;
+    },
   };
   const request = {
-    headers: origin ? {
-      origin,
-      "access-control-request-headers": "content-type,x-jp-client-platform",
-    } : {},
+    headers: origin
+      ? {
+          origin,
+          "access-control-request-headers": "content-type,x-jp-client-platform",
+        }
+      : {},
     method,
     hostname: "api.example",
   } as unknown as Request;
@@ -35,7 +49,9 @@ function invokeCors(origin?: string, method = "OPTIONS") {
   createCorsMiddleware(new Set(["https://preview.example"]), () => false)(
     request,
     response as unknown as Response,
-    () => { nextCalled = true; },
+    () => {
+      nextCalled = true;
+    },
   );
   return { response, nextCalled };
 }

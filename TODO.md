@@ -6,6 +6,39 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-02 (c) — delegation, invite sign-up, alerts, AI, GPS, PDF, premium motion
+
+Delivered in source (typecheck, lint with 0 errors, 176 unit tests, API build, web export and 16 Playwright flows pass; not exercised against the shared database, real gateways/AI keys, or an Android device). **Needs additive migration 0013 applied** (plus 0010–0012 if still pending).
+
+- Delegation: owner/director/admin hands a person site or project authority (site operations, bills & payments, approve own work) for 1 hour to 1 month or until revoked; effective-dated grants, immediate revocation, audit, home banner for the delegate. `approval.self` relaxes maker-checker only while delegated.
+- Invite sign-up: admins issue single-use, expiring codes (hash stored) fixing organisation, role and site; "Have an invite code? Create account" on sign-in; throttled per client address.
+- Alerts: Expo push (needs EAS project id/FCM credentials in the APK build), WhatsApp via WAHA or Evolution API (open source, self-hosted; unofficial — number-ban risk) or the official Cloud API, SMS via SMS Gateway for Android or textbee; opt-in per person; critical/stop-work issues, assignment, delegation and site arrival/departure; delivery log without message bodies.
+- AI: Gemini reads bill photos into an editable invoice draft and Excel/CSV; Sarvam speech-to-text (Odia/Hindi/English) plus Gemini (Sarvam fallback) fills the issue form. Server keys only; outputs re-validated; nothing saved without confirmation. Requires GEMINI_API_KEY (Google AI Studio — a Gemini app subscription is not an API key) and SARVAM_API_KEY.
+- GPS camera (photos record location and distance from the site boundary), admin-set site boundary, opt-in background geofencing with server plausibility checks.
+- PDF exports (printable A4 landscape) alongside CSV; Playfair Display serif headings, entrance animations, shimmer loaders, animated tab icons.
+- Still open: worker payment allocation/balances, Hindi/Odia for deeper finance/inventory/workforce screens, native-speaker review of translations, device QA and a signed APK.
+
+## Increment 2026-11-02 (b) — issues, evidence, exports, attendance, languages
+
+Delivered in source (typecheck, lint with 0 errors, 151 unit tests, API build, web export and 14 Playwright flows pass; not exercised against the shared database or on an Android device):
+
+- Outcome 9 (partial): safety/quality/constraint issues — report (category, severity, stop-work, location, immediate action), assign owner and target date, start, resolve with corrective/preventive action, verify and close (High/Critical closed by a different person), send back, reopen with reason; append-only history and comments; inbox items for critical, assigned, unowned and to-verify issues. **Needs additive migration 0012 applied.** Push delivery and escalation notifications remain open.
+- Outcome 4/8: private evidence — JPEG/PNG/WebP/PDF up to 8 MB, type checked from file bytes, SHA-256 checksum, no replacement, opened only via a short-lived signed link after a fresh permission check; on issues, daily reports, invoices, payments and petty cash entries. "Accepted" means signature and size verified; no antivirus scan is claimed.
+- Outcome 11 (partial): CSV exports for daily reports, material requests, stock movements, tasks, issues, supplier invoices, supplier payments, petty cash and audit — site/permission scoped, with organisation, sites, period, generated time, row count and a continuation note past 5000 rows; spreadsheet-formula-safe cells; each export audited. PDF exports remain open.
+- Outcome 4/6 (partial): daily attendance on existing `attendance_records` — supervisor marks, a different PM/admin approves, overtime pending until approved, approved rows locked; labour cost per worker shows approved earnings separately from estimates awaiting approval, flags missing rates. Worker payment allocation/balances remain open.
+- Outcome 10 (partial): issues reported offline stay on the phone and are sent automatically on reconnect with the same idempotency key.
+- Outcome 1 (partial): English, Hindi and Odia for sign-in, navigation, Home, Sites, More, Notifications, Issues and Attendance, chosen on the sign-in screen or in More. Translations need a native-speaker review; deeper finance/inventory/workforce screens are still English.
+
+## Increment 2026-11-02 — premium shell, site administration, derived inbox, offline cache
+
+Delivered in source (typecheck, lint with 0 errors, 121 unit tests, API build, web export and 3 new Playwright flows pass; not yet exercised against the shared database or on an Android device):
+
+- Visual system: "Midnight & Gold" theme (navy actions, gold accents, ivory/ink surfaces, light and dark), shared card/tile/sheet/field components, branded header with automatic back button, redesigned login, tab bar, Home, Sites, More and Notifications. Developer/roadmap notes removed from client-facing screens.
+- Outcome 2/5: Owner, Director, Admin (or an org-level `site.manage` grant) and Super Admin can create and edit projects and sites, change project/site status with a required reason (allowed transitions only; reactivating a site needs an active project), and assign/remove site team members with a reason. All writes are transactional, idempotent by `clientMutationId`, and audited. Site detail screen shows project, address, the caller's role, team and leadership.
+- Role/scope fixes: `site.manage`/`user.manage` now reach client capabilities; the primary organisation role is the highest-ranked active membership; storekeeper may raise material requests and view tasks; accounts may view material requests and inventory (read only).
+- Outcome 9 (partial): in-app inbox derived live from persisted records — reports to review, returned reports, material/invoice/payment/stock/petty-cash approvals and posting, custody acknowledgement, overdue tasks. No push delivery or stored read state yet.
+- Outcome 10 (partial): successful reads persist to device storage for 7 days and show offline with an offline banner; device connectivity drives query pausing; sign-out clears the cache.
+
 ## 1. Mobile shell, identity, and role-aware navigation — IN PROGRESS
 
 - The primary field navigation is Home, Sites, Reports, Requests, and More.

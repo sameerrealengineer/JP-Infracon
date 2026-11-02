@@ -1,5 +1,21 @@
-export type SiteStatus = "On track" | "Attention" | "Blocked" | "Active" | "On Hold" | "Completed" | "Inactive";
-export type WorkflowStatus = "Draft" | "Pending review" | "Approved" | "Returned" | "Pending approval" | "Queued offline" | "Partially Approved" | "Rejected" | "Cancelled";
+export type SiteStatus =
+  | "On track"
+  | "Attention"
+  | "Blocked"
+  | "Active"
+  | "On Hold"
+  | "Completed"
+  | "Inactive";
+export type WorkflowStatus =
+  | "Draft"
+  | "Pending review"
+  | "Approved"
+  | "Returned"
+  | "Pending approval"
+  | "Queued offline"
+  | "Partially Approved"
+  | "Rejected"
+  | "Cancelled";
 export type SyncStatus = "Local Draft" | "Pending Sync" | "Synced" | "Conflict" | "Sync Failed";
 
 export type Site = {
@@ -231,11 +247,15 @@ export function getUnreadCount(workspace: WorkspaceData) {
 }
 
 export function getPendingReportCount(workspace: WorkspaceData) {
-  return workspace.reports.filter((report) => report.status === "Draft" || report.status === "Returned").length;
+  return workspace.reports.filter(
+    (report) => report.status === "Draft" || report.status === "Returned",
+  ).length;
 }
 
 export function getPendingRequestCount(workspace: WorkspaceData) {
-  return workspace.requests.filter((request) => request.status === "Pending approval" || request.status === "Returned").length;
+  return workspace.requests.filter(
+    (request) => request.status === "Pending approval" || request.status === "Returned",
+  ).length;
 }
 
 export function getSiteStatusTone(status: SiteStatus): "success" | "warning" | "error" {

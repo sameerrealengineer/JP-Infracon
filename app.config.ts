@@ -43,8 +43,9 @@ const publicRuntime = {
 const config = {
   name: env.appName,
   slug: env.appSlug,
-  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519664045909713/GdcbZZbozOxAtxcY.png",
-  version: "1.0.0",
+  logoUrl:
+    "https://files.manuscdn.com/user_upload_by_module/session_file/310519664045909713/GdcbZZbozOxAtxcY.png",
+  version: "1.1.0",
   extra: publicRuntime,
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -53,11 +54,12 @@ const config = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
-    "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
+    versionCode: 110,
     adaptiveIcon: {
       backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -103,14 +105,32 @@ const config = {
       },
     ],
     [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "JP Infracon tags site photos with their location and can alert your team when you arrive at a site.",
+        locationAlwaysAndWhenInUsePermission:
+          "If you switch on site arrival alerts, JP Infracon detects when you reach or leave your assigned sites, even when the app is closed.",
+        isAndroidBackgroundLocationEnabled: true,
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Allow JP Infracon to attach site photos you choose as evidence.",
+        cameraPermission:
+          "Allow JP Infracon to take site photos as evidence for reports and issues.",
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "#F4F1EA",
         dark: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "#0A121B",
         },
       },
     ],

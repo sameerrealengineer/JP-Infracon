@@ -1,0 +1,11 @@
+# Generated or vendored files
+pnpm-lock.yaml
+dist/
+web-build/
+.expo/
+drizzle/meta/
+MANIFEST.sha256
+.claude/
+
+# Markdown docs are edited line by line by the workflow skills; keep them as written.
+*.md

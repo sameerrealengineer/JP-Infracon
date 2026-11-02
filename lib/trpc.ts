@@ -1,5 +1,5 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { createTRPCClient as createVanillaTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { Platform } from "react-native";
 import type { AppRouter } from "@/server/routers";
@@ -33,9 +33,10 @@ export function createTRPCClient() {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           };
         },
-        // Custom fetch to include credentials for cookie-based auth
+        // Custom fetch: resolves the server address per request (it can be changed at sign-in)
+        // and includes credentials for cookie-based auth.
         fetch(url, options) {
-          return fetch(url, {
+          return fetch(resolveTrpcUrl(url), {
             ...options,
             credentials: "include",
           });
@@ -43,4 +44,32 @@ export function createTRPCClient() {
       }),
     ],
   });
+}
+
+/** Plain (non-React) client for background tasks such as geofence events. */
+export function createBackgroundClient() {
+  return createVanillaTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: `${getApiBaseUrl()}/api/trpc`,
+        transformer: superjson,
+        async headers() {
+          const token = await Auth.getSessionToken();
+          return {
+            "x-jp-client-platform": Platform.OS,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          };
+        },
+        fetch(url, options) {
+          return fetch(resolveTrpcUrl(url), options);
+        },
+      }),
+    ],
+  });
+}
+
+function resolveTrpcUrl(url: string | URL | Request): string {
+  const text = typeof url === "string" ? url : url instanceof URL ? url.href : url.url;
+  const index = text.indexOf("/api/trpc");
+  return index === -1 ? text : `${getApiBaseUrl()}${text.slice(index)}`;
 }

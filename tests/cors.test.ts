@@ -11,9 +11,7 @@ import {
   getSessionCookieName,
   getSessionCookieOptions,
 } from "../server/_core/cookies";
-import {
-  SESSION_COOKIE_SUFFIX,
-} from "../shared/const";
+import { SESSION_COOKIE_SUFFIX } from "../shared/const";
 
 let server: Server | null = null;
 
@@ -41,12 +39,7 @@ async function testServer(
   ]),
 ): Promise<string> {
   const app = express();
-  app.use(
-    createCorsMiddleware(
-      allowedOrigins,
-      () => localApi,
-    ),
-  );
+  app.use(createCorsMiddleware(allowedOrigins, () => localApi));
   app.get("/read", (_req, res) => res.json({ ok: true }));
   app.post("/write", (_req, res) => res.json({ ok: true }));
   server = app.listen(0);
@@ -59,14 +52,8 @@ async function testServer(
 describe("Mobile API origin and cookie isolation", () => {
   it("derives only the paired 8328 preview from the platform 8081 origin", () => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv(
-      "EXPO_PACKAGER_PROXY_URL",
-      "https://8081-sandbox.region.preview.example.test",
-    );
-    vi.stubEnv(
-      "EXPO_WEB_PREVIEW_URL",
-      "https://8328-sandbox.region.preview.example.test",
-    );
+    vi.stubEnv("EXPO_PACKAGER_PROXY_URL", "https://8081-sandbox.region.preview.example.test");
+    vi.stubEnv("EXPO_WEB_PREVIEW_URL", "https://8328-sandbox.region.preview.example.test");
     expect([...trustedExpoWebOrigins()].sort()).toEqual([
       "https://8081-sandbox.region.preview.example.test",
       "https://8328-sandbox.region.preview.example.test",
@@ -97,19 +84,19 @@ describe("Mobile API origin and cookie isolation", () => {
     expect(response.status).toBe(403);
   });
 
-  it.each([
-    "https://8081-sandbox.example.test",
-    "https://8328-sandbox.example.test",
-  ])("allows a paired Expo Web origin: %s", async (origin) => {
-    const base = await testServer();
-    const web = await fetch(`${base}/read`, {
-      headers: { Origin: origin },
-    });
-    expect(web.status).toBe(200);
-    expect(web.headers.get("access-control-allow-origin")).toBe(origin);
-    expect(web.headers.get("access-control-allow-credentials")).toBe("true");
-    expect(web.headers.get("vary")).toContain("Origin");
-  });
+  it.each(["https://8081-sandbox.example.test", "https://8328-sandbox.example.test"])(
+    "allows a paired Expo Web origin: %s",
+    async (origin) => {
+      const base = await testServer();
+      const web = await fetch(`${base}/read`, {
+        headers: { Origin: origin },
+      });
+      expect(web.status).toBe(200);
+      expect(web.headers.get("access-control-allow-origin")).toBe(origin);
+      expect(web.headers.get("access-control-allow-credentials")).toBe("true");
+      expect(web.headers.get("vary")).toContain("Origin");
+    },
+  );
 
   it("allows only the exact dynamic packager and Dashboard origins for a loopback API", async () => {
     vi.stubEnv("EXPO_PACKAGER_PROXY_URL", "http://localhost:48081");
@@ -152,24 +139,24 @@ describe("Mobile API origin and cookie isolation", () => {
     "https://localhost:8081",
     "http://127.0.0.42:9090",
     "https://[::ffff:127.0.0.1]:8081",
-  ])("never promotes a loopback-equivalent origin into a remote API allowlist: %s", async (origin) => {
-    const previousPackager = process.env.EXPO_PACKAGER_PROXY_URL;
-    try {
-      process.env.EXPO_PACKAGER_PROXY_URL = origin;
-      expect([...trustedExpoWebOrigins()]).toEqual([]);
-      const base = await testServer(
-        false,
-        new Set([origin]),
-      );
-      const remote = await fetch(`${base}/read`, {
-        headers: { Origin: origin },
-      });
-      expect(remote.status).toBe(403);
-    } finally {
-      if (previousPackager === undefined) delete process.env.EXPO_PACKAGER_PROXY_URL;
-      else process.env.EXPO_PACKAGER_PROXY_URL = previousPackager;
-    }
-  });
+  ])(
+    "never promotes a loopback-equivalent origin into a remote API allowlist: %s",
+    async (origin) => {
+      const previousPackager = process.env.EXPO_PACKAGER_PROXY_URL;
+      try {
+        process.env.EXPO_PACKAGER_PROXY_URL = origin;
+        expect([...trustedExpoWebOrigins()]).toEqual([]);
+        const base = await testServer(false, new Set([origin]));
+        const remote = await fetch(`${base}/read`, {
+          headers: { Origin: origin },
+        });
+        expect(remote.status).toBe(403);
+      } finally {
+        if (previousPackager === undefined) delete process.env.EXPO_PACKAGER_PROXY_URL;
+        else process.env.EXPO_PACKAGER_PROXY_URL = previousPackager;
+      }
+    },
+  );
 
   it("keeps native no-Origin requests separate", async () => {
     const base = await testServer();
@@ -207,9 +194,9 @@ describe("Mobile API origin and cookie isolation", () => {
     const currentName = getSessionCookieName(request);
     const tossableParentName = `manus_session_${SESSION_COOKIE_SUFFIX}`;
     expect(currentName.startsWith("__Host-jp_session_")).toBe(true);
-    expect(
-      getSessionCookieName({ ...request, protocol: "http" } as Request),
-    ).toBe(`jp_local_session_${SESSION_COOKIE_SUFFIX}`);
+    expect(getSessionCookieName({ ...request, protocol: "http" } as Request)).toBe(
+      `jp_local_session_${SESSION_COOKIE_SUFFIX}`,
+    );
     for (const cookie of [
       `app_session_id=platform-token; ${currentName}=current-project-token`,
       `${tossableParentName}=attacker-token; ${currentName}=current-project-token`,
@@ -223,6 +210,4 @@ describe("Mobile API origin and cookie isolation", () => {
       ).toBe("current-project-token");
     }
   });
-
-
 });

@@ -43,10 +43,13 @@ describe("commercial exact-amount domain", () => {
   });
 
   it("derives invoice subtotal and gross total from line items and explicit tax/charges", () => {
-    expect(calculateInvoiceTotals([
-      { lineTotalMinor: "25000000" },
-      { lineTotalMinor: "10000000" },
-    ], "4500000", "500000")).toEqual({
+    expect(
+      calculateInvoiceTotals(
+        [{ lineTotalMinor: "25000000" }, { lineTotalMinor: "10000000" }],
+        "4500000",
+        "500000",
+      ),
+    ).toEqual({
       subtotalMinor: "35000000",
       taxMinor: "4500000",
       chargesMinor: "500000",
@@ -56,22 +59,64 @@ describe("commercial exact-amount domain", () => {
   });
 
   it("accepts a fully allocated multi-invoice part-payment using exact paise", () => {
-    expect(calculatePaymentAllocationTotal("250001", [
-      { invoiceId: "invoice-a", amountMinor: "150001" },
-      { invoiceId: "invoice-b", amountMinor: "100000" },
-    ], new Map([["invoice-a", "200000"], ["invoice-b", "125000"]]))).toBe("250001");
+    expect(
+      calculatePaymentAllocationTotal(
+        "250001",
+        [
+          { invoiceId: "invoice-a", amountMinor: "150001" },
+          { invoiceId: "invoice-b", amountMinor: "100000" },
+        ],
+        new Map([
+          ["invoice-a", "200000"],
+          ["invoice-b", "125000"],
+        ]),
+      ),
+    ).toBe("250001");
   });
 
   it("rejects duplicate, unknown, over-balance, over-payment, and unallocated amounts", () => {
-    const balances = new Map([["invoice-a", "50000"], ["invoice-b", "100000"]]);
-    expect(() => calculatePaymentAllocationTotal("70000", [
-      { invoiceId: "invoice-a", amountMinor: "40000" },
-      { invoiceId: "invoice-a", amountMinor: "30000" },
-    ], balances)).toThrow(/only once/);
-    expect(() => calculatePaymentAllocationTotal("70000", [{ invoiceId: "invoice-x", amountMinor: "70000" }], balances)).toThrow(/approved invoice/);
-    expect(() => calculatePaymentAllocationTotal("70000", [{ invoiceId: "invoice-a", amountMinor: "50001" }], balances)).toThrow(/available/);
-    expect(() => calculatePaymentAllocationTotal("70000", [{ invoiceId: "invoice-b", amountMinor: "70001" }], balances)).toThrow(/cannot exceed/);
-    expect(() => calculatePaymentAllocationTotal("70000", [{ invoiceId: "invoice-b", amountMinor: "60000" }], balances)).toThrow(/full payment/);
+    const balances = new Map([
+      ["invoice-a", "50000"],
+      ["invoice-b", "100000"],
+    ]);
+    expect(() =>
+      calculatePaymentAllocationTotal(
+        "70000",
+        [
+          { invoiceId: "invoice-a", amountMinor: "40000" },
+          { invoiceId: "invoice-a", amountMinor: "30000" },
+        ],
+        balances,
+      ),
+    ).toThrow(/only once/);
+    expect(() =>
+      calculatePaymentAllocationTotal(
+        "70000",
+        [{ invoiceId: "invoice-x", amountMinor: "70000" }],
+        balances,
+      ),
+    ).toThrow(/approved invoice/);
+    expect(() =>
+      calculatePaymentAllocationTotal(
+        "70000",
+        [{ invoiceId: "invoice-a", amountMinor: "50001" }],
+        balances,
+      ),
+    ).toThrow(/available/);
+    expect(() =>
+      calculatePaymentAllocationTotal(
+        "70000",
+        [{ invoiceId: "invoice-b", amountMinor: "70001" }],
+        balances,
+      ),
+    ).toThrow(/cannot exceed/);
+    expect(() =>
+      calculatePaymentAllocationTotal(
+        "70000",
+        [{ invoiceId: "invoice-b", amountMinor: "60000" }],
+        balances,
+      ),
+    ).toThrow(/full payment/);
   });
 
   it("derives the remaining approved invoice amount only from posted allocations", () => {
@@ -79,39 +124,71 @@ describe("commercial exact-amount domain", () => {
       postedAllocatedMinor: "200000",
       balanceMinor: "100000",
     });
-    expect(calculateInvoicePaymentBalance("300000", [])).toEqual({ postedAllocatedMinor: "0", balanceMinor: "300000" });
+    expect(calculateInvoicePaymentBalance("300000", [])).toEqual({
+      postedAllocatedMinor: "0",
+      balanceMinor: "300000",
+    });
     expect(() => calculateInvoicePaymentBalance("300000", ["200000", "100001"])).toThrow(/exceed/);
   });
 
   it("matches the PRD petty-cash example using Posted movements only", () => {
-    expect(calculatePettyCashBalance([
-      { movementType: "Funding", amountMinor: "5000000", status: "Posted" },
-      { movementType: "Expense", amountMinor: "1500000", status: "Posted" },
-      { movementType: "Expense", amountMinor: "800000", status: "Posted" },
-      { movementType: "Expense", amountMinor: "200000", status: "Posted" },
-      { movementType: "Expense", amountMinor: "900000", status: "Submitted" },
-      { movementType: "Cash Return", amountMinor: "50000", status: "Rejected" },
-    ])).toEqual({ fundedMinor: "5000000", expenseMinor: "2500000", returnedMinor: "0", balanceMinor: "2500000" });
+    expect(
+      calculatePettyCashBalance([
+        { movementType: "Funding", amountMinor: "5000000", status: "Posted" },
+        { movementType: "Expense", amountMinor: "1500000", status: "Posted" },
+        { movementType: "Expense", amountMinor: "800000", status: "Posted" },
+        { movementType: "Expense", amountMinor: "200000", status: "Posted" },
+        { movementType: "Expense", amountMinor: "900000", status: "Submitted" },
+        { movementType: "Cash Return", amountMinor: "50000", status: "Rejected" },
+      ]),
+    ).toEqual({
+      fundedMinor: "5000000",
+      expenseMinor: "2500000",
+      returnedMinor: "0",
+      balanceMinor: "2500000",
+    });
   });
 
   it("enforces expense availability and the authorised fund ceiling in integer paise", () => {
-    expect(assertPettyCashPostingWithinLimits({
-      movementType: "Expense", amountMinor: "12501", balanceMinor: "50000", authorizedLimitMinor: "100000",
-    })).toBe("37499");
-    expect(assertPettyCashPostingWithinLimits({
-      movementType: "Funding", amountMinor: "20000", balanceMinor: "50000", authorizedLimitMinor: "70000",
-    })).toBe("70000");
-    expect(() => assertPettyCashPostingWithinLimits({
-      movementType: "Expense", amountMinor: "50001", balanceMinor: "50000", authorizedLimitMinor: "100000",
-    })).toThrow(/available cash/);
-    expect(() => assertPettyCashPostingWithinLimits({
-      movementType: "Cash Return", amountMinor: "1", balanceMinor: "70000", authorizedLimitMinor: "70000",
-    })).toThrow(/authorised limit/);
+    expect(
+      assertPettyCashPostingWithinLimits({
+        movementType: "Expense",
+        amountMinor: "12501",
+        balanceMinor: "50000",
+        authorizedLimitMinor: "100000",
+      }),
+    ).toBe("37499");
+    expect(
+      assertPettyCashPostingWithinLimits({
+        movementType: "Funding",
+        amountMinor: "20000",
+        balanceMinor: "50000",
+        authorizedLimitMinor: "70000",
+      }),
+    ).toBe("70000");
+    expect(() =>
+      assertPettyCashPostingWithinLimits({
+        movementType: "Expense",
+        amountMinor: "50001",
+        balanceMinor: "50000",
+        authorizedLimitMinor: "100000",
+      }),
+    ).toThrow(/available cash/);
+    expect(() =>
+      assertPettyCashPostingWithinLimits({
+        movementType: "Cash Return",
+        amountMinor: "1",
+        balanceMinor: "70000",
+        authorizedLimitMinor: "70000",
+      }),
+    ).toThrow(/authorised limit/);
   });
 
   it("caps cash returns at the remaining amount of their original Posted expense", () => {
     expect(calculateRemainingPettyCashReturnMinor("150001", ["25000", "50000"])).toBe("75001");
     expect(calculateRemainingPettyCashReturnMinor("100000", ["0"])).toBe("100000");
-    expect(() => calculateRemainingPettyCashReturnMinor("100000", ["60000", "40001"])).toThrow(/exceed/);
+    expect(() => calculateRemainingPettyCashReturnMinor("100000", ["60000", "40001"])).toThrow(
+      /exceed/,
+    );
   });
 });

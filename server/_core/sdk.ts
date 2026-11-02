@@ -9,10 +9,7 @@ import type { User } from "../../drizzle/schema";
 import * as db from "../db";
 import { ENV } from "./env";
 import { currentSessionCookie } from "./cookies";
-import type {
-  GetUserInfoWithJwtRequest,
-  GetUserInfoWithJwtResponse,
-} from "./types/manusTypes";
+import type { GetUserInfoWithJwtRequest, GetUserInfoWithJwtResponse } from "./types/manusTypes";
 // Utility function
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
@@ -37,7 +34,8 @@ class SDKServer {
 
   constructor(client: AxiosInstance = createOAuthHttpClient()) {
     this.client = client;
-    if (!ENV.oAuthServerUrl) console.warn("[Auth] Platform identity service is not configured for scheduled callbacks.");
+    if (!ENV.oAuthServerUrl)
+      console.warn("[Auth] Platform identity service is not configured for scheduled callbacks.");
   }
 
   private deriveLoginMethod(
@@ -193,18 +191,26 @@ class SDKServer {
 
     const appDb = await db.getDb();
     if (!appDb) throw ForbiddenError("Session service unavailable");
-    const [activeSession] = await appDb.select({ id: authSessions.id }).from(authSessions)
-      .where(and(
-        eq(authSessions.id, session.sessionId),
-        eq(authSessions.userId, user.id),
-        isNull(authSessions.revokedAt),
-        gt(authSessions.expiresAt, new Date()),
-      )).limit(1);
+    const [activeSession] = await appDb
+      .select({ id: authSessions.id })
+      .from(authSessions)
+      .where(
+        and(
+          eq(authSessions.id, session.sessionId),
+          eq(authSessions.userId, user.id),
+          isNull(authSessions.revokedAt),
+          gt(authSessions.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
     if (!activeSession || user.accountStatus !== "Active") {
       throw ForbiddenError("Invalid or expired application session");
     }
-    const [credential] = await appDb.select({ mustChangePassword: userCredentials.mustChangePassword })
-      .from(userCredentials).where(eq(userCredentials.userId, user.id)).limit(1);
+    const [credential] = await appDb
+      .select({ mustChangePassword: userCredentials.mustChangePassword })
+      .from(userCredentials)
+      .where(eq(userCredentials.userId, user.id))
+      .limit(1);
     if (!credential) throw ForbiddenError("Invalid or expired application session");
 
     await db.upsertUser({

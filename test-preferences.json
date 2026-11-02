@@ -1,0 +1,9 @@
+{
+  "tool": "vitest",
+  "gate": null,
+  "additionalTools": ["@testing-library/react", "jsdom"],
+  "e2eTool": "playwright",
+  "testDir": "beside the source (unit); e2e/ (Playwright)",
+  "filePattern": "*.test.ts / *.test.tsx; e2e/*.spec.ts",
+  "packageManager": "pnpm"
+}

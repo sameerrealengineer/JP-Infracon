@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { hashPassword, isValidUsername, normalizeBootstrapSecret, normalizeUsername, validatePassword, verifyPassword } from "./credential-auth";
+import {
+  hashPassword,
+  isValidUsername,
+  normalizeBootstrapSecret,
+  normalizeUsername,
+  validatePassword,
+  verifyPassword,
+} from "./credential-auth";
 
 describe("username/password credential domain", () => {
   it("normalizes usernames and limits their allowed shape", () => {
@@ -11,7 +18,7 @@ describe("username/password credential domain", () => {
   });
 
   it("requires a non-blank 12–128 character password", () => {
-    expect(validatePassword("short" )).toBe(false);
+    expect(validatePassword("short")).toBe(false);
     expect(validatePassword("             ")).toBe(false);
     expect(validatePassword("correct horse battery staple")).toBe(true);
     expect(validatePassword("a".repeat(129))).toBe(false);

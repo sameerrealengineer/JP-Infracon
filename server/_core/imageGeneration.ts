@@ -53,7 +53,8 @@ export async function generateImage(options: GenerateImageOptions): Promise<Gene
   const fullUrl = new URL("images.v1.ImageService/GenerateImage", baseUrl).toString();
 
   const model = options.model ?? DEFAULT_IMAGE_MODEL;
-  const quality = options.quality ?? (model === DEFAULT_IMAGE_MODEL ? DEFAULT_IMAGE_QUALITY : undefined);
+  const quality =
+    options.quality ?? (model === DEFAULT_IMAGE_MODEL ? DEFAULT_IMAGE_QUALITY : undefined);
 
   const response = await fetch(fullUrl, {
     method: "POST",

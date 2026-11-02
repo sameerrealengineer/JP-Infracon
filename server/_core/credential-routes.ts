@@ -6,9 +6,10 @@ import { sdk } from "./sdk";
 export function registerCredentialRoutes(app: Express) {
   app.post("/api/auth/logout", async (req: Request, res: Response) => {
     const authHeader = req.headers.authorization || req.headers.Authorization;
-    const token = typeof authHeader === "string" && authHeader.startsWith("Bearer ")
-      ? authHeader.slice("Bearer ".length).trim()
-      : currentSessionCookie(req);
+    const token =
+      typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+        ? authHeader.slice("Bearer ".length).trim()
+        : currentSessionCookie(req);
     if (token) {
       const session = await sdk.verifySession(token);
       if (session?.sessionId) await revokeSession(session.sessionId);
