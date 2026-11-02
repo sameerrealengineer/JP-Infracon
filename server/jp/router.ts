@@ -38,6 +38,12 @@ import { notificationsRouter } from "./notify";
 import { aiRouter } from "./ai";
 import { presenceRouter } from "./presence";
 import { buildInbox } from "./inbox";
+import {
+  checkReportItems,
+  dailyReportProcedures,
+  insertReportItems,
+  reportHeaderFields,
+} from "./daily-reports";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
 const codeSchema = z
@@ -508,6 +514,7 @@ export const jpRouter = router({
   }),
 
   reports: router({
+    ...dailyReportProcedures,
     list: reportListProcedure,
 
     createDraft: protectedProcedure
@@ -521,11 +528,13 @@ export const jpRouter = router({
           remarks: z.string().trim().max(5000).optional(),
           nextDayPlan: z.string().trim().max(3000).optional(),
           clientMutationId: mutationIdSchema,
+          ...reportHeaderFields,
         }),
       )
       .mutation(async ({ ctx, input }) => {
         const permission = input.reportKind === "DPR" ? "dpr.create" : "dlr.create";
         const scope = await getSiteScope(ctx.user, input.siteId, permission);
+        const items = await checkReportItems(input.reportKind, scope.siteId, input.items);
         const db = requireDb(await (await import("../db")).getDb());
         const [existing] = await db
           .select()
@@ -554,11 +563,14 @@ export const jpRouter = router({
               title: input.title,
               remarks: input.remarks || null,
               nextDayPlan: input.nextDayPlan || null,
+              weatherCode: input.weatherCode ?? null,
+              overallStatus: input.overallStatus ?? null,
               status: "Draft",
               revisionNumber: 1,
               clientMutationId: input.clientMutationId,
               createdBy: ctx.user.id,
             });
+            await insertReportItems(tx, id, items);
             await createAudit(tx, {
               organizationId: scope.organizationId,
               siteId: scope.siteId,
@@ -571,6 +583,7 @@ export const jpRouter = router({
                 reportKind: input.reportKind,
                 reportDate: input.reportDate,
                 siteId: scope.siteId,
+                lines: items.length,
               }),
             });
           });

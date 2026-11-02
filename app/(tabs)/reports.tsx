@@ -1,16 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   AppHeader,
   EmptyState,
@@ -28,13 +20,9 @@ import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
 import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
-import {
-  createClientMutationId,
-  readDraftStore,
-  removeLocalDraft,
-  saveReportDraft,
-} from "@/lib/jp/local-repository";
+import { readDraftStore, removeLocalDraft } from "@/lib/jp/local-repository";
 import type { FieldReport, WorkflowStatus } from "@/lib/jp/domain";
+import { SITE_STATUS_OPTIONS, WEATHER_OPTIONS } from "@/lib/jp/dpr-domain";
 
 function currentDate() {
   const now = new Date();
@@ -77,6 +65,7 @@ export default function ReportsScreenTab() {
 
 export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
   const colors = useColors();
+  const router = useRouter();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const utils = trpc.useUtils();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
@@ -86,24 +75,21 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
   const submitMutation = trpc.jp.reports.submit.useMutation();
   const [localReports, setLocalReports] = useState<FieldReport[]>([]);
   const [filter, setFilter] = useState<"All" | "Needs action" | "Drafts">("All");
-  const [composerVisible, setComposerVisible] = useState(false);
-  const [title, setTitle] = useState("");
-  const [remarks, setRemarks] = useState("");
-  const [chosenKind, setKind] = useState<"DPR" | "DLR" | null>(null);
   const siteParam = useSiteParam();
-  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [pendingSync, setPendingSync] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    readDraftStore().then((store) => {
-      if (mounted) setLocalReports(store.reports);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      readDraftStore().then((store) => {
+        if (mounted) setLocalReports(store.reports);
+      });
+      return () => {
+        mounted = false;
+      };
+    }, []),
+  );
   // DLR only accounts start on the report type they can create; a tap still overrides it.
   const defaultKind =
     capabilitiesQuery.data &&
@@ -111,7 +97,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
     capabilitiesQuery.data.some((capability) => capability["dlr.create"])
       ? "DLR"
       : "DPR";
-  const kind = chosenKind ?? defaultKind;
+  const kind = defaultKind;
   const createPermissionKey = kind === "DPR" ? ("dpr.create" as const) : ("dlr.create" as const);
   const siteOptions = useMemo(
     () =>
@@ -122,7 +108,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
       ),
     [sitesQuery.data, capabilitiesQuery.data, createPermissionKey],
   );
-  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
+  const siteId = resolveSelectedId(siteOptions, siteParam);
 
   const serverReports: FieldReport[] = (reportsQuery.data ?? []).map((report) => ({
     id: report.id,
@@ -165,6 +151,11 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
       shiftCode: "General",
       title: draft.title,
       remarks: draft.remarks,
+      nextDayPlan: draft.nextDayPlan,
+      weatherCode: (draft.weatherCode as (typeof WEATHER_OPTIONS)[number] | undefined) ?? null,
+      overallStatus:
+        (draft.overallStatus as (typeof SITE_STATUS_OPTIONS)[number] | undefined) ?? null,
+      items: draft.items ?? [],
       clientMutationId: draft.clientMutationId || draft.id,
     });
     await removeLocalDraft("report", draft.id);
@@ -192,43 +183,6 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
       await refresh();
     } finally {
       setPendingSync(false);
-    }
-  };
-
-  const createDraft = async () => {
-    const selectedSite = siteOptions.find((item) => item.id === siteId);
-    if (!selectedSite) {
-      setSavedMessage("Choose an assigned site before saving a report.");
-      return;
-    }
-    const clientMutationId = createClientMutationId();
-    const localDraft: FieldReport = {
-      id: clientMutationId,
-      clientMutationId,
-      siteId: selectedSite.id,
-      siteName: selectedSite.name,
-      title: title.trim() || "Untitled daily progress report",
-      kind,
-      date: currentDate(),
-      status: "Draft",
-      evidenceCount: 0,
-      author: me.data?.name || "Signed-in staff user",
-      updatedAt: new Date().toISOString(),
-      syncStatus: "Local Draft",
-      lineSummary: remarks.trim() || "No work line items or evidence added.",
-      remarks: remarks.trim() || undefined,
-    };
-    setLocalReports((current) => [localDraft, ...current]);
-    await saveReportDraft(localDraft);
-    setComposerVisible(false);
-    setTitle("");
-    setRemarks("");
-    setKind(null);
-    try {
-      await syncOne(localDraft);
-      setSavedMessage("Saved to the server as a draft. It has not been submitted for review.");
-    } catch (error) {
-      setSavedMessage(`Saved on this device; server sync is not confirmed. ${errorText(error)}`);
     }
   };
 
@@ -293,7 +247,13 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
           <Pressable
             accessibilityRole="button"
             disabled={siteOptions.length === 0}
-            onPress={() => setComposerVisible(true)}
+            onPress={() =>
+              router.push(
+                (siteId
+                  ? `/report-editor?siteId=${encodeURIComponent(siteId)}`
+                  : "/report-editor") as never,
+              )
+            }
             style={({ pressed }) => [
               styles.addButton,
               { backgroundColor: siteOptions.length ? colors.primary : colors.border },
@@ -374,6 +334,14 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
                     onSubmit={() => {
                       if (serverReport) void submitReport(serverReport.id);
                     }}
+                    onOpen={
+                      serverReport
+                        ? () =>
+                            router.push(
+                              `/report-editor?reportId=${encodeURIComponent(serverReport.id)}` as never,
+                            )
+                        : undefined
+                    }
                     onSync={() => {
                       void syncOne(report)
                         .then(() => setSavedMessage("Local draft saved to the server as a draft."))
@@ -398,142 +366,6 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
           </Text>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={composerVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setComposerVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View
-            style={[
-              styles.modalCard,
-              { backgroundColor: colors.background, borderColor: colors.border },
-            ]}
-          >
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={[styles.modalKicker, { color: colors.primary }]}>
-                  NEW FIELD RECORD
-                </Text>
-                <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  Start a report draft
-                </Text>
-              </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                onPress={() => setComposerVisible(false)}
-              >
-                <MaterialIcons name="close" size={23} color={colors.foreground} />
-              </Pressable>
-            </View>
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Report type</Text>
-            <View style={styles.siteChoiceRow}>
-              {(["DPR", "DLR"] as const).map((item) => (
-                <Pressable
-                  key={item}
-                  accessibilityRole="button"
-                  onPress={() => setKind(item)}
-                  style={[
-                    styles.siteChoice,
-                    {
-                      backgroundColor: kind === item ? `${colors.primary}16` : colors.surface,
-                      borderColor: kind === item ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.siteChoiceText,
-                      { color: kind === item ? colors.primary : colors.foreground },
-                    ]}
-                  >
-                    {item === "DPR" ? "Daily Progress Report" : "Daily Labour Report"}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Report title</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Footing concrete — Grid A"
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Site</Text>
-            <ScrollView style={styles.siteChoiceScroll} nestedScrollEnabled>
-              {siteOptions.map((site) => (
-                <Pressable
-                  key={site.id}
-                  accessibilityRole="button"
-                  onPress={() => setSiteId(site.id)}
-                  style={[
-                    styles.siteChoice,
-                    {
-                      backgroundColor: siteId === site.id ? `${colors.primary}16` : colors.surface,
-                      borderColor: siteId === site.id ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.siteChoiceText,
-                      { color: siteId === site.id ? colors.primary : colors.foreground },
-                    ]}
-                  >
-                    {site.name} · {site.project}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Notes (optional)</Text>
-            <TextInput
-              value={remarks}
-              onChangeText={setRemarks}
-              multiline
-              placeholder="Add a field note; no line items or evidence are recorded yet."
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                styles.notesInput,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <View
-              style={[
-                styles.draftCallout,
-                { backgroundColor: `${colors.warning}12`, borderColor: `${colors.warning}35` },
-              ]}
-            >
-              <MaterialIcons name="info-outline" size={18} color={colors.warning} />
-              <Text style={[styles.draftCalloutText, { color: colors.foreground }]}>
-                Online, this saves a server Draft. Offline, it remains on this device until the
-                server acknowledges it. Nothing is submitted or approved.
-              </Text>
-            </View>
-            <PrimaryButton
-              icon="save"
-              label={createDraftMutation.isPending ? "Saving…" : "Save draft"}
-              disabled={createDraftMutation.isPending || siteOptions.length === 0}
-              onPress={createDraft}
-            />
-          </View>
-        </View>
-      </Modal>
     </Screen>
   );
 }
@@ -545,6 +377,7 @@ function ReportCard({
   submitting,
   onSubmit,
   onSync,
+  onOpen,
 }: {
   report: FieldReport;
   localDraft: boolean;
@@ -552,6 +385,7 @@ function ReportCard({
   submitting: boolean;
   onSubmit: () => void;
   onSync: () => void;
+  onOpen?: () => void;
 }) {
   const colors = useColors();
   return (
@@ -586,6 +420,15 @@ function ReportCard({
         </Text>
         <SyncPill status={report.syncStatus} />
       </View>
+      {onOpen ? (
+        <View style={styles.cardAction}>
+          <SecondaryButton
+            icon={report.status === "Returned" ? "edit" : "visibility"}
+            label={report.status === "Returned" ? "Open and correct" : "Open report"}
+            onPress={onOpen}
+          />
+        </View>
+      ) : null}
       {localDraft ? (
         <View style={styles.cardAction}>
           <SecondaryButton icon="sync" label="Sync draft" onPress={onSync} />
@@ -675,47 +518,6 @@ const styles = StyleSheet.create({
   auditText: { fontSize: 11, textAlign: "center", flex: 1, lineHeight: 16 },
   loading: { minHeight: 90, alignItems: "center", justifyContent: "center", gap: 8 },
   loadingText: { fontSize: 12 },
-  modalBackdrop: { flex: 1, backgroundColor: "rgba(10, 20, 18, 0.52)", justifyContent: "flex-end" },
-  modalCard: {
-    maxHeight: "94%",
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    borderWidth: 1,
-    padding: 21,
-    paddingBottom: 30,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  modalKicker: { fontSize: 10, letterSpacing: 1.4, fontWeight: "800" },
-  modalTitle: { fontSize: 22, fontWeight: "800", marginTop: 4 },
-  inputLabel: { fontSize: 11, fontWeight: "800", marginBottom: 7, marginTop: 2 },
-  input: {
-    minHeight: 46,
-    borderWidth: 1,
-    borderRadius: 13,
-    paddingHorizontal: 13,
-    fontSize: 14,
-    marginBottom: 15,
-  },
-  notesInput: { minHeight: 65, paddingTop: 11, textAlignVertical: "top" },
-  siteChoiceScroll: { maxHeight: 105, marginBottom: 15 },
-  siteChoiceRow: { gap: 8, marginBottom: 16 },
-  siteChoice: { borderWidth: 1, borderRadius: 12, padding: 11, marginBottom: 6 },
-  siteChoiceText: { fontSize: 12, fontWeight: "700" },
-  draftCallout: {
-    borderWidth: 1,
-    borderRadius: 13,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 9,
-    marginBottom: 17,
-  },
-  draftCalloutText: { fontSize: 12, lineHeight: 18, flex: 1 },
 });
 
 function ReportPhotos({ reportId, canUpload }: { reportId: string; canUpload: boolean }) {

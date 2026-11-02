@@ -654,8 +654,10 @@ export const dailyReports = mysqlTable(
   (table) => ({
     reportSiteDateIndex: index("daily_report_site_date_idx").on(table.siteId, table.reportDate),
     reportStatusIndex: index("daily_report_status_idx").on(table.organizationId, table.status),
-    reportRevisionUnique: uniqueIndex("daily_report_site_date_shift_revision_uq").on(
+    // A DPR and a DLR for the same site, day and shift are separate records.
+    reportRevisionUnique: uniqueIndex("daily_report_site_kind_date_shift_revision_uq").on(
       table.siteId,
+      table.reportKind,
       table.reportDate,
       table.shiftCode,
       table.revisionNumber,
