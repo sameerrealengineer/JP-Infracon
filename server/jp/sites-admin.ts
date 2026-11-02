@@ -9,6 +9,7 @@ import {
   permissionGrants,
   projects,
   siteAssignments,
+  siteGeofences,
   sites,
   users,
 } from "../../drizzle/schema";
@@ -606,7 +607,24 @@ export const sitesAdminRouter = router({
           ),
         )
         .limit(50);
+      let geofence: { latitude: number; longitude: number; radiusM: number } | null = null;
+      try {
+        const [fence] = await db
+          .select()
+          .from(siteGeofences)
+          .where(eq(siteGeofences.siteId, site.id))
+          .limit(1);
+        if (fence)
+          geofence = {
+            latitude: Number(fence.latitude),
+            longitude: Number(fence.longitude),
+            radiusM: fence.radiusM,
+          };
+      } catch {
+        geofence = null; // Table not migrated yet.
+      }
       return {
+        geofence,
         site: {
           id: site.id,
           code: site.siteCode,
@@ -831,5 +849,44 @@ export const sitesAdminRouter = router({
         });
       });
       return { id: assignment.id };
+    }),
+
+  /** Records the site boundary used for GPS photos and arrival/departure alerts. */
+  setGeofence: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().uuid(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        radiusM: z.number().int().min(50).max(5000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      const site = await loadSite(db, input.siteId);
+      await assertSiteManager(ctx.user, site.organizationId);
+      const values = {
+        latitude: input.latitude.toFixed(6),
+        longitude: input.longitude.toFixed(6),
+        radiusM: input.radiusM,
+        setBy: ctx.user.id,
+      };
+      await db.transaction(async (tx) => {
+        await tx
+          .insert(siteGeofences)
+          .values({ siteId: site.id, ...values })
+          .onDuplicateKeyUpdate({ set: values });
+        await tx.insert(auditEvents).values({
+          id: randomUUID(),
+          organizationId: site.organizationId,
+          siteId: site.id,
+          actorUserId: ctx.user.id,
+          action: "site.geofence_set",
+          entityType: "site",
+          entityId: site.id,
+          afterSummary: JSON.stringify({ radiusM: input.radiusM }),
+        });
+      });
+      return { ok: true };
     }),
 });

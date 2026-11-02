@@ -1,8 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { File as FsFile, Paths } from "expo-file-system";
-import * as Sharing from "expo-sharing";
 import { useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -22,6 +20,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { resolveChoice } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
+import { deliverTextFile } from "@/lib/device-files";
 
 const ranges = ["This month", "Last month", "Last 30 days", "This year", "Custom"] as const;
 type Range = (typeof ranges)[number];
@@ -37,28 +36,6 @@ function rangeDates(range: Range, today = new Date()): { from: string; to: strin
     return { from: iso(new Date(Date.UTC(y, m - 1, 1))), to: iso(new Date(Date.UTC(y, m, 0))) };
   if (range === "This year") return { from: `${y}-01-01`, to: iso(today) };
   return { from: iso(new Date(today.getTime() - 29 * 86_400_000)), to: iso(today) };
-}
-
-async function deliver(fileName: string, csv: string) {
-  if (Platform.OS === "web") {
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    return;
-  }
-  const file = new FsFile(Paths.cache, fileName);
-  if (file.exists) file.delete();
-  file.create();
-  file.write(csv);
-  if (await Sharing.isAvailableAsync())
-    await Sharing.shareAsync(file.uri, {
-      mimeType: "text/csv",
-      dialogTitle: fileName,
-      UTI: "public.comma-separated-values-text",
-    });
 }
 
 export default function ExportsScreen() {
@@ -101,7 +78,7 @@ export default function ExportsScreen() {
         from: dates.from,
         to: dates.to,
       });
-      await deliver(result.fileName, result.csv);
+      await deliverTextFile(result.fileName, result.csv, "text/csv");
       setLast({
         fileName: result.fileName,
         rows: result.rowCount,

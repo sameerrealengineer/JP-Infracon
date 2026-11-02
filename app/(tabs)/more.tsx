@@ -127,6 +127,14 @@ export default function MoreScreen() {
       show: workspace.canManageAccounts,
     },
     {
+      icon: "document-scanner",
+      title: "Scan a bill",
+      detail: "AI reads bills into Excel",
+      tone: "accent",
+      route: "/scan-bill",
+      show: can("finance.invoice.create"),
+    },
+    {
       icon: "file-download",
       title: "Export data",
       detail: "CSV for Excel / Sheets",

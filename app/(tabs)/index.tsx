@@ -119,6 +119,14 @@ export default function HomeScreen() {
       show: can("attendance.mark", "attendance.approve"),
     },
     {
+      icon: "document-scanner",
+      title: "Scan a bill",
+      detail: "AI → invoice & Excel",
+      tone: "accent",
+      route: "/scan-bill",
+      show: can("finance.invoice.create"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       detail: "Tasks & revisions",

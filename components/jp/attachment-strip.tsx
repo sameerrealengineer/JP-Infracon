@@ -1,11 +1,17 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
-import { File as FsFile } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { InlineError, SecondaryButton, formatDateTime } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import {
@@ -15,24 +21,9 @@ import {
 } from "@/lib/jp/attachment-policy";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { trpc } from "@/lib/trpc";
-
-async function readBase64(uri: string): Promise<string> {
-  if (Platform.OS === "web") {
-    const buffer = new Uint8Array(await (await fetch(uri)).arrayBuffer());
-    let binary = "";
-    for (let index = 0; index < buffer.length; index += 0x8000)
-      binary += String.fromCharCode(...buffer.subarray(index, index + 0x8000));
-    return btoa(binary);
-  }
-  return new FsFile(uri).base64();
-}
-
-/** Shrinks a photo to a sharp but light JPEG (about 1600 px wide) before upload. */
-async function compressPhoto(uri: string): Promise<string> {
-  const rendered = await ImageManipulator.manipulate(uri).resize({ width: 1600 }).renderAsync();
-  const saved = await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.72, base64: true });
-  return saved.base64 ?? readBase64(saved.uri);
-}
+import { compressPhoto, readBase64 } from "@/lib/device-files";
+import { currentPosition } from "@/lib/geofence-task";
+import { describeDistance, mapsLink } from "@/lib/jp/geo";
 
 /**
  * Private evidence for one record: list, open (signed link after a fresh permission check) and add.
@@ -61,6 +52,7 @@ export function AttachmentStrip({
     base64: string,
     fileName: string,
     sourceType: "Captured in app" | "Selected from device",
+    location?: { latitude: number; longitude: number; accuracyM?: number } | null,
   ) => {
     if ((base64.length * 3) / 4 > MAX_ATTACHMENT_BYTES)
       throw new Error("This file is larger than 8 MB.");
@@ -71,6 +63,7 @@ export function AttachmentStrip({
       base64,
       sourceType,
       captureTime: sourceType === "Captured in app" ? new Date() : undefined,
+      location: location ?? undefined,
       clientMutationId: createClientMutationId(),
     });
     await utils.jp.attachments.list.invalidate({ entityType, entityId });
@@ -94,8 +87,12 @@ export function AttachmentStrip({
       if (!permission.granted) throw new Error("Camera permission was not given.");
       const result = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 });
       if (result.canceled || !result.assets[0]) return;
-      const base64 = await compressPhoto(result.assets[0].uri);
-      await send(base64, `photo-${Date.now()}.jpg`, "Captured in app");
+      // GPS camera: the photo carries where it was taken (if location is allowed).
+      const [base64, location] = await Promise.all([
+        compressPhoto(result.assets[0].uri),
+        currentPosition(),
+      ]);
+      await send(base64, `photo-${Date.now()}.jpg`, "Captured in app", location);
     });
 
   const pickPhoto = () =>
@@ -169,6 +166,26 @@ export function AttachmentStrip({
               {formatBytes(file.sizeBytes)} · {file.uploadedByName ?? "Unknown"} ·{" "}
               {formatDateTime(file.uploadedAt)}
             </Text>
+            {file.location ? (
+              <Text
+                accessibilityRole="link"
+                onPress={() => void Linking.openURL(mapsLink(file.location!))}
+                style={[
+                  styles.fileMeta,
+                  {
+                    color:
+                      file.location.siteRadiusM !== null &&
+                      file.location.distanceFromSiteM !== null &&
+                      file.location.distanceFromSiteM > file.location.siteRadiusM
+                        ? colors.warning
+                        : colors.success,
+                  },
+                ]}
+              >
+                📍 {describeDistance(file.location.distanceFromSiteM, file.location.siteRadiusM)}
+                {file.location.accuracyM ? ` (±${file.location.accuracyM} m)` : ""}
+              </Text>
+            ) : null}
           </View>
           {busy === `open-${file.id}` ? (
             <ActivityIndicator size="small" color={colors.primary} />

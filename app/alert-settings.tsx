@@ -1,6 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -16,6 +16,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { siteAlertsEnabled, startSiteAlerts, stopSiteAlerts } from "@/lib/geofence-task";
 
 type Draft = { phone: string; whatsappOptIn: boolean; smsOptIn: boolean; pushOptIn: boolean };
 
@@ -41,6 +42,7 @@ export default function AlertSettingsScreen() {
           {prefs.data ? (
             <Form key={prefs.dataUpdatedAt} initial={prefs.data} channels={prefs.data.channels} />
           ) : null}
+          <SiteArrivalAlerts />
         </ScrollView>
       </Screen>
     </AuthGate>
@@ -180,6 +182,62 @@ function Form({
         Alerts never include money amounts or ID numbers. Unofficial WhatsApp gateways (WAHA,
         Evolution API) can get a number blocked by WhatsApp; use a separate business number.
       </Text>
+    </>
+  );
+}
+
+function SiteArrivalAlerts() {
+  const colors = useColors();
+  const fences = trpc.jp.presence.myFences.useQuery();
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void siteAlertsEnabled().then((value) => {
+      if (active) setEnabled(value);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+  if (Platform.OS === "web") return null;
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      if (enabled) {
+        await stopSiteAlerts();
+        setEnabled(false);
+      } else {
+        await startSiteAlerts(fences.data ?? []);
+        setEnabled(true);
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not change site alerts.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <SectionHeader
+        title="Site arrival & departure"
+        caption="Optional · uses this phone's location"
+      />
+      <Toggle
+        checked={Boolean(enabled)}
+        onToggle={() => void toggle()}
+        title={busy ? "Updating…" : "Tell my team when I reach or leave a site"}
+        detail={`${fences.data?.length ?? 0} of your sites have a boundary. Only "arrived/left site" is shared — never a live location trail. Turn off any time.`}
+        available={!busy}
+      />
+      {error ? <InlineError message={error} title="Site alerts" /> : null}
+      {enabled ? (
+        <Text style={[styles.meta, { color: colors.success }]}>
+          On — your phone watches your site boundaries.
+        </Text>
+      ) : null}
     </>
   );
 }

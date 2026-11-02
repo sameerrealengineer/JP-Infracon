@@ -35,6 +35,8 @@ import { exportsRouter } from "./exports";
 import { attendanceRouter } from "./attendance";
 import { delegationRouter } from "./delegation";
 import { notificationsRouter } from "./notify";
+import { aiRouter } from "./ai";
+import { presenceRouter } from "./presence";
 import { buildInbox } from "./inbox";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
@@ -158,6 +160,8 @@ export const jpRouter = router({
   attendance: attendanceRouter,
   delegation: delegationRouter,
   notifications: notificationsRouter,
+  ai: aiRouter,
+  presence: presenceRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

@@ -1,5 +1,5 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink } from "@trpc/client";
+import { createTRPCClient as createVanillaTRPCClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
 import { Platform } from "react-native";
 import type { AppRouter } from "@/server/routers";
@@ -39,6 +39,25 @@ export function createTRPCClient() {
             ...options,
             credentials: "include",
           });
+        },
+      }),
+    ],
+  });
+}
+
+/** Plain (non-React) client for background tasks such as geofence events. */
+export function createBackgroundClient() {
+  return createVanillaTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: `${getApiBaseUrl()}/api/trpc`,
+        transformer: superjson,
+        async headers() {
+          const token = await Auth.getSessionToken();
+          return {
+            "x-jp-client-platform": Platform.OS,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          };
         },
       }),
     ],

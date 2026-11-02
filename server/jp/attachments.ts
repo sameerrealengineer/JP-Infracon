@@ -1,10 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  attachmentLocations,
   attachments,
   auditEvents,
+  siteGeofences,
   dailyReports,
   pettyCashMovements,
   siteIssues,
@@ -23,6 +25,7 @@ import {
   sniffContentType,
   type AttachmentEntityType,
 } from "../../lib/jp/attachment-policy";
+import { distanceMeters, isValidLatLng } from "../../lib/jp/geo";
 
 function requireDb(db: Awaited<ReturnType<typeof getDb>>) {
   if (!db)
@@ -92,7 +95,7 @@ export const attachmentsRouter = router({
     const db = requireDb(await getDb());
     const siteId = await siteOf(db, input.entityType, input.entityId);
     const scope = await getSiteScope(ctx.user, siteId, entityRules[input.entityType].view);
-    return db
+    const files = await db
       .select({
         id: attachments.id,
         originalFilename: attachments.originalFilename,
@@ -114,6 +117,43 @@ export const attachmentsRouter = router({
       )
       .orderBy(desc(attachments.uploadedAt))
       .limit(100);
+    let locations: (typeof attachmentLocations.$inferSelect)[] = [];
+    let radius: number | null = null;
+    if (files.length)
+      try {
+        locations = await db
+          .select()
+          .from(attachmentLocations)
+          .where(
+            inArray(
+              attachmentLocations.attachmentId,
+              files.map((file) => file.id),
+            ),
+          );
+        const [fence] = await db
+          .select({ radiusM: siteGeofences.radiusM })
+          .from(siteGeofences)
+          .where(eq(siteGeofences.siteId, scope.siteId))
+          .limit(1);
+        radius = fence?.radiusM ?? null;
+      } catch {
+        locations = [];
+      }
+    return files.map((file) => {
+      const location = locations.find((row) => row.attachmentId === file.id);
+      return {
+        ...file,
+        location: location
+          ? {
+              latitude: Number(location.latitude),
+              longitude: Number(location.longitude),
+              accuracyM: location.accuracyM,
+              distanceFromSiteM: location.distanceFromSiteM,
+              siteRadiusM: radius,
+            }
+          : null,
+      };
+    });
   }),
 
   upload: protectedProcedure
@@ -127,6 +167,13 @@ export const attachmentsRouter = router({
           .min(8)
           .max(Math.ceil((MAX_ATTACHMENT_BYTES * 4) / 3) + 16),
         captureTime: z.coerce.date().optional(),
+        location: z
+          .object({
+            latitude: z.number().min(-90).max(90),
+            longitude: z.number().min(-180).max(180),
+            accuracyM: z.number().min(0).max(100_000).optional(),
+          })
+          .optional(),
         sourceType: z.enum(["Captured in app", "Selected from device"]),
         clientMutationId: z.string().trim().min(16).max(64),
       }),
@@ -210,6 +257,30 @@ export const attachmentsRouter = router({
           }),
         });
       });
+      if (input.location && isValidLatLng(input.location)) {
+        try {
+          const [fence] = await db
+            .select()
+            .from(siteGeofences)
+            .where(eq(siteGeofences.siteId, scope.siteId))
+            .limit(1);
+          await db.insert(attachmentLocations).values({
+            attachmentId: id,
+            latitude: input.location.latitude.toFixed(6),
+            longitude: input.location.longitude.toFixed(6),
+            accuracyM: input.location.accuracyM ? Math.round(input.location.accuracyM) : null,
+            distanceFromSiteM: fence
+              ? distanceMeters(input.location, {
+                  latitude: Number(fence.latitude),
+                  longitude: Number(fence.longitude),
+                })
+              : null,
+            capturedAt: input.captureTime ?? new Date(),
+          });
+        } catch {
+          // Location is optional evidence; the file itself is already saved.
+        }
+      }
       return { id };
     }),
 

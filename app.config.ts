@@ -104,6 +104,16 @@ const config = {
       },
     ],
     [
+      "expo-location",
+      {
+        locationWhenInUsePermission:
+          "JP Infracon tags site photos with their location and can alert your team when you arrive at a site.",
+        locationAlwaysAndWhenInUsePermission:
+          "If you switch on site arrival alerts, JP Infracon detects when you reach or leave your assigned sites, even when the app is closed.",
+        isAndroidBackgroundLocationEnabled: true,
+      },
+    ],
+    [
       "expo-image-picker",
       {
         photosPermission: "Allow JP Infracon to attach site photos you choose as evidence.",

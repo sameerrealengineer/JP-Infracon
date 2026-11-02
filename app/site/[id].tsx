@@ -1,10 +1,19 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Linking,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import {
   AppHeader,
   Card,
+  ChipGroup,
   Divider,
   EmptyState,
   HeroCard,
@@ -35,6 +44,8 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { trpc } from "@/lib/trpc";
+import { currentPosition } from "@/lib/geofence-task";
+import { mapsLink } from "@/lib/jp/geo";
 
 export default function SiteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -209,6 +220,7 @@ export default function SiteDetailScreen() {
                 </View>
               ) : null}
 
+              <GeofenceCard siteId={site.id} geofence={data.geofence} canManage={data.canManage} />
               {site.status !== "Active" ? (
                 <Card
                   accent={getSiteStatusTone(site.status as SiteStatus)}
@@ -386,3 +398,80 @@ const styles = StyleSheet.create({
   leaderRole: { fontSize: 11, marginTop: 2 },
   footnote: { fontSize: 11, marginBottom: 8 },
 });
+
+function GeofenceCard({
+  siteId,
+  geofence,
+  canManage,
+}: {
+  siteId: string;
+  geofence: { latitude: number; longitude: number; radiusM: number } | null;
+  canManage: boolean;
+}) {
+  const colors = useColors();
+  const utils = trpc.useUtils();
+  const setFence = trpc.jp.sitesAdmin.setGeofence.useMutation();
+  const [radius, setRadius] = useState<"100" | "200" | "500" | "1000">(
+    geofence ? (String(geofence.radiusM) as "200") : "200",
+  );
+  const [error, setError] = useState<string | null>(null);
+  if (!geofence && !canManage) return null;
+  const save = async () => {
+    setError(null);
+    try {
+      const position = await currentPosition();
+      if (!position) throw new Error("Allow location and stand at the centre of the site.");
+      await setFence.mutateAsync({ siteId, ...position, radiusM: Number(radius) });
+      await utils.jp.sitesAdmin.siteDetail.invalidate({ siteId });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Location not saved.");
+    }
+  };
+  return (
+    <Card style={{ marginBottom: 18 }} accent={geofence ? "success" : "warning"}>
+      <View style={{ flex: 1, gap: 6 }}>
+        <Text style={[styles.noticeTitle, { color: colors.foreground }]}>
+          Site location & boundary
+        </Text>
+        {geofence ? (
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => void Linking.openURL(mapsLink(geofence))}
+          >
+            <Text style={[styles.noticeText, { color: colors.primary }]}>
+              📍 {geofence.latitude.toFixed(5)}, {geofence.longitude.toFixed(5)} ·{" "}
+              {geofence.radiusM} m radius
+            </Text>
+          </Pressable>
+        ) : (
+          <Text style={[styles.noticeText, { color: colors.muted }]}>
+            Not set. Setting it lets photos show whether they were taken on site and powers arrival
+            alerts.
+          </Text>
+        )}
+        {canManage ? (
+          <>
+            <ChipGroup
+              options={["100", "200", "500", "1000"] as const}
+              value={radius}
+              onChange={setRadius}
+              format={(value) => `${value} m`}
+            />
+            {error ? <InlineError message={error} title="Not saved" /> : null}
+            <SecondaryButton
+              icon="my-location"
+              label={
+                setFence.isPending
+                  ? "Saving…"
+                  : geofence
+                    ? "Reset to my current location"
+                    : "Set to my current location"
+              }
+              onPress={() => void save()}
+            />
+          </>
+        ) : null}
+      </View>
+    </Card>
+  );
+}

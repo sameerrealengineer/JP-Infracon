@@ -13,6 +13,7 @@ import {
 } from "@/lib/jp/issue-policy";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { trpc } from "@/lib/trpc";
+import { VoiceIssueAssist } from "@/components/jp/voice-assist";
 import { useT } from "@/lib/i18n";
 
 export function IssueFormSheet({
@@ -141,6 +142,19 @@ function IssueForm({
       }
     >
       {error ? <InlineError message={error} title="Not saved" /> : null}
+      {siteId && online !== false ? (
+        <VoiceIssueAssist
+          siteId={siteId}
+          onFields={(fields) => {
+            if (fields.category) setCategory(fields.category);
+            if (fields.severity) setSeverity(fields.severity);
+            if (fields.title) setTitle(fields.title);
+            if (fields.description) setDescription(fields.description);
+            if (fields.location) setLocation(fields.location);
+            if (fields.immediateAction) setImmediate(fields.immediateAction);
+          }}
+        />
+      ) : null}
       {sites.length > 1 ? (
         <ChipGroup
           label="Site"
