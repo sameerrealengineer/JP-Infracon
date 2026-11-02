@@ -61,6 +61,14 @@ export default function MoreScreen() {
       show: can("issue.view"),
     },
     {
+      icon: "how-to-reg",
+      title: "Attendance",
+      detail: "Daily roll call & labour cost",
+      tone: "success",
+      route: "/attendance",
+      show: can("attendance.view"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       detail: "Tasks, dependencies, revisions",

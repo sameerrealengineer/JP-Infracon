@@ -107,6 +107,14 @@ export default function HomeScreen() {
       show: can("issue.view"),
     },
     {
+      icon: "how-to-reg",
+      title: "Attendance",
+      detail: "Mark today's roll call",
+      tone: "success",
+      route: "/attendance",
+      show: can("attendance.mark", "attendance.approve"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       detail: "Tasks & revisions",

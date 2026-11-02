@@ -74,6 +74,13 @@ export default function SiteDetailScreen() {
       show: has("issue.view"),
     },
     {
+      icon: "how-to-reg",
+      title: "Attendance",
+      tone: "success",
+      route: "/attendance",
+      show: has("attendance.view"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       tone: "info",

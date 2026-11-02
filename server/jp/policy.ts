@@ -299,15 +299,16 @@ const pettyCashRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["finance.cash.view"],
 };
 
+const fullAttendance = ["attendance.view", "attendance.mark", "attendance.approve"];
 const issueRoleDefaults: Record<BusinessRole, readonly string[]> = {
-  owner: ["issue.view", "issue.create", "issue.manage", "issue.close"],
-  director: ["issue.view", "issue.create", "issue.manage", "issue.close"],
-  admin: ["issue.view", "issue.create", "issue.manage", "issue.close"],
-  project_manager: ["issue.view", "issue.create", "issue.manage", "issue.close"],
-  supervisor: ["issue.view", "issue.create", "issue.manage"],
-  accounts: ["issue.view"],
+  owner: ["issue.view", "issue.create", "issue.manage", "issue.close", ...fullAttendance],
+  director: ["issue.view", "issue.create", "issue.manage", "issue.close", ...fullAttendance],
+  admin: ["issue.view", "issue.create", "issue.manage", "issue.close", ...fullAttendance],
+  project_manager: ["issue.view", "issue.create", "issue.manage", "issue.close", ...fullAttendance],
+  supervisor: ["issue.view", "issue.create", "issue.manage", "attendance.view", "attendance.mark"],
+  accounts: ["issue.view", "attendance.view"],
   storekeeper: ["issue.view", "issue.create"],
-  auditor: ["issue.view"],
+  auditor: ["issue.view", "attendance.view"],
 };
 
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {

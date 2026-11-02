@@ -27,6 +27,7 @@ import { sitesAdminRouter } from "./sites-admin";
 import { issuesRouter } from "./issues";
 import { attachmentsRouter } from "./attachments";
 import { exportsRouter } from "./exports";
+import { attendanceRouter } from "./attendance";
 import { buildInbox } from "./inbox";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
@@ -147,6 +148,7 @@ export const jpRouter = router({
   issues: issuesRouter,
   attachments: attachmentsRouter,
   exports: exportsRouter,
+  attendance: attendanceRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

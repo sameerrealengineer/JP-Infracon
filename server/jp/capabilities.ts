@@ -71,6 +71,9 @@ export const permissionKeys = [
   "issue.create",
   "issue.manage",
   "issue.close",
+  "attendance.view",
+  "attendance.mark",
+  "attendance.approve",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];
