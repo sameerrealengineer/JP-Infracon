@@ -24,6 +24,7 @@ pnpm format:check            # Prettier check (pnpm format writes)
 pnpm test                    # Vitest, database free tests only
 pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
 pnpm build                   # Bundle the API to dist/ with esbuild
+pnpm build:server            # Bundle the API into one file (dist-server/index.mjs) for the Docker image
 npx expo export --platform web --output-dir /tmp/jp-web-export   # Web bundle check
 ```
 
