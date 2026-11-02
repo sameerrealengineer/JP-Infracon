@@ -246,7 +246,7 @@ export default function ReportsScreen() {
         <AppHeader
           eyebrow="Field records"
           title="Reports"
-          subtitle="DPR/DLR drafts and review status from assigned sites."
+          subtitle="Daily progress (DPR) and labour (DLR) reports for your sites."
           userInitials={initials(me.data?.name)}
         />
         <OfflineBanner

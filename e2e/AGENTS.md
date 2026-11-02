@@ -28,6 +28,7 @@ npx playwright test finance          # one spec (reuses a server already on :809
 
 ## Gotchas
 
-- The web export currently fails until `react-native-css-interop` resolves (see root `AGENTS.md` Gotchas), so these specs are not in CI yet.
+- These specs are not in CI yet. `serve-export.mjs` maps a dynamic path such as `/site/<id>` to `site/[id].html`.
+- Hidden tab screens stay in the DOM, so assert on text unique to the screen you navigated to.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

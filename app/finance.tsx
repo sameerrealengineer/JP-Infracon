@@ -73,7 +73,7 @@ function invoiceStatusDescription(status: string) {
   if (status === "Approved")
     return "Invoice review approved · see Payments for allocation-derived availability";
   if (status === "Rejected") return "Rejected · no payable or payment was recorded";
-  if (status === "Disputed") return "Disputed · resolution workflow not yet available";
+  if (status === "Disputed") return "Disputed · not payable until resolved";
   return status;
 }
 
@@ -426,8 +426,8 @@ export default function FinanceScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
             eyebrow="Commercial records"
-            title="Commercial & site finance"
-            subtitle="Site-scoped suppliers, invoice review, internal payment allocations, and petty cash."
+            title="Finance"
+            subtitle="Suppliers, invoices, payments and petty cash for your sites."
           />
           {sitesQuery.isError ? (
             <InlineError message={sitesQuery.error.message} onRetry={refresh} />
@@ -455,11 +455,8 @@ export default function FinanceScreen() {
           >
             <MaterialIcons name="lock-outline" size={17} color={colors.primary} />
             <Text style={[styles.noticeText, { color: colors.muted }]}>
-              Online workflows only. Supplier payments and petty cash are internal ledgers, not
-              bank/card/UPI transfers. Cash balances use Posted movements only; physical cash-count
-              reconciliation and receipt-file storage are not available. Supplier advances,
-              credit/debit notes, retention, linked procurement records, worker payables and
-              reimbursements remain outside these increments.
+              Approvals need a connection. Payments and petty cash are recorded in the JP Infracon
+              ledger — no money is sent from this app. Balances count Posted entries only.
             </Text>
           </View>
           <SectionHeader title="Assigned site" />
@@ -1237,10 +1234,8 @@ export default function FinanceScreen() {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Invoice evidence upload and draft correction/cancellation are not available in
-                  this increment. Reference fields are not linked procurement/receipt records. This
-                  invoice form does not create a payment, settle an account, or determine statutory
-                  tax treatment.
+                  Saving records the invoice for review. It does not pay the supplier or decide tax
+                  treatment — enter tax and charges exactly as printed on the bill.
                 </Text>
               </View>
               <View style={styles.buttonStack}>

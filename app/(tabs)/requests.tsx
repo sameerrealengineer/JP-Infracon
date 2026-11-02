@@ -231,7 +231,7 @@ export default function RequestsScreen() {
         <AppHeader
           eyebrow="Material control"
           title="Requests"
-          subtitle="A request is not a purchase; server approval is a separate step."
+          subtitle="Raise material needs from site and track every decision."
           userInitials={initials(me.data?.name)}
         />
         <OfflineBanner

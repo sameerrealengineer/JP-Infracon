@@ -318,7 +318,7 @@ export default function InventoryScreen() {
           <AppHeader
             eyebrow="Stock control"
             title="Inventory"
-            subtitle="Site quantities are calculated from posted movement records."
+            subtitle="Live stock for each site, calculated from posted entries."
             userInitials={initials(me.data?.name)}
           />
           <OfflineBanner
@@ -654,13 +654,9 @@ export default function InventoryScreen() {
                   >
                     <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                     <Text style={[styles.ledgerNoticeText, { color: colors.foreground }]}>
-                      This slice records accepted inward quantity, issue/consumption, return,
-                      wastage, and damage. Up to 200 oldest pending entries are shown first; review
-                      and refresh to advance a larger queue. Only the latest 100 posted/rejected
-                      entries are shown, with full history export/pagination not yet available.
-                      Rejected delivery quantity, supplier documents/photos, purchase orders, site
-                      transfers, physical counts, adjustments, and linked corrections are not yet
-                      captured.
+                      Stock changes only when a different authorised person posts an entry. The
+                      oldest pending entries are listed first, followed by the latest posted and
+                      rejected entries.
                     </Text>
                   </View>
                   {movements.length === 0 ? (

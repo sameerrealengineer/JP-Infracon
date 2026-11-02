@@ -1,8 +1,6 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
-import { EmptyState, InlineError, Screen, StatusPill } from "@/components/jp/ui";
+import { AppHeader, EmptyState, InlineError, Screen } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 
@@ -40,30 +38,16 @@ function tone(action: string): "success" | "warning" | "error" | "info" {
 
 export default function AuditScreen() {
   const colors = useColors();
-  const router = useRouter();
   const events = trpc.jp.workspace.auditEvents.useQuery();
   return (
     <AuthGate>
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          <View style={styles.header}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              onPress={() => router.back()}
-            >
-              <MaterialIcons name="arrow-back" size={23} color={colors.foreground} />
-            </Pressable>
-            <View style={styles.headerCopy}>
-              <Text style={[styles.eyebrow, { color: colors.primary }]}>TRACEABILITY</Text>
-              <Text style={[styles.title, { color: colors.foreground }]}>Audit activity</Text>
-            </View>
-            <StatusPill label="Read only" tone="info" />
-          </View>
-          <Text style={[styles.detail, { color: colors.muted }]}>
-            Append-only events for sites in your authorised scope. Records include the actor,
-            action, and server timestamp; raw IDs and unrelated organisation events are not exposed.
-          </Text>
+          <AppHeader
+            eyebrow="Traceability"
+            title="Audit trail"
+            subtitle="Every business change on your sites: who did it, when, and why."
+          />
           {events.isError ? (
             <InlineError
               message={events.error.message}

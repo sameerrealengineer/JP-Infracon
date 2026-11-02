@@ -15,6 +15,8 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `tasks.ts` | Tasks, Finish to Start dependencies, rescheduling with impact preview |
 | `workforce.ts` | Workers, KYC review, effective dated rates |
 | `inventory.ts` | Catalogue, stock movements, derived stock |
+| `sites-admin.ts` | Projects and sites: create, edit, status changes with reason, site team assign/remove (`site.manage`, organisation level) |
+| `inbox.ts` | `buildInbox`: the derived notification inbox (reviews, approvals, returned reports, custody, overdue tasks) |
 | `finance.ts` | Suppliers and invoices; mounts `supplier-payments.ts` and `petty-cash.ts` |
 
 ## Conventions

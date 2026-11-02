@@ -18,7 +18,9 @@ const types = {
 
 function resolveFile(urlPath) {
   const clean = path.normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, "");
-  const candidates = [clean, `${clean}.html`, path.join(clean, "index.html")];
+  // Dynamic routes such as /site/<id> are exported once as site/[id].html.
+  const dynamic = path.join(path.dirname(clean), "[id].html");
+  const candidates = [clean, `${clean}.html`, path.join(clean, "index.html"), dynamic];
   for (const candidate of candidates) {
     const file = path.join(root, candidate);
     if (file.startsWith(root) && existsSync(file) && statSync(file).isFile()) return file;

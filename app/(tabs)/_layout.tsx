@@ -1,18 +1,37 @@
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
+import type { ComponentProps } from "react";
+import { Platform, StyleSheet, View, type ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Platform } from "react-native";
-import { useColors } from "@/hooks/use-colors";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+
+type IconName = ComponentProps<typeof MaterialIcons>["name"];
+
+function TabIcon({
+  name,
+  color,
+  focused,
+}: {
+  name: IconName;
+  color: ColorValue;
+  focused: boolean;
+}) {
+  const colors = useColors();
+  return (
+    <View style={[styles.iconWrap, focused && { backgroundColor: `${colors.accent}22` }]}>
+      <MaterialIcons size={23} name={name} color={color} />
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
-  const tabBarHeight = 56 + bottomPadding;
+  const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   const capabilities = trpc.jp.workspace.myCapabilities.useQuery();
   const canOpenReports =
     capabilities.data?.some(
@@ -26,32 +45,37 @@ export default function TabLayout() {
     <AuthGate>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: colors.tint,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.muted,
           headerShown: false,
           tabBarButton: HapticTab,
           tabBarStyle: {
             paddingTop: 8,
             paddingBottom: bottomPadding,
-            height: tabBarHeight,
-            backgroundColor: colors.background,
+            height: 64 + bottomPadding,
+            backgroundColor: colors.surface,
             borderTopColor: colors.border,
-            borderTopWidth: 0.5,
+            borderTopWidth: StyleSheet.hairlineWidth,
           },
-          tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
+          tabBarLabelStyle: { fontSize: 11, fontWeight: "700", marginTop: 2 },
         }}
       >
         <Tabs.Screen
           name="index"
           options={{
             title: "Home",
-            tabBarIcon: ({ color }) => <MaterialIcons size={23} name="home" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="space-dashboard" color={color} focused={focused} />
+            ),
           }}
         />
         <Tabs.Screen
           name="sites"
           options={{
             title: "Sites",
-            tabBarIcon: ({ color }) => <MaterialIcons size={23} name="domain" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="location-city" color={color} focused={focused} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -59,7 +83,9 @@ export default function TabLayout() {
           options={{
             href: canOpenReports ? undefined : null,
             title: "Reports",
-            tabBarIcon: ({ color }) => <MaterialIcons size={23} name="description" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="assignment" color={color} focused={focused} />
+            ),
           }}
         />
         <Tabs.Screen
@@ -67,17 +93,31 @@ export default function TabLayout() {
           options={{
             href: canOpenRequests ? undefined : null,
             title: "Requests",
-            tabBarIcon: ({ color }) => <MaterialIcons size={23} name="inventory-2" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="local-shipping" color={color} focused={focused} />
+            ),
           }}
         />
         <Tabs.Screen
           name="more"
           options={{
             title: "More",
-            tabBarIcon: ({ color }) => <MaterialIcons size={23} name="more-horiz" color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon name="apps" color={color} focused={focused} />
+            ),
           }}
         />
       </Tabs>
     </AuthGate>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    width: 48,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});

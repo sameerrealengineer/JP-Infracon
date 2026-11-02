@@ -281,8 +281,8 @@ export default function UserAccountsScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
             eyebrow="Administration"
-            title="User accounts"
-            subtitle="Individual logins with organization and site scope."
+            title="Team accounts"
+            subtitle="Create individual logins and control who can work on which site."
             userInitials={initials(me.data?.name)}
           />
           <OfflineBanner

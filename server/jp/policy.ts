@@ -147,13 +147,14 @@ const roleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: [
     "site.view",
     "audit.view",
+    "material.request.view",
     "workforce.view",
     "workforce.kyc.view",
     "compensation.view",
     "compensation.manage",
     "compensation.review",
   ],
-  storekeeper: ["site.view", "material.request.view"],
+  storekeeper: ["site.view", "task.view", "material.request.view", "material.request"],
   auditor: ["site.view", "audit.view", "workforce.view", "compensation.view"],
 };
 
@@ -168,7 +169,7 @@ const inventoryRoleDefaults: Record<BusinessRole, readonly string[]> = {
   admin: ["inventory.view", "inventory.catalog.manage", "inventory.transact", "inventory.review"],
   project_manager: ["inventory.view", "inventory.transact", "inventory.review"],
   supervisor: ["inventory.view", "inventory.transact"],
-  accounts: [],
+  accounts: ["inventory.view"],
   storekeeper: ["inventory.view", "inventory.transact"],
   auditor: ["inventory.view"],
 };

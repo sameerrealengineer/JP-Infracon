@@ -6,6 +6,16 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-02 — premium shell, site administration, derived inbox, offline cache
+
+Delivered in source (typecheck, lint with 0 errors, 121 unit tests, API build, web export and 3 new Playwright flows pass; not yet exercised against the shared database or on an Android device):
+
+- Visual system: "Midnight & Gold" theme (navy actions, gold accents, ivory/ink surfaces, light and dark), shared card/tile/sheet/field components, branded header with automatic back button, redesigned login, tab bar, Home, Sites, More and Notifications. Developer/roadmap notes removed from client-facing screens.
+- Outcome 2/5: Owner, Director, Admin (or an org-level `site.manage` grant) and Super Admin can create and edit projects and sites, change project/site status with a required reason (allowed transitions only; reactivating a site needs an active project), and assign/remove site team members with a reason. All writes are transactional, idempotent by `clientMutationId`, and audited. Site detail screen shows project, address, the caller's role, team and leadership.
+- Role/scope fixes: `site.manage`/`user.manage` now reach client capabilities; the primary organisation role is the highest-ranked active membership; storekeeper may raise material requests and view tasks; accounts may view material requests and inventory (read only).
+- Outcome 9 (partial): in-app inbox derived live from persisted records — reports to review, returned reports, material/invoice/payment/stock/petty-cash approvals and posting, custody acknowledgement, overdue tasks. No push delivery or stored read state yet.
+- Outcome 10 (partial): successful reads persist to device storage for 7 days and show offline with an offline banner; device connectivity drives query pausing; sign-out clears the cache.
+
 ## 1. Mobile shell, identity, and role-aware navigation — IN PROGRESS
 
 - The primary field navigation is Home, Sites, Reports, Requests, and More.

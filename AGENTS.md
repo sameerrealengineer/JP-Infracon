@@ -50,7 +50,8 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - One managed MySQL database serves both development and production. Never point tests at it, seed demo data, or run destructive cleanup.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. There are no demo logins; the first Super Admin comes from the one time bootstrap flow.
-- The web bundle (`expo export`, so also `pnpm test:e2e`) fails to resolve `react-native-css-interop/jsx-runtime` because pnpm does not hoist NativeWind's runtime package; it builds once that package is resolvable (for example as a direct dependency).
+- `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
+- The React Query cache is persisted to AsyncStorage (`app/_layout.tsx`) so synced records stay viewable offline; sign out calls `queryClient.clear()` so the next user of the phone sees nothing.
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
 ## Agent skills

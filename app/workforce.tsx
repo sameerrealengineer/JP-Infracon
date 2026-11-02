@@ -310,7 +310,7 @@ export default function WorkforceScreen() {
           <AppHeader
             eyebrow="People & compensation"
             title="Workforce"
-            subtitle="Site-scoped profiles, restricted rate history, and authorised review."
+            subtitle="Workers, technicians and contacts with KYC status and approved rates."
           />
           {sitesQuery.isError ? (
             <InlineError message={sitesQuery.error.message} onRetry={refresh} />
@@ -919,9 +919,8 @@ export default function WorkforceScreen() {
               >
                 <MaterialIcons name="info-outline" size={17} color={colors.primary} />
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Attendance, document storage, vendor onboarding, subcontract measurements,
-                  approved earnings, advances, and worker payment balances are not implemented in
-                  this increment. Rate records alone are not payables.
+                  Rates take effect only after a different authorised person approves them. A rate
+                  on its own is not a payment due.
                 </Text>
               </View>
             </>

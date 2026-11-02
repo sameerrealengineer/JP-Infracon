@@ -11,6 +11,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import * as Auth from "@/lib/_core/auth";
@@ -159,291 +160,335 @@ export function AuthGate({ children }: { children: ReactNode }) {
         (firstRun && (!bootstrapSecret.trim() || !displayName.trim())));
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.state, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <LinearGradient
+      colors={["#1E3E60", "#10243A", "#070F18"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
     >
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
-        <Image
-          source={companyLogo}
-          resizeMode="contain"
-          accessibilityLabel="JP Infracon company logo"
-          style={styles.logo}
-        />
-        <Text style={[styles.title, { color: colors.foreground }]}>JP Infracon</Text>
-        <Text style={[styles.tagline, { color: colors.primary }]}>
-          BUILDING TODAY. SHAPING TOMORROW.
-        </Text>
-        {mustChangePassword ? (
-          <>
-            <Text style={[styles.detail, { color: colors.muted }]}>
-              Change the temporary password before continuing. Your prior sessions will be revoked.
-            </Text>
-            <TextInput
-              accessibilityLabel="Temporary password"
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Temporary password"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="password"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="New password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="New password (12+ characters)"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="newPassword"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="Confirm new password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="newPassword"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-          </>
-        ) : firstRun ? (
-          <>
-            <Text style={[styles.detail, { color: colors.muted }]}>
-              Create the first Super Admin account. Use this app’s configured one-time setup key—not
-              your login password. Leading and trailing spaces are ignored.
-            </Text>
-            <TextInput
-              accessibilityLabel="Super Admin display name"
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Full name"
-              placeholderTextColor={colors.muted}
-              autoCapitalize="words"
-              autoComplete="name"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="Choose username"
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Choose username"
-              placeholderTextColor={colors.muted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="username"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="Choose password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Choose password (12+ characters)"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="newPassword"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="One-time Super Admin setup key"
-              value={bootstrapSecret}
-              onChangeText={setBootstrapSecret}
-              placeholder="One-time setup key"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoComplete="off"
-              spellCheck={false}
-              textContentType="none"
-              maxLength={512}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-          </>
-        ) : (
-          <>
-            <Text style={[styles.detail, { color: colors.muted }]}>
-              Sign in with your individual username and password. Site and organisation access is
-              checked by the server.
-            </Text>
-            <TextInput
-              accessibilityLabel="Username"
-              value={username}
-              onChangeText={setUsername}
-              placeholder="Username"
-              placeholderTextColor={colors.muted}
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="username"
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <TextInput
-              accessibilityLabel="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Password"
-              placeholderTextColor={colors.muted}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              textContentType="password"
-              returnKeyType="go"
-              onSubmitEditing={() => {
-                void signIn();
-              }}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-          </>
-        )}
-        {setup.isError ? (
-          <Text style={[styles.error, { color: colors.error }]}>
-            Account setup status could not be reached. Check your connection and retry.
-          </Text>
-        ) : null}
-        {formError ? (
-          <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
-            {formError}
-          </Text>
-        ) : null}
-        <Pressable
-          accessibilityRole="button"
-          disabled={disabled}
-          onPress={() => {
-            void submit();
-          }}
-          style={({ pressed }) => [
-            styles.loginButton,
-            {
-              backgroundColor: disabled ? colors.border : colors.primary,
-              opacity: pressed && !disabled ? 0.82 : 1,
-            },
-          ]}
+      <KeyboardAvoidingView
+        style={styles.state}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
-          {submitting ? (
-            <ActivityIndicator color={colors.background} />
-          ) : (
-            <Text style={[styles.loginText, { color: colors.background }]}>
+          <View style={styles.logoRing}>
+            <Image
+              source={companyLogo}
+              resizeMode="contain"
+              accessibilityLabel="JP Infracon company logo"
+              style={styles.logo}
+            />
+          </View>
+          <Text style={styles.title}>JP INFRACON</Text>
+          <Text style={styles.tagline}>BUILDING TODAY. SHAPING TOMORROW.</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               {mustChangePassword
-                ? "Update password"
+                ? "Set a new password"
                 : firstRun
-                  ? "Create Super Admin account"
-                  : "Sign in"}
+                  ? "Create the Super Admin"
+                  : "Welcome back"}
             </Text>
-          )}
-        </Pressable>
-        <Text style={[styles.privacy, { color: colors.muted }]}>
-          Individual accounts only. Do not share passwords. Role and assigned-site access are
-          enforced by the server.
-        </Text>
-        <Text style={[styles.leadership, { color: colors.muted }]}>
-          A contracting partnership led by Jeetendra Kumar Panda, Managing Partner, and Rambabu
-          Kumar Singh, Partner.
-        </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {mustChangePassword ? (
+              <>
+                <Text style={[styles.detail, { color: colors.muted }]}>
+                  Change the temporary password before continuing. Your prior sessions will be
+                  revoked.
+                </Text>
+                <TextInput
+                  accessibilityLabel="Temporary password"
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  placeholder="Temporary password"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="New password"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="New password (12+ characters)"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Confirm new password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm new password"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+              </>
+            ) : firstRun ? (
+              <>
+                <Text style={[styles.detail, { color: colors.muted }]}>
+                  Create the first Super Admin account. Use this app’s configured one-time setup
+                  key—not your login password. Leading and trailing spaces are ignored.
+                </Text>
+                <TextInput
+                  accessibilityLabel="Super Admin display name"
+                  value={displayName}
+                  onChangeText={setDisplayName}
+                  placeholder="Full name"
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Choose username"
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Choose username"
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="username"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Choose password"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Choose password (12+ characters)"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="One-time Super Admin setup key"
+                  value={bootstrapSecret}
+                  onChangeText={setBootstrapSecret}
+                  placeholder="One-time setup key"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="off"
+                  spellCheck={false}
+                  textContentType="none"
+                  maxLength={512}
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+              </>
+            ) : (
+              <>
+                <Text style={[styles.detail, { color: colors.muted }]}>
+                  Sign in with the username and password your administrator gave you.
+                </Text>
+                <TextInput
+                  accessibilityLabel="Username"
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Username"
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="username"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Password"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                  returnKeyType="go"
+                  onSubmitEditing={() => {
+                    void signIn();
+                  }}
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+              </>
+            )}
+            {setup.isError ? (
+              <Text style={[styles.error, { color: colors.error }]}>
+                Account setup status could not be reached. Check your connection and retry.
+              </Text>
+            ) : null}
+            {formError ? (
+              <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
+                {formError}
+              </Text>
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              disabled={disabled}
+              onPress={() => {
+                void submit();
+              }}
+              style={({ pressed }) => [
+                styles.loginButton,
+                {
+                  backgroundColor: disabled ? colors.border : colors.primary,
+                  opacity: pressed && !disabled ? 0.82 : 1,
+                },
+              ]}
+            >
+              {submitting ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={[styles.loginText, { color: colors.background }]}>
+                  {mustChangePassword
+                    ? "Update password"
+                    : firstRun
+                      ? "Create Super Admin account"
+                      : "Sign in"}
+                </Text>
+              )}
+            </Pressable>
+            <Text style={[styles.privacy, { color: colors.muted }]}>
+              Individual accounts only. Never share your password.
+            </Text>
+          </View>
+          <Text style={styles.leadership}>
+            Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.
+          </Text>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  state: { flex: 1, justifyContent: "center", paddingHorizontal: 22 },
+  state: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 30,
+    paddingVertical: 36,
     gap: 12,
   },
-  logo: { width: 126, height: 120, marginBottom: 2 },
-  title: { fontSize: 25, fontWeight: "900", textAlign: "center" },
-  tagline: {
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    textAlign: "center",
-    marginTop: -7,
-    marginBottom: 9,
+  logoRing: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "#D9B76A",
+    marginBottom: 6,
   },
-  detail: { fontSize: 13, lineHeight: 19, textAlign: "center", maxWidth: 360, marginBottom: 5 },
+  logo: { width: 84, height: 84 },
+  title: {
+    fontSize: 26,
+    fontWeight: "900",
+    textAlign: "center",
+    color: "#FFFFFF",
+    letterSpacing: 4,
+  },
+  tagline: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 2,
+    textAlign: "center",
+    color: "#D9B76A",
+    marginTop: -6,
+    marginBottom: 12,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: 26,
+    padding: 22,
+    gap: 12,
+    alignItems: "center",
+  },
+  cardTitle: { fontSize: 21, fontWeight: "800", alignSelf: "flex-start", letterSpacing: -0.3 },
+  detail: { fontSize: 13, lineHeight: 19, alignSelf: "flex-start", marginBottom: 4 },
   input: {
     width: "100%",
     maxWidth: 390,
-    minHeight: 50,
+    minHeight: 52,
     borderWidth: 1,
-    borderRadius: 13,
+    borderRadius: 14,
     paddingHorizontal: 14,
     fontSize: 15,
   },
@@ -460,5 +505,12 @@ const styles = StyleSheet.create({
   },
   loginText: { fontSize: 14, fontWeight: "800" },
   privacy: { fontSize: 11, lineHeight: 16, textAlign: "center", maxWidth: 360, marginTop: 4 },
-  leadership: { fontSize: 10, lineHeight: 15, textAlign: "center", maxWidth: 360, marginTop: 5 },
+  leadership: {
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: "center",
+    maxWidth: 340,
+    marginTop: 10,
+    color: "rgba(246,241,230,0.65)",
+  },
 });

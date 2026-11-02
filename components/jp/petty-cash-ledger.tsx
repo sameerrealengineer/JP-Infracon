@@ -459,13 +459,9 @@ export function PettyCashLedger(props: Props) {
       >
         <MaterialIcons name="account-balance-wallet" size={17} color={colors.warning} />
         <Text style={[styles.noticeText, { color: colors.muted }]}>
-          Balances are calculated from Posted funding, expenses and linked cash returns only. Draft,
-          Submitted, Approved, Rejected and Cancelled entries do not change cash. This site-scoped
-          view intentionally shows authorised site finance users the full ledger, including
-          payer/payee, purpose, receipt-reference text and audit reasons; it returns no private file
-          bytes or account credentials. Personal out-of-pocket costs must not be entered here; the
-          separate reimbursement workflow is not yet available. No bank/card/UPI transfer is sent or
-          verified, and physical reconciliation is not yet available.
+          The balance counts Posted funding, expenses and cash returns only — drafts and pending
+          entries never change cash. Enter site petty-cash spending only, not personal out-of-pocket
+          costs. No money is sent from this app.
         </Text>
       </View>
 
@@ -867,8 +863,7 @@ export function PettyCashLedger(props: Props) {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  The period is recorded, but physical cash-count reconciliation and variance
-                  adjustments are not yet available.
+                  The reconciliation period is saved with the fund for the custodian and reviewers.
                 </Text>
               </View>
               <PrimaryButton
@@ -909,10 +904,8 @@ export function PettyCashLedger(props: Props) {
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <ModalHeader title="Record petty-cash movement" onClose={closeMovementForm} />
               <Text style={[styles.noticeText, { color: colors.warning }]}>
-                Records movement from this named site petty-cash fund only. Do not enter personal
-                out-of-pocket costs here; the separate reimbursement workflow is not yet available.
-                This saves a Draft; posting requires a different authorised person. No money is sent
-                or verified.
+                Records a movement from this site petty-cash fund only (not personal spending). It
+                saves as a Draft; a different authorised person posts it. No money is sent.
               </Text>
               <Text style={[styles.label, { color: colors.muted }]}>Movement type *</Text>
               <View style={styles.choiceStack}>
@@ -1127,11 +1120,9 @@ export function PettyCashLedger(props: Props) {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Do not enter card, bank-account or login credentials. Receipt evidence is
-                  text-only in this increment. If an active reviewer/poster grant requires an
-                  accepted Private receipt file, review/post stays blocked until secure upload
-                  exists; a text reference does not satisfy that requirement. Only Posted entries
-                  change balance; posted entries cannot be edited or deleted here.
+                  Never enter card, bank-account or login details. Write the bill or receipt number,
+                  or why there is none. Posted entries change the balance and cannot be edited or
+                  deleted.
                 </Text>
               </View>
               <PrimaryButton

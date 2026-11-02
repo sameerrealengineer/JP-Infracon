@@ -32,6 +32,8 @@ import { workforceRouter } from "./workforce";
 import { inventoryRouter } from "./inventory";
 import { financeRouter } from "./finance";
 import { accountsRouter } from "./accounts";
+import { sitesAdminRouter } from "./sites-admin";
+import { buildInbox } from "./inbox";
 
 const codeSchema = z
   .string()
@@ -67,6 +69,9 @@ function safeRequestId(value: string | string[] | undefined) {
 }
 
 const permissionKeys = [
+  "site.view",
+  "site.manage",
+  "user.manage",
   "dpr.view",
   "dpr.create",
   "dpr.submit",
@@ -143,7 +148,13 @@ async function siteCapabilities(
     for (const permissionKey of permissionKeys) {
       const siteIsAvailable = site.status === "Active" || permissionKey.endsWith(".view");
       capabilities[permissionKey] = siteIsAvailable
-        ? ["inventory.catalog.manage", "vendor.view", "vendor.create"].includes(permissionKey)
+        ? [
+            "inventory.catalog.manage",
+            "vendor.view",
+            "vendor.create",
+            "site.manage",
+            "user.manage",
+          ].includes(permissionKey)
           ? resolveOrganizationPermission({
               role: site.businessRole,
               permissionKey,
@@ -270,7 +281,15 @@ export const jpRouter = router({
   inventory: inventoryRouter,
   finance: financeRouter,
   accounts: accountsRouter,
+  sitesAdmin: sitesAdminRouter,
   workspace: router({
+    inbox: protectedProcedure.query(async ({ ctx }) => {
+      assertActiveAccount(ctx.user);
+      const db = requireDb(await (await import("../db")).getDb());
+      const capabilities = await siteCapabilities(ctx.user, await getAccessibleSites(ctx.user));
+      return buildInbox(db, ctx.user.id, capabilities);
+    }),
+
     mySites: protectedProcedure.query(async ({ ctx }) => getAccessibleSites(ctx.user)),
 
     myCapabilities: protectedProcedure.query(async ({ ctx }) =>
@@ -280,9 +299,9 @@ export const jpRouter = router({
     onboardingState: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);
       const db = requireDb(await (await import("../db")).getDb());
-      const [membership] = await db
+      const memberships = await db
         .select({
-          id: organizationMemberships.id,
+          organizationId: organizationMemberships.organizationId,
           businessRole: organizationMemberships.businessRole,
         })
         .from(organizationMemberships)
@@ -292,11 +311,50 @@ export const jpRouter = router({
             eq(organizationMemberships.status, "Active"),
           ),
         )
-        .limit(1);
+        .limit(50);
+      const rank = [
+        "owner",
+        "director",
+        "admin",
+        "project_manager",
+        "accounts",
+        "supervisor",
+        "storekeeper",
+        "auditor",
+      ];
+      const primary = [...memberships].sort(
+        (a, b) => rank.indexOf(a.businessRole) - rank.indexOf(b.businessRole),
+      )[0];
+      const organizationIds = [...new Set(memberships.map((row) => row.organizationId))];
+      const grants = organizationIds.length
+        ? await db
+            .select()
+            .from(permissionGrants)
+            .where(
+              and(
+                eq(permissionGrants.userId, ctx.user.id),
+                inArray(permissionGrants.organizationId, organizationIds),
+                inArray(permissionGrants.permissionKey, ["site.manage", "user.manage"]),
+              ),
+            )
+        : [];
+      const orgAllows = (permissionKey: string) =>
+        ctx.user.role === "super_admin" ||
+        memberships.some((membership) =>
+          resolveOrganizationPermission({
+            role: membership.businessRole,
+            permissionKey,
+            organizationId: membership.organizationId,
+            grants: grants as PermissionGrantForResolution[],
+          }),
+        );
       return {
-        hasOrganizationMembership: Boolean(membership),
-        businessRole: membership?.businessRole ?? null,
-        canInitializeOrganization: ctx.user.role === "super_admin" && !membership,
+        hasOrganizationMembership: memberships.length > 0,
+        businessRole: primary?.businessRole ?? null,
+        roles: [...new Set(memberships.map((row) => row.businessRole))],
+        canInitializeOrganization: ctx.user.role === "super_admin" && memberships.length === 0,
+        canManageSites: orgAllows("site.manage"),
+        canManageAccounts: orgAllows("user.manage"),
       };
     }),
 

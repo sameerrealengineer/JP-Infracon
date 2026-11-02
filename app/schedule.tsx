@@ -324,8 +324,8 @@ export default function ScheduleScreen() {
               <View style={styles.scopeNote}>
                 <MaterialIcons name="event-note" size={18} color={colors.primary} />
                 <Text style={[styles.scopeNoteText, { color: colors.muted }]}>
-                  {activeSite.project} · {activeSite.name}. Dates use calendar days; configurable
-                  site work calendars, resource clashes, and schedule approvals are not yet modeled.
+                  {activeSite.project} · {activeSite.name}. Dates are calendar days. Every
+                  reschedule keeps the original plan in history.
                 </Text>
               </View>
               {message ? (

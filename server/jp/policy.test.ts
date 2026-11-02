@@ -10,8 +10,10 @@ describe("server permission policy", () => {
     expect(roleAllows("supervisor", "dpr.review")).toBe(false);
     expect(roleAllows("supervisor", "dpr.view")).toBe(true);
     expect(roleAllows("accounts", "material.request")).toBe(false);
-    expect(roleAllows("accounts", "material.request.view")).toBe(false);
+    expect(roleAllows("accounts", "material.request.view")).toBe(true);
     expect(roleAllows("storekeeper", "material.request.view")).toBe(true);
+    expect(roleAllows("storekeeper", "material.request")).toBe(true);
+    expect(roleAllows("storekeeper", "material.review")).toBe(false);
   });
 
   it("gives supervisors task visibility and field status updates without schedule management", () => {
@@ -66,7 +68,7 @@ describe("server permission policy", () => {
     expect(roleAllows("storekeeper", "inventory.catalog.manage")).toBe(false);
     expect(roleAllows("storekeeper", "inventory.review")).toBe(false);
     expect(roleAllows("project_manager", "inventory.review")).toBe(true);
-    expect(roleAllows("accounts", "inventory.view")).toBe(false);
+    expect(roleAllows("accounts", "inventory.view")).toBe(true);
     expect(roleAllows("auditor", "inventory.view")).toBe(true);
     expect(roleAllows("auditor", "inventory.transact")).toBe(false);
   });

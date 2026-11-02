@@ -1,103 +1,153 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
   AppHeader,
+  Card,
   EmptyState,
+  HeroCard,
+  HeroStat,
   InlineError,
+  ListRow,
+  LoadingBlock,
   MetricCard,
+  ModuleTile,
   OfflineBanner,
   Screen,
   SectionHeader,
   StatusPill,
-  styles as uiStyles,
+  formatDateTime,
+  type IconName,
+  type Tone,
 } from "@/components/jp/ui";
 import { FirstWorkspaceSetup } from "@/components/jp/first-workspace-setup";
 import { useColors } from "@/hooks/use-colors";
+import { useConnectivity, useSyncQueue } from "@/hooks/use-connectivity";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
+import { prettyRole } from "@/lib/jp/site-admin-policy";
+import { inboxIcon } from "@/components/jp/inbox-meta";
 import { trpc } from "@/lib/trpc";
-import { readDraftStore } from "@/lib/jp/local-repository";
-import { useEffect } from "react";
 
-function initials(name: string | null | undefined) {
-  return (
-    name
-      ?.trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("") || "?"
-  );
-}
-
-function displayTime(value?: string | Date | null) {
-  if (!value) return "Not available";
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime())
-    ? "Not available"
-    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
-}
-
-function statusTone(status: string): "success" | "warning" | "error" | "info" {
-  if (status === "Active" || status === "Completed") return "success";
-  if (status === "On Hold") return "warning";
-  if (status === "Inactive") return "error";
-  return "info";
+function greeting(date = new Date()) {
+  const hour = date.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 export default function HomeScreen() {
   const colors = useColors();
-  const utils = trpc.useUtils();
-  const me = trpc.auth.me.useQuery(undefined, { retry: false });
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const workspace = useWorkspace();
+  const { online } = useConnectivity();
+  const { pending, refresh: refreshQueue } = useSyncQueue();
   const sites = trpc.jp.workspace.mySites.useQuery();
   const dashboard = trpc.jp.workspace.dashboard.useQuery();
-  const onboarding = trpc.jp.workspace.onboardingState.useQuery();
-  const reports = trpc.jp.reports.list.useQuery(undefined);
-  const requests = trpc.jp.materialRequests.list.useQuery(undefined);
+  const inbox = trpc.jp.workspace.inbox.useQuery();
   const [refreshing, setRefreshing] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
-  const [localDraftCount, setLocalDraftCount] = useState(0);
-
-  useEffect(() => {
-    readDraftStore().then((store) =>
-      setLocalDraftCount(store.syncQueue.filter((item) => item.status !== "Synced").length),
-    );
-  }, []);
 
   const refresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        me.refetch(),
-        sites.refetch(),
-        dashboard.refetch(),
-        onboarding.refetch(),
-        reports.refetch(),
-        requests.refetch(),
-      ]);
+      await Promise.all([queryClient.invalidateQueries(), refreshQueue()]);
     } finally {
       setRefreshing(false);
     }
   };
 
-  const displaySites = useMemo(() => sites.data ?? [], [sites.data]);
-  const dataError = sites.error || dashboard.error || reports.error || requests.error;
-  const available = !dataError && (sites.isSuccess || dashboard.isSuccess);
+  const { can } = workspace;
+  const firstName = workspace.me.data?.name?.trim().split(/\s+/)[0] ?? "there";
   const today = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
     day: "numeric",
-    month: "short",
-    year: "numeric",
+    month: "long",
   }).format(new Date());
-  const pendingDprs = dashboard.data?.reportsNeedingReview ?? 0;
-  const pendingRequests = dashboard.data?.pendingMaterialRequests ?? 0;
+  const items = inbox.data?.items ?? [];
+  const overdue = items.filter((item) => item.kind === "task.overdue").length;
+  const siteList = sites.data ?? [];
+  const activeSites = siteList.filter((site) => site.status === "Active").length;
+  const dataError = sites.error || dashboard.error;
+  const hasCache = Boolean(sites.data || dashboard.data);
+
+  const actions: {
+    icon: IconName;
+    title: string;
+    detail: string;
+    tone: Tone;
+    route: string;
+    show: boolean;
+  }[] = [
+    {
+      icon: "post-add",
+      title: "Daily report",
+      detail: "DPR / DLR for today",
+      tone: "info",
+      route: "/(tabs)/reports",
+      show: can("dpr.create", "dlr.create"),
+    },
+    {
+      icon: "local-shipping",
+      title: "Request material",
+      detail: "Raise a site request",
+      tone: "accent",
+      route: "/(tabs)/requests",
+      show: can("material.request"),
+    },
+    {
+      icon: "event-note",
+      title: "Schedule",
+      detail: "Tasks & revisions",
+      tone: "info",
+      route: "/schedule",
+      show: can("task.view"),
+    },
+    {
+      icon: "inventory",
+      title: "Stock entry",
+      detail: "Inward, issue, return",
+      tone: "success",
+      route: "/inventory",
+      show: can("inventory.transact", "inventory.view"),
+    },
+    {
+      icon: "groups",
+      title: "Workforce",
+      detail: "People & rates",
+      tone: "info",
+      route: "/workforce",
+      show: can("workforce.view"),
+    },
+    {
+      icon: "receipt-long",
+      title: "Finance",
+      detail: "Invoices, payments, cash",
+      tone: "accent",
+      route: "/finance",
+      show: can("finance.invoice.view", "finance.cash.view"),
+    },
+    {
+      icon: "add-business",
+      title: "Projects & sites",
+      detail: "Create and manage",
+      tone: "success",
+      route: "/projects",
+      show: workspace.canManageSites,
+    },
+    {
+      icon: "person-add-alt",
+      title: "Team accounts",
+      detail: "Logins & roles",
+      tone: "info",
+      route: "/users",
+      show: workspace.canManageAccounts,
+    },
+  ];
+  const visibleActions = actions.filter((action) => action.show);
 
   return (
     <Screen>
@@ -109,211 +159,196 @@ export default function HomeScreen() {
         }
       >
         <AppHeader
-          eyebrow="JP Infracon · Field operations"
-          title="Keep today's work moving."
-          subtitle="A live brief from the records you are allowed to access."
-          userInitials={initials(me.data?.name)}
+          eyebrow={greeting()}
+          title={`Hello, ${firstName}`}
+          subtitle={`${prettyRole(workspace.role)} · ${today}`}
         />
         <OfflineBanner
-          pendingCount={localDraftCount}
-          connected={available}
-          lastSyncedAt={dashboard.data?.asOf ? displayTime(dashboard.data.asOf) : null}
+          pendingCount={pending.length}
+          connected={online === false ? false : hasCache && !dataError ? true : online}
+          lastSyncedAt={dashboard.dataUpdatedAt ? formatDateTime(dashboard.dataUpdatedAt) : null}
           onRetry={refresh}
           retrying={refreshing}
         />
+        {dataError && online !== false ? (
+          <InlineError message={dataError.message} onRetry={refresh} />
+        ) : null}
 
-        {dataError ? <InlineError message={dataError.message} onRetry={refresh} /> : null}
-        <View style={styles.briefRow}>
-          <View style={styles.briefCopy}>
-            <Text style={[styles.briefKicker, { color: colors.muted }]}>{today.toUpperCase()}</Text>
-            <Text style={[styles.briefTitle, { color: colors.foreground }]}>Operational brief</Text>
-            <Text style={[styles.briefDetail, { color: colors.muted }]}>
-              As of {displayTime(dashboard.data?.asOf)}
-            </Text>
+        <HeroCard>
+          <Text style={styles.heroKicker}>TODAY&apos;S BRIEF</Text>
+          <Text style={styles.heroTitle}>
+            {items.length > 0
+              ? `${items.length} item${items.length === 1 ? "" : "s"} need${items.length === 1 ? "s" : ""} your attention`
+              : inbox.isSuccess
+                ? "You are all caught up"
+                : "Gathering your site brief…"}
+          </Text>
+          <View style={styles.heroStats}>
+            <HeroStat value={sites.data ? String(activeSites) : "—"} label="Active sites" />
+            <View style={styles.heroDivider} />
+            <HeroStat value={inbox.data ? String(items.length) : "—"} label="Waiting on you" />
+            <View style={styles.heroDivider} />
+            <HeroStat value={inbox.data ? String(overdue) : "—"} label="Overdue tasks" />
           </View>
-          <View
-            style={[
-              styles.signalMark,
-              { backgroundColor: `${colors.primary}15`, borderColor: `${colors.primary}35` },
-            ]}
-          >
-            <MaterialIcons name="north-east" size={23} color={colors.primary} />
-          </View>
-        </View>
+        </HeroCard>
 
-        <View style={styles.metricsRow}>
-          <MetricCard
-            icon="domain"
-            value={dashboard.data ? String(dashboard.data.siteCount) : "—"}
-            label="Assigned sites"
-            tone="info"
-          />
-          <MetricCard
-            icon="assignment-late"
-            value={dashboard.data ? String(dashboard.data.reportsNeedingReview) : "—"}
-            label="Reports to review"
-            tone="warning"
-          />
-          <MetricCard
-            icon="inventory-2"
-            value={dashboard.data ? String(dashboard.data.pendingMaterialRequests) : "—"}
-            label="Material requests"
-            tone="success"
-          />
-        </View>
-
-        <SectionHeader title="Needs attention" />
-        {dashboard.isLoading ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.muted }]}>
-              Loading authorised records…
-            </Text>
-          </View>
-        ) : dashboard.data && pendingDprs + pendingRequests > 0 ? (
-          <View
-            style={[
-              styles.attentionCard,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-          >
-            <View style={[styles.attentionBar, { backgroundColor: colors.warning }]} />
-            <View style={styles.attentionBody}>
-              <StatusPill
-                label={`${pendingDprs + pendingRequests} open workflow item${pendingDprs + pendingRequests === 1 ? "" : "s"}`}
-                tone="warning"
+        {dashboard.data && (can("dpr.view", "dlr.view") || can("material.request.view")) ? (
+          <View style={styles.metricsRow}>
+            {can("dpr.view", "dlr.view") ? (
+              <MetricCard
+                icon="fact-check"
+                value={String(dashboard.data.reportsNeedingReview)}
+                label="Reports in review"
+                tone="info"
+                onPress={() => router.push("/(tabs)/reports" as never)}
               />
-              <Text style={[styles.attentionTitle, { color: colors.foreground }]}>
-                Review the current queue
-              </Text>
-              <Text style={[styles.attentionDetail, { color: colors.muted }]}>
-                {pendingDprs} report(s) need review · {pendingRequests} material request(s) are
-                awaiting a decision.
-              </Text>
-              <View style={styles.attentionLinks}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => utils.jp.reports.list.invalidate()}
-                  style={styles.actionLink}
-                >
-                  <Text style={[styles.actionLinkText, { color: colors.primary }]}>
-                    Refresh reports
-                  </Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={colors.primary} />
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => utils.jp.materialRequests.list.invalidate()}
-                  style={styles.actionLink}
-                >
-                  <Text style={[styles.actionLinkText, { color: colors.primary }]}>
-                    Refresh requests
-                  </Text>
-                  <MaterialIcons name="arrow-forward" size={16} color={colors.primary} />
-                </Pressable>
-              </View>
-            </View>
+            ) : null}
+            {can("dpr.view", "dlr.view") ? (
+              <MetricCard
+                icon="assignment-return"
+                value={String(dashboard.data.reportsReturned)}
+                label="Returned reports"
+                tone={dashboard.data.reportsReturned > 0 ? "error" : "success"}
+                onPress={() => router.push("/(tabs)/reports" as never)}
+              />
+            ) : null}
+            {can("material.request.view") ? (
+              <MetricCard
+                icon="local-shipping"
+                value={String(dashboard.data.pendingMaterialRequests)}
+                label="Material pending"
+                tone="accent"
+                onPress={() => router.push("/(tabs)/requests" as never)}
+              />
+            ) : null}
           </View>
-        ) : dashboard.data ? (
-          <EmptyState
-            icon="task-alt"
-            title="No pending approvals in this view"
-            detail="This summary is computed from the site records currently in your authorised scope."
-          />
+        ) : null}
+
+        {visibleActions.length > 0 ? (
+          <>
+            <SectionHeader title="Quick actions" />
+            <View style={styles.grid}>
+              {visibleActions.map((action) => (
+                <ModuleTile
+                  key={action.title}
+                  icon={action.icon}
+                  title={action.title}
+                  detail={action.detail}
+                  tone={action.tone}
+                  onPress={() => router.push(action.route as never)}
+                />
+              ))}
+            </View>
+          </>
         ) : null}
 
         <SectionHeader
-          title="Assigned sites"
-          action="All sites"
-          onPress={() => utils.jp.workspace.mySites.invalidate()}
+          title="Waiting on you"
+          action={items.length > 0 ? "View all" : undefined}
+          onPress={() => router.push("/notifications" as never)}
+        />
+        {inbox.isLoading ? (
+          <LoadingBlock label="Checking your queue…" />
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon="task-alt"
+            title="Nothing pending"
+            detail="Reviews, approvals, returned reports and overdue tasks for your sites will appear here."
+          />
+        ) : (
+          <Card style={styles.listCard}>
+            {items.slice(0, 4).map((item, index) => (
+              <View
+                key={item.id}
+                style={index > 0 ? [styles.rowDivider, { borderTopColor: colors.border }] : null}
+              >
+                <ListRow
+                  icon={inboxIcon[item.kind].icon}
+                  tone={inboxIcon[item.kind].tone}
+                  title={item.title}
+                  detail={`${item.siteName} · ${item.detail}`}
+                  onPress={() => router.push(item.route as never)}
+                />
+              </View>
+            ))}
+          </Card>
+        )}
+
+        <SectionHeader
+          title="Your sites"
+          caption={sites.data ? `${siteList.length} in your access` : undefined}
+          action={siteList.length > 0 ? "All sites" : undefined}
+          onPress={() => router.push("/(tabs)/sites" as never)}
         />
         {sites.isLoading ? (
-          <View style={styles.loading}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={[styles.loadingText, { color: colors.muted }]}>
-              Loading assigned sites…
-            </Text>
-          </View>
-        ) : displaySites.length === 0 ? (
+          <LoadingBlock label="Loading your sites…" />
+        ) : siteList.length === 0 ? (
           <EmptyState
-            icon="domain"
-            title="No assigned sites"
+            icon="location-city"
+            title="No sites yet"
             detail={
-              onboarding.data?.canInitializeOrganization
-                ? "Create the first organisation, project, and site using real company values."
-                : "Ask your organisation administrator to add an active site assignment for your account."
+              workspace.access.data?.canInitializeOrganization
+                ? "Set up your company, first project and first site to get started."
+                : workspace.canManageSites
+                  ? "Create a project and add its first site."
+                  : "Ask your administrator to assign you to a site."
             }
             action={
-              onboarding.data?.canInitializeOrganization ? "Set up first workspace" : undefined
+              workspace.access.data?.canInitializeOrganization
+                ? "Set up company"
+                : workspace.canManageSites
+                  ? "Open projects & sites"
+                  : undefined
             }
-            onPress={() => setSetupOpen(true)}
+            onPress={() =>
+              workspace.access.data?.canInitializeOrganization
+                ? setSetupOpen(true)
+                : router.push("/projects" as never)
+            }
           />
         ) : (
           <View style={styles.siteStack}>
-            {displaySites.slice(0, 5).map((site) => (
-              <View
+            {siteList.slice(0, 4).map((site) => (
+              <Card
                 key={site.id}
-                style={[
-                  styles.siteCard,
-                  { backgroundColor: colors.surface, borderColor: colors.border },
-                ]}
+                accent={getSiteStatusTone(site.status as SiteStatus)}
+                onPress={() => router.push(`/site/${site.id}` as never)}
+                accessibilityLabel={`Open ${site.name}`}
               >
-                <View style={styles.siteCardTop}>
-                  <View style={styles.siteCardHeading}>
-                    <View
-                      style={[
-                        styles.siteMarker,
-                        {
-                          backgroundColor:
-                            statusTone(site.status) === "success"
-                              ? colors.success
-                              : statusTone(site.status) === "warning"
-                                ? colors.warning
-                                : colors.muted,
-                        },
-                      ]}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.siteName, { color: colors.foreground }]}>
-                        {site.name}
-                      </Text>
-                      <Text style={[styles.siteProject, { color: colors.muted }]}>
-                        {site.project} · {site.code}
-                      </Text>
-                    </View>
-                  </View>
-                  <StatusPill label={site.status} tone={statusTone(site.status)} compact />
-                </View>
-                <View style={styles.siteDetails}>
-                  <View style={styles.siteDetailItem}>
-                    <MaterialIcons name="place" size={15} color={colors.muted} />
-                    <Text style={[styles.siteDetailText, { color: colors.muted }]}>
-                      {site.location || "No site address recorded"}
+                <View style={styles.siteTop}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.siteName, { color: colors.foreground }]}>{site.name}</Text>
+                    <Text style={[styles.siteMeta, { color: colors.muted }]}>
+                      {site.project} · {site.code}
                     </Text>
                   </View>
+                  <StatusPill
+                    label={site.status}
+                    tone={getSiteStatusTone(site.status as SiteStatus)}
+                    compact
+                  />
                 </View>
-              </View>
+                <View style={styles.siteBottom}>
+                  <MaterialIcons name="place" size={14} color={colors.muted} />
+                  <Text
+                    style={[styles.siteMeta, { color: colors.muted, flex: 1 }]}
+                    numberOfLines={1}
+                  >
+                    {site.location || "Address not recorded"}
+                  </Text>
+                  <Text style={[styles.siteRole, { color: colors.accent }]}>
+                    {prettyRole(site.businessRole)}
+                  </Text>
+                </View>
+              </Card>
             ))}
           </View>
         )}
 
-        {onboarding.data?.canInitializeOrganization && displaySites.length > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setSetupOpen(true)}
-            style={styles.secondaryAction}
-          >
-            <MaterialIcons name="add-business" size={17} color={colors.primary} />
-            <Text style={[styles.secondaryActionText, { color: colors.primary }]}>
-              Create workspace
-            </Text>
-          </Pressable>
-        ) : null}
-        <View style={styles.footerNote}>
-          <MaterialIcons name="verified-user" size={16} color={colors.primary} />
+        <View style={styles.footer}>
+          <MaterialIcons name="verified-user" size={14} color={colors.accent} />
           <Text style={[styles.footerText, { color: colors.muted }]}>
-            Site access is enforced by the server. This first build does not yet show task, stock,
-            safety, or finance ledgers.
+            JP Infracon · access checked on every request
           </Text>
         </View>
       </ScrollView>
@@ -329,72 +364,46 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 30 },
-  briefRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
+  content: { paddingBottom: 32 },
+  heroKicker: {
+    color: "#D9B76A",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.8,
+    marginTop: 6,
   },
-  briefCopy: { flex: 1 },
-  briefKicker: { fontSize: 10, letterSpacing: 1.3, fontWeight: "800" },
-  briefTitle: { fontSize: 20, fontWeight: "800", marginTop: 4 },
-  briefDetail: { fontSize: 11, marginTop: 3 },
-  signalMark: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 21,
+    fontWeight: "800",
+    lineHeight: 27,
+    marginTop: 8,
+    marginBottom: 18,
+    letterSpacing: -0.3,
   },
-  metricsRow: { flexDirection: "row", marginBottom: 24 },
-  loading: { minHeight: 75, alignItems: "center", justifyContent: "center", gap: 8 },
-  loadingText: { fontSize: 12 },
-  attentionCard: {
-    borderWidth: 1,
-    borderRadius: 18,
-    flexDirection: "row",
-    overflow: "hidden",
-    marginBottom: 24,
+  heroStats: { flexDirection: "row", alignItems: "center" },
+  heroDivider: {
+    width: 1,
+    height: 34,
+    backgroundColor: "rgba(255,255,255,0.14)",
+    marginHorizontal: 12,
   },
-  attentionBar: { width: 5 },
-  attentionBody: { flex: 1, padding: 15 },
-  attentionTitle: { fontSize: 17, fontWeight: "800", marginTop: 12 },
-  attentionDetail: { fontSize: 12, lineHeight: 18, marginTop: 4 },
-  attentionLinks: { flexDirection: "row", gap: 18, marginTop: 15, flexWrap: "wrap" },
-  actionLink: { flexDirection: "row", alignItems: "center", gap: 4 },
-  actionLinkText: { fontSize: 12, fontWeight: "800" },
-  siteStack: { gap: 11, marginBottom: 19 },
-  siteCard: { borderWidth: 1, borderRadius: 18, padding: 15 },
-  siteCardTop: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  siteCardHeading: { flexDirection: "row", alignItems: "flex-start", flex: 1, gap: 9 },
-  siteMarker: { width: 9, height: 9, borderRadius: 5, marginTop: 5 },
-  siteName: { fontSize: 15, fontWeight: "800" },
-  siteProject: { fontSize: 11, marginTop: 3 },
-  siteDetails: { flexDirection: "row", gap: 14, marginTop: 12, flexWrap: "wrap" },
-  siteDetailItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  siteDetailText: { fontSize: 11, flex: 1 },
-  secondaryAction: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 5,
-    padding: 12,
-  },
-  secondaryActionText: { fontSize: 12, fontWeight: "800" },
-  footerNote: {
+  metricsRow: { flexDirection: "row", gap: 10, marginBottom: 22 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 22 },
+  listCard: { paddingVertical: 2, marginBottom: 22 },
+  rowDivider: { borderTopWidth: StyleSheet.hairlineWidth },
+  siteStack: { gap: 10, marginBottom: 20 },
+  siteTop: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  siteName: { fontSize: 16, fontWeight: "800" },
+  siteMeta: { fontSize: 12, marginTop: 3 },
+  siteBottom: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12 },
+  siteRole: { fontSize: 11, fontWeight: "800" },
+  footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingHorizontal: 8,
-    marginTop: 12,
+    marginTop: 10,
   },
-  footerText: { fontSize: 11, lineHeight: 16, textAlign: "center", flex: 1 },
+  footerText: { fontSize: 11 },
 });
