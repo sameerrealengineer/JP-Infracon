@@ -151,4 +151,39 @@ describe("daily progress report lines and corrections", () => {
     await supervisor.jp.reports.submit({ reportId: created.id });
     expect((await supervisor.jp.reports.detail({ reportId: created.id })).canEdit).toBe(false);
   });
+
+  it("a labour report shows the day's attendance and links it on submit", async () => {
+    const todayLocal = (await supervisor.jp.reports.list({ siteId: siteA })).find(
+      (report) => report.reportKind === "DLR" && report.title === "Labour on site today",
+    )!;
+    const snapshot = await supervisor.jp.reports.labourSnapshot({
+      siteId: siteA,
+      workDate: todayLocal.reportDate,
+    });
+    expect(snapshot.totals.marked).toBeGreaterThan(0);
+    expect(snapshot.totals.onSite).toBe(snapshot.totals.marked);
+
+    const detail = await supervisor.jp.reports.detail({ reportId: todayLocal.id });
+    expect(detail.labour?.totals.marked).toBe(snapshot.totals.marked);
+    await supervisor.jp.reports.submit({ reportId: todayLocal.id });
+    expect((await supervisor.jp.reports.detail({ reportId: todayLocal.id })).report.status).toBe(
+      "Submitted",
+    );
+  });
+
+  it("a labour report cannot be submitted for a day with no attendance", async () => {
+    const empty = await supervisor.jp.reports.createDraft({
+      siteId: siteA,
+      reportKind: "DLR",
+      reportDate: "2026-01-20",
+      title: "No one marked",
+      clientMutationId: mutationId(),
+    });
+    expect((await supervisor.jp.reports.detail({ reportId: empty.id })).labour?.totals.marked).toBe(
+      0,
+    );
+    await expect(supervisor.jp.reports.submit({ reportId: empty.id })).rejects.toThrow(
+      "Mark attendance",
+    );
+  });
 });

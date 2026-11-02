@@ -1,13 +1,16 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  attendanceRecords,
   auditEvents,
   dailyReportItems,
+  people,
   dailyReports,
   sites,
   users,
+  workerEngagements,
   workTasks,
 } from "../../drizzle/schema";
 import { protectedProcedure } from "../_core/trpc";
@@ -19,6 +22,7 @@ import {
   validateDprItems,
   type DprItem,
 } from "../../lib/jp/dpr-domain";
+import { summarizeLabour } from "../../lib/jp/dlr-domain";
 
 /** DPR progress lines, the report detail view, and correcting a draft or returned report. */
 
@@ -115,6 +119,71 @@ async function loadReport(reportId: string) {
 
 const EDITABLE = ["Draft", "Returned for Correction"] as const;
 
+/** Attendance marked on a site for one day (all shifts), summarised by trade. */
+async function labourFor(siteId: string, workDate: string) {
+  const rows = await (
+    await db()
+  )
+    .select({
+      trade: people.tradeType,
+      status: attendanceRecords.attendanceStatus,
+      regularHours: attendanceRecords.regularHours,
+      overtimeHours: attendanceRecords.overtimeHours,
+      reviewedBy: attendanceRecords.reviewedBy,
+    })
+    .from(attendanceRecords)
+    .innerJoin(workerEngagements, eq(attendanceRecords.workerEngagementId, workerEngagements.id))
+    .innerJoin(people, eq(workerEngagements.personId, people.id))
+    .where(and(eq(attendanceRecords.siteId, siteId), eq(attendanceRecords.workDate, workDate)))
+    .limit(2000);
+  return summarizeLabour(
+    rows.map((row) => ({
+      trade: row.trade,
+      status: row.status,
+      regularHours: row.regularHours,
+      overtimeHours: row.overtimeHours,
+      approved: row.reviewedBy !== null,
+    })),
+  );
+}
+
+/**
+ * On DLR submit: the day must have attendance, and unlinked attendance rows for that site
+ * and day are linked to the report so the labour figures trace back to it.
+ */
+export async function linkAttendanceToReport(
+  tx: any,
+  report: { id: string; siteId: string; reportDate: string; reportKind: "DPR" | "DLR" },
+) {
+  if (report.reportKind !== "DLR") return 0;
+  const rows = await tx
+    .select({ id: attendanceRecords.id })
+    .from(attendanceRecords)
+    .where(
+      and(
+        eq(attendanceRecords.siteId, report.siteId),
+        eq(attendanceRecords.workDate, report.reportDate),
+      ),
+    )
+    .limit(2000);
+  if (rows.length === 0)
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Mark attendance for this site and day before submitting the labour report.",
+    });
+  await tx
+    .update(attendanceRecords)
+    .set({ reportId: report.id })
+    .where(
+      and(
+        eq(attendanceRecords.siteId, report.siteId),
+        eq(attendanceRecords.workDate, report.reportDate),
+        isNull(attendanceRecords.reportId),
+      ),
+    );
+  return rows.length;
+}
+
 export const dailyReportProcedures = {
   /** One report with its progress lines, for anyone who may view that report type on the site. */
   detail: protectedProcedure
@@ -145,10 +214,25 @@ export const dailyReportProcedures = {
       return {
         report: { ...report, siteName: site?.name ?? "", creatorName: creator?.name ?? null },
         items,
+        labour:
+          report.reportKind === "DLR" ? await labourFor(report.siteId, report.reportDate) : null,
         canEdit:
           report.createdBy === ctx.user.id &&
           (EDITABLE as readonly string[]).includes(report.status),
       };
+    }),
+
+  /** Today's attendance by trade, shown while writing a labour report. */
+  labourSnapshot: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().uuid(),
+        workDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const scope = await getSiteScope(ctx.user, input.siteId, "dlr.view");
+      return labourFor(scope.siteId, input.workDate);
     }),
 
   /**

@@ -42,6 +42,7 @@ import {
   checkReportItems,
   dailyReportProcedures,
   insertReportItems,
+  linkAttendanceToReport,
   reportHeaderFields,
 } from "./daily-reports";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
@@ -635,6 +636,7 @@ export const jpRouter = router({
               code: "PRECONDITION_FAILED",
               message: "This report was changed by another action and can no longer be submitted.",
             });
+          await linkAttendanceToReport(tx, lockedReport);
           await tx
             .update(dailyReports)
             .set({

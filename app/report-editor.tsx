@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AuthGate } from "@/components/jp/auth-gate";
+import { LabourSummaryCard } from "@/components/jp/labour-summary";
 import {
   AppHeader,
   Card,
@@ -144,6 +145,7 @@ function ExistingReport({ reportId }: { reportId: string }) {
           remarks: data.report.remarks ?? "",
           nextDayPlan: data.report.nextDayPlan ?? "",
           returnReason: data.report.returnReason,
+          reportDate: data.report.reportDate,
           lines: data.items.map((item) => ({
             key: item.id,
             taskId: item.taskId,
@@ -212,6 +214,12 @@ function ReportView({ data }: { data: ReportDetail }) {
           )}
         </>
       ) : null}
+      {data.labour ? (
+        <>
+          <SectionHeader title="Attendance for this day" />
+          <LabourSummaryCard summary={data.labour} />
+        </>
+      ) : null}
       {report.remarks ? <Meta label="Notes" value={report.remarks} block /> : null}
       {report.nextDayPlan ? (
         <Meta label="Plan for tomorrow" value={report.nextDayPlan} block />
@@ -237,6 +245,7 @@ type Initial = {
   remarks: string;
   nextDayPlan: string;
   returnReason: string | null;
+  reportDate: string;
   lines: EditorLine[];
 };
 
@@ -286,9 +295,14 @@ function ReportForm({
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const reportDate = initial?.reportDate ?? today();
   const context = trpc.jp.reports.progressContext.useQuery(
     { siteId, excludeReportId: reportId },
     { enabled: kind === "DPR" && Boolean(siteId), retry: false },
+  );
+  const labour = trpc.jp.reports.labourSnapshot.useQuery(
+    { siteId, workDate: reportDate },
+    { enabled: kind === "DLR" && Boolean(siteId), retry: false },
   );
   const create = trpc.jp.reports.createDraft.useMutation();
   const update = trpc.jp.reports.updateDraft.useMutation();
@@ -637,23 +651,34 @@ function ReportForm({
             ) : null}
           </>
         ) : (
-          <Card>
-            <View style={styles.lineHead}>
-              <MaterialIcons name="how-to-reg" size={18} color={colors.primary} />
-              <Text style={[styles.muted, { color: colors.muted, flex: 1 }]}>
-                Workers, hours and overtime are recorded in Attendance for this site and day. Use
-                this report for the day&apos;s labour summary and notes.
-              </Text>
-            </View>
-            {site ? (
-              <SecondaryButton
-                label="Open attendance"
-                onPress={() =>
-                  router.push(`/attendance?siteId=${encodeURIComponent(site.id)}` as never)
-                }
-              />
+          <>
+            <SectionHeader
+              title="Attendance today"
+              caption="Counted from Attendance; correct it there."
+            />
+            {labour.data ? (
+              <LabourSummaryCard summary={labour.data} />
+            ) : labour.isLoading ? (
+              <LoadingBlock label="Loading attendance…" />
             ) : null}
-          </Card>
+            <Card>
+              <View style={styles.lineHead}>
+                <MaterialIcons name="how-to-reg" size={18} color={colors.primary} />
+                <Text style={[styles.muted, { color: colors.muted, flex: 1 }]}>
+                  Workers, hours and overtime are recorded in Attendance for this site and day. Use
+                  this report for the day&apos;s labour summary and notes.
+                </Text>
+              </View>
+              {site ? (
+                <SecondaryButton
+                  label="Open attendance"
+                  onPress={() =>
+                    router.push(`/attendance?siteId=${encodeURIComponent(site.id)}` as never)
+                  }
+                />
+              ) : null}
+            </Card>
+          </>
         )}
 
         <Field

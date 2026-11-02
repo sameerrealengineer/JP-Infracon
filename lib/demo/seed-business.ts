@@ -89,6 +89,24 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     title: "Column reinforcement and shuttering",
     remarks: "12 columns shuttered, reinforcement checked by site engineer.",
     nextDayPlan: "Concrete pour for C1 to C6.",
+    weatherCode: "Clear",
+    overallStatus: "On track",
+    items: [
+      {
+        taskId: columns.id,
+        description: "Column shuttering",
+        locationLabel: "Ground floor, grid A–C",
+        unitCode: "nos",
+        plannedQuantity: "24",
+        completedQuantityToday: "12",
+        cumulativeQuantity: "12",
+      },
+      {
+        description: "Reinforcement check",
+        locationLabel: "Ground floor columns",
+        remarks: "Checked by site engineer",
+      },
+    ],
     clientMutationId: id(),
   });
   await supervisor.jp.reports.submit({ reportId: dpr.id });
