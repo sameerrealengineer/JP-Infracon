@@ -311,8 +311,21 @@ const issueRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["issue.view", "attendance.view"],
 };
 
+const documentLeaders = ["document.view", "document.upload", "document.manage"];
+const documentRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: documentLeaders,
+  director: documentLeaders,
+  admin: documentLeaders,
+  project_manager: documentLeaders,
+  supervisor: ["document.view", "document.upload"],
+  accounts: ["document.view", "document.upload"],
+  storekeeper: ["document.view", "document.upload"],
+  auditor: ["document.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    documentRoleDefaults[role].includes(permissionKey) ||
     issueRoleDefaults[role].includes(permissionKey) ||
     roleDefaults[role].includes(permissionKey) ||
     inventoryRoleDefaults[role].includes(permissionKey) ||

@@ -49,7 +49,7 @@ const SITE_KEYTERMS = [
   "TMT",
 ];
 
-function geminiKey() {
+export function geminiKey() {
   return process.env.GEMINI_API_KEY?.trim() || "";
 }
 function sarvamKey() {
@@ -70,13 +70,14 @@ function rateLimit(userId: number, perHour = 40) {
   usage.set(userId, recent);
 }
 
-type Part = { text: string } | { image: { data: string; mimeType: string } };
+/** A prompt part: text, or an inline photo or PDF (base64). */
+export type Part = { text: string } | { image: { data: string; mimeType: string } };
 
 /**
  * Calls Gemini with JSON output. Uses the Interactions API and falls back to generateContent,
  * so a change on Google's side does not break bill scanning.
  */
-async function geminiJson(parts: Part[], schema: object): Promise<unknown> {
+export async function geminiJson(parts: Part[], schema: object): Promise<unknown> {
   const key = geminiKey();
   if (!key)
     throw new TRPCError({
@@ -95,7 +96,11 @@ async function geminiJson(parts: Part[], schema: object): Promise<unknown> {
       input: parts.map((part) =>
         "text" in part
           ? { type: "text", text: part.text }
-          : { type: "image", data: part.image.data, mime_type: part.image.mimeType },
+          : {
+              type: part.image.mimeType === "application/pdf" ? "document" : "image",
+              data: part.image.data,
+              mime_type: part.image.mimeType,
+            },
       ),
       response_format: { type: "text", mime_type: "application/json", schema },
     }),

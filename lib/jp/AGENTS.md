@@ -29,6 +29,11 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `geo.ts` | Distances, coordinate checks, geofence plausibility, map links |
 | `pdf-report.ts` | Escaped printable HTML for PDF exports |
 | `effective-time.ts` | `effectiveNow()`: whole-second start time so MySQL rounding never makes an immediate grant/assignment start in the future |
+| `dpr-domain.ts` | DPR work lines: exact quantities, cumulative vs planned, estimated percent, suggested cumulative |
+| `dlr-domain.ts` | Labour summary by trade from attendance rows (exact hours) |
+| `ai-report-extraction.ts` | Prompt, schema and re-validation of AI-filled daily reports |
+| `document-policy.ts` | Document categories, file type sniffing (incl. DOCX/XLSX/CSV), chunking, cosine and keyword scores, hybrid ranking |
+| `document-text.ts` | Text from Word, Excel and CSV files with `fflate` (no AI) |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions

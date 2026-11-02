@@ -1713,3 +1713,98 @@ export const delegationGrants = mysqlTable(
     delegationGrantUnique: uniqueIndex("delegation_grant_uq").on(table.delegationId, table.grantId),
   }),
 );
+
+/**
+ * A project document (contract, drawing, BOQ, bill, approval, photo…). The file itself is an
+ * `attachments` row per version; this row holds what people search and filter by.
+ */
+export const projectDocuments = mysqlTable(
+  "project_documents",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    /** Null for a project-wide document; set when it belongs to one site. */
+    siteId: varchar("siteId", { length: 36 }).references(() => sites.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 64 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    tags: varchar("tags", { length: 500 }),
+    currentVersion: int("currentVersion").default(1).notNull(),
+    status: mysqlEnum("status", ["Active", "Archived"]).default("Active").notNull(),
+    /** What the AI reader found; suggestions only, never used for money or approvals. */
+    aiDocumentType: varchar("aiDocumentType", { length: 80 }),
+    aiSummary: text("aiSummary"),
+    aiFields: text("aiFields"),
+    indexStatus: mysqlEnum("indexStatus", ["Pending", "Indexed", "Keyword only", "Failed"])
+      .default("Pending")
+      .notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    documentProjectIndex: index("project_document_project_idx").on(
+      table.organizationId,
+      table.projectId,
+      table.status,
+    ),
+    documentSiteIndex: index("project_document_site_idx").on(table.siteId),
+  }),
+);
+
+/** Every uploaded file of a document, kept when it is replaced. */
+export const projectDocumentVersions = mysqlTable(
+  "project_document_versions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    documentId: varchar("documentId", { length: 36 })
+      .notNull()
+      .references(() => projectDocuments.id, { onDelete: "restrict" }),
+    versionNumber: int("versionNumber").notNull(),
+    attachmentId: varchar("attachmentId", { length: 36 })
+      .notNull()
+      .references(() => attachments.id, { onDelete: "restrict" }),
+    note: varchar("note", { length: 500 }),
+    uploadedBy: int("uploadedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    documentVersionUnique: uniqueIndex("project_document_version_uq").on(
+      table.documentId,
+      table.versionNumber,
+    ),
+  }),
+);
+
+/**
+ * Search passages of a document's current version: text for keyword matching and, when an AI
+ * key is set, an embedding (JSON array) for meaning search. Rebuilt when a version is added.
+ */
+export const documentChunks = mysqlTable(
+  "document_chunks",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    documentId: varchar("documentId", { length: 36 })
+      .notNull()
+      .references(() => projectDocuments.id, { onDelete: "restrict" }),
+    versionNumber: int("versionNumber").notNull(),
+    chunkIndex: int("chunkIndex").notNull(),
+    content: text("content").notNull(),
+    embedding: text("embedding"),
+    embeddingModel: varchar("embeddingModel", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    chunkDocumentIndex: index("document_chunk_document_idx").on(table.documentId, table.chunkIndex),
+  }),
+);

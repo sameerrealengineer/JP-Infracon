@@ -103,6 +103,14 @@ export default function MoreScreen() {
       show: can("finance.invoice.view", "finance.cash.view"),
     },
     {
+      icon: "folder-copy",
+      title: "Project documents",
+      detail: "Contracts, drawings, bills, smart search",
+      tone: "info",
+      route: "/documents",
+      show: can("document.view"),
+    },
+    {
       icon: "add-business",
       title: "Projects & sites",
       detail: "Create, edit, status, team",

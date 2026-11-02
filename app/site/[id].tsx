@@ -121,6 +121,13 @@ export default function SiteDetailScreen() {
       show: has("finance.invoice.view") || has("finance.cash.view"),
     },
     {
+      icon: "folder-copy",
+      title: "Documents",
+      tone: "info",
+      route: "/documents",
+      show: has("document.view"),
+    },
+    {
       icon: "history",
       title: "Audit trail",
       tone: "info",

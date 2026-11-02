@@ -75,6 +75,9 @@ export const permissionKeys = [
   "attendance.mark",
   "attendance.approve",
   "approval.self",
+  "document.view",
+  "document.upload",
+  "document.manage",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];
