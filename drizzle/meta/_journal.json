@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1763372440610,
+      "tag": "0000_elite_eternals",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1793033744364,
+      "tag": "0001_dear_vector",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1793036000910,
+      "tag": "0002_sweet_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1793036195644,
+      "tag": "0003_lowly_ben_urich",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1793036625493,
+      "tag": "0004_flat_revanche",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1793054801331,
+      "tag": "0005_fresh_may_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1793067175060,
+      "tag": "0006_chubby_felicia_hardy",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1793068530440,
+      "tag": "0007_curvy_ogun",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1793071514496,
+      "tag": "0008_sudden_frog_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1793367516578,
+      "tag": "0009_wet_ben_parker",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1793495864336,
+      "tag": "0010_freezing_malcolm_colcord",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1793577696834,
+      "tag": "0011_hard_nightmare",
+      "breakpoints": true
+    }
+  ]
+}

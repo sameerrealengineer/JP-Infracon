@@ -1,0 +1,1 @@
+ALTER TABLE `work_tasks` ADD `recordVersion` int DEFAULT 1 NOT NULL;
