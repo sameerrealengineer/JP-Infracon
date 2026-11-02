@@ -626,8 +626,8 @@ const styles = StyleSheet.create({
   },
   logo: { width: 84, height: 84 },
   title: {
-    fontSize: 26,
-    fontWeight: "900",
+    fontSize: 28,
+    fontFamily: "PlayfairDisplay_700Bold",
     textAlign: "center",
     color: "#FFFFFF",
     letterSpacing: 4,
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: "center",
   },
-  cardTitle: { fontSize: 21, fontWeight: "800", alignSelf: "flex-start", letterSpacing: -0.3 },
+  cardTitle: { fontSize: 23, fontFamily: "PlayfairDisplay_700Bold", alignSelf: "flex-start" },
   detail: { fontSize: 13, lineHeight: 19, alignSelf: "flex-start", marginBottom: 4 },
   input: {
     width: "100%",

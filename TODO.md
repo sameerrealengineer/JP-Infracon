@@ -6,6 +6,18 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-02 (c) — delegation, invite sign-up, alerts, AI, GPS, PDF, premium motion
+
+Delivered in source (typecheck, lint with 0 errors, 176 unit tests, API build, web export and 16 Playwright flows pass; not exercised against the shared database, real gateways/AI keys, or an Android device). **Needs additive migration 0013 applied** (plus 0010–0012 if still pending).
+
+- Delegation: owner/director/admin hands a person site or project authority (site operations, bills & payments, approve own work) for 1 hour to 1 month or until revoked; effective-dated grants, immediate revocation, audit, home banner for the delegate. `approval.self` relaxes maker-checker only while delegated.
+- Invite sign-up: admins issue single-use, expiring codes (hash stored) fixing organisation, role and site; "Have an invite code? Create account" on sign-in; throttled per client address.
+- Alerts: Expo push (needs EAS project id/FCM credentials in the APK build), WhatsApp via WAHA or Evolution API (open source, self-hosted; unofficial — number-ban risk) or the official Cloud API, SMS via SMS Gateway for Android or textbee; opt-in per person; critical/stop-work issues, assignment, delegation and site arrival/departure; delivery log without message bodies.
+- AI: Gemini reads bill photos into an editable invoice draft and Excel/CSV; Sarvam speech-to-text (Odia/Hindi/English) plus Gemini (Sarvam fallback) fills the issue form. Server keys only; outputs re-validated; nothing saved without confirmation. Requires GEMINI_API_KEY (Google AI Studio — a Gemini app subscription is not an API key) and SARVAM_API_KEY.
+- GPS camera (photos record location and distance from the site boundary), admin-set site boundary, opt-in background geofencing with server plausibility checks.
+- PDF exports (printable A4 landscape) alongside CSV; Playfair Display serif headings, entrance animations, shimmer loaders, animated tab icons.
+- Still open: worker payment allocation/balances, Hindi/Odia for deeper finance/inventory/workforce screens, native-speaker review of translations, device QA and a signed APK.
+
 ## Increment 2026-11-02 (b) — issues, evidence, exports, attendance, languages
 
 Delivered in source (typecheck, lint with 0 errors, 151 unit tests, API build, web export and 14 Playwright flows pass; not exercised against the shared database or on an Android device):

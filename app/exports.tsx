@@ -1,6 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -21,6 +23,7 @@ import { useConnectivity } from "@/hooks/use-connectivity";
 import { resolveChoice } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 import { deliverTextFile } from "@/lib/device-files";
+import { buildReportHtml } from "@/lib/jp/pdf-report";
 
 const ranges = ["This month", "Last month", "Last 30 days", "This year", "Custom"] as const;
 type Range = (typeof ranges)[number];
@@ -47,6 +50,7 @@ export default function ExportsScreen() {
   const [chosenKind, setKind] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("all");
   const [range, setRange] = useState<Range>("This month");
+  const [format, setFormat] = useState<"Excel (CSV)" | "PDF">("Excel (CSV)");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +82,18 @@ export default function ExportsScreen() {
         from: dates.from,
         to: dates.to,
       });
-      await deliverTextFile(result.fileName, result.csv, "text/csv");
+      if (format === "PDF") {
+        const html = buildReportHtml(result.table);
+        if (Platform.OS === "web") await Print.printAsync({ html });
+        else {
+          const { uri } = await Print.printToFileAsync({ html });
+          if (await Sharing.isAvailableAsync())
+            await Sharing.shareAsync(uri, {
+              mimeType: "application/pdf",
+              dialogTitle: result.fileName.replace(/\.csv$/, ".pdf"),
+            });
+        }
+      } else await deliverTextFile(result.fileName, result.csv, "text/csv");
       setLast({
         fileName: result.fileName,
         rows: result.rowCount,
@@ -133,6 +148,12 @@ export default function ExportsScreen() {
                     : (sites.data?.find((row) => row.id === value)?.name ?? "Site")
                 }
               />
+              <SectionHeader title="Format" />
+              <ChipGroup
+                options={["Excel (CSV)", "PDF"] as const}
+                value={format}
+                onChange={setFormat}
+              />
               <SectionHeader title="When" />
               <ChipGroup options={ranges} value={range} onChange={setRange} />
               {range === "Custom" ? (
@@ -162,7 +183,13 @@ export default function ExportsScreen() {
               {error ? <InlineError message={error} title="Export failed" /> : null}
               <PrimaryButton
                 icon="file-download"
-                label={online === false ? "Connect to export" : "Create CSV"}
+                label={
+                  online === false
+                    ? "Connect to export"
+                    : format === "PDF"
+                      ? "Create PDF"
+                      : "Create CSV"
+                }
                 tone="gold"
                 disabled={!datesValid || online === false}
                 loading={generate.isPending}

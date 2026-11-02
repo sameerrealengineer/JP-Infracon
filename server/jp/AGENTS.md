@@ -22,6 +22,10 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `attachments.ts` | Private evidence upload (signature-checked, 8 MB), list, short-lived signed open link |
 | `exports.ts` | Permission-scoped CSV exports with metadata and an audit row per export |
 | `attendance.ts` | Daily roster, marking, maker-checker approval, labour cost estimate |
+| `delegation.ts` | Time-limited delegation of authority (bundles of grants, `approval.self`), revoke, `mine` banner |
+| `notify.ts` | `dispatchAlert` over Expo push, WhatsApp (WAHA / Evolution API / Cloud API) and SMS (android-sms-gateway / textbee) from env; device and preference procedures |
+| `ai.ts` | Gemini bill scan and issue filling, Sarvam speech-to-text; keys from env only, per-user hourly limit |
+| `presence.ts` | Site geofences for phones, arrival/departure records with plausibility check, presence log |
 | `finance.ts` | Suppliers and invoices; mounts `supplier-payments.ts` and `petty-cash.ts` |
 
 ## Conventions
@@ -35,6 +39,9 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 - Keep pure rules in `lib/jp/` so they can be unit tested without a database.
 
 ## Gotchas
+
+- Maker-checker checks call `selfApprovalAllowed` (from `access.ts`): the same person may approve their own record only while a delegation grants `approval.self` for that site.
+- Alerts are best effort and never throw; they run after the transaction commits.
 
 - The database has no CHECK constraints. Positive amounts, date ordering, and non negative balances are enforced only here; do not claim the database enforces them.
 - Supplier payment posting and petty cash entries are app ledger events, not bank transfers.

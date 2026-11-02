@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useSegments } from "expo-router";
-import type { ComponentProps, ReactNode } from "react";
+import { useEffect, type ComponentProps, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -26,6 +26,21 @@ import {
 } from "@/lib/jp/domain";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+
+/** Classic serif for display headings; falls back to the system font until loaded. */
+export const displayFont = "PlayfairDisplay_700Bold";
+
+/** Soft rise-and-fade used for cards and tiles as they appear. */
+const enter = FadeInDown.duration(420).springify().damping(18).mass(0.8);
 
 export type IconName = ComponentProps<typeof MaterialIcons>["name"];
 export type Tone = "success" | "warning" | "error" | "info" | "accent";
@@ -220,7 +235,7 @@ export function AppHeader({
 export function HeroCard({ children }: { children: ReactNode }) {
   const elevation = useElevation(2);
   return (
-    <View style={[styles.heroShell, elevation]}>
+    <Animated.View entering={FadeIn.duration(500)} style={[styles.heroShell, elevation]}>
       <LinearGradient
         colors={["#1E3E60", "#10243A", "#0A1624"]}
         start={{ x: 0, y: 0 }}
@@ -231,7 +246,7 @@ export function HeroCard({ children }: { children: ReactNode }) {
         <View style={styles.heroLine} />
         {children}
       </LinearGradient>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -420,16 +435,23 @@ export function Card({
     elevation,
     style,
   ];
-  if (!onPress) return <View style={base}>{body}</View>;
+  if (!onPress)
+    return (
+      <Animated.View entering={enter} style={base}>
+        {body}
+      </Animated.View>
+    );
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      style={({ pressed }) => [...base, pressed && styles.pressed]}
-    >
-      {body}
-    </Pressable>
+    <Animated.View entering={enter}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        style={({ pressed }) => [...base, pressed && styles.pressed]}
+      >
+        {body}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -452,27 +474,29 @@ export function MetricCard({
   const accent = useToneColor(tone);
   const elevation = useElevation(1);
   return (
-    <Pressable
-      accessibilityRole={onPress ? "button" : undefined}
-      accessibilityLabel={`${label}: ${value}`}
-      disabled={!onPress}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.metricCard,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        elevation,
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={[styles.metricIcon, { backgroundColor: `${accent}16` }]}>
-        <MaterialIcons name={icon} size={18} color={accent} />
-      </View>
-      <Text style={[styles.metricValue, { color: colors.foreground }]}>{value}</Text>
-      <Text style={[styles.metricLabel, { color: colors.muted }]} numberOfLines={2}>
-        {label}
-      </Text>
-      {note ? <Text style={[styles.metricNote, { color: accent }]}>{note}</Text> : null}
-    </Pressable>
+    <Animated.View entering={enter} style={{ flex: 1 }}>
+      <Pressable
+        accessibilityRole={onPress ? "button" : undefined}
+        accessibilityLabel={`${label}: ${value}`}
+        disabled={!onPress}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.metricCard,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          elevation,
+          pressed && styles.pressed,
+        ]}
+      >
+        <View style={[styles.metricIcon, { backgroundColor: `${accent}16` }]}>
+          <MaterialIcons name={icon} size={18} color={accent} />
+        </View>
+        <Text style={[styles.metricValue, { color: colors.foreground }]}>{value}</Text>
+        <Text style={[styles.metricLabel, { color: colors.muted }]} numberOfLines={2}>
+          {label}
+        </Text>
+        {note ? <Text style={[styles.metricNote, { color: accent }]}>{note}</Text> : null}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -496,36 +520,38 @@ export function ModuleTile({
   const accent = useToneColor(tone);
   const elevation = useElevation(1);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.tile,
-        { backgroundColor: colors.surface, borderColor: colors.border },
-        elevation,
-        pressed && styles.pressed,
-      ]}
-    >
-      <View style={styles.tileTop}>
-        <View style={[styles.tileIcon, { backgroundColor: `${accent}14` }]}>
-          <MaterialIcons name={icon} size={22} color={accent} />
-        </View>
-        {badge ? (
-          <View style={[styles.tileBadge, { backgroundColor: colors.accent }]}>
-            <Text style={styles.tileBadgeText}>{badge > 99 ? "99+" : badge}</Text>
+    <Animated.View entering={enter} style={styles.tileShell}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.tile,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          elevation,
+          pressed && styles.pressed,
+        ]}
+      >
+        <View style={styles.tileTop}>
+          <View style={[styles.tileIcon, { backgroundColor: `${accent}14` }]}>
+            <MaterialIcons name={icon} size={22} color={accent} />
           </View>
-        ) : null}
-      </View>
-      <Text style={[styles.tileTitle, { color: colors.foreground }]} numberOfLines={1}>
-        {title}
-      </Text>
-      {detail ? (
-        <Text style={[styles.tileDetail, { color: colors.muted }]} numberOfLines={2}>
-          {detail}
+          {badge ? (
+            <View style={[styles.tileBadge, { backgroundColor: colors.accent }]}>
+              <Text style={styles.tileBadgeText}>{badge > 99 ? "99+" : badge}</Text>
+            </View>
+          ) : null}
+        </View>
+        <Text style={[styles.tileTitle, { color: colors.foreground }]} numberOfLines={1}>
+          {title}
         </Text>
-      ) : null}
-    </Pressable>
+        {detail ? (
+          <Text style={[styles.tileDetail, { color: colors.muted }]} numberOfLines={2}>
+            {detail}
+          </Text>
+        ) : null}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -718,9 +744,30 @@ export function LoadingBlock({ label }: { label?: string }) {
   const { t } = useT();
   return (
     <View style={styles.loadingBlock} accessibilityLabel={label ?? t("Loading…")}>
-      <ActivityIndicator color={colors.primary} />
-      <Text style={[styles.loadingText, { color: colors.muted }]}>{label ?? t("Loading…")}</Text>
+      <Shimmer width="92%" />
+      <Shimmer width="70%" />
+      <Shimmer width="80%" />
+      <View style={styles.loadingRow}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.muted }]}>{label ?? t("Loading…")}</Text>
+      </View>
     </View>
+  );
+}
+
+/** Placeholder bar that gently pulses while records load. */
+function Shimmer({ width }: { width: `${number}%` }) {
+  const colors = useColors();
+  const opacity = useSharedValue(0.35);
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withSequence(withTiming(0.8, { duration: 700 }), withTiming(0.35, { duration: 700 })),
+      -1,
+    );
+  }, [opacity]);
+  const animated = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return (
+    <Animated.View style={[styles.shimmer, { width, backgroundColor: colors.border }, animated]} />
   );
 }
 
@@ -918,7 +965,7 @@ export const styles = StyleSheet.create({
   brandTag: { fontSize: 10, fontWeight: "700", letterSpacing: 0.6, marginTop: 1 },
   headerCopy: {},
   eyebrow: { fontSize: 11, letterSpacing: 1.8, fontWeight: "800", marginBottom: 6 },
-  headerTitle: { fontSize: 28, lineHeight: 34, fontWeight: "800", letterSpacing: -0.6 },
+  headerTitle: { fontSize: 30, lineHeight: 37, fontFamily: displayFont, letterSpacing: -0.2 },
   headerSubtitle: { fontSize: 13, lineHeight: 19, marginTop: 6 },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 9 },
   iconButton: {
@@ -972,7 +1019,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#D9B76A",
   },
   heroStat: { flex: 1 },
-  heroStatValue: { color: "#FFFFFF", fontSize: 24, fontWeight: "800", letterSpacing: -0.5 },
+  heroStatValue: { color: "#FFFFFF", fontSize: 26, fontFamily: displayFont },
   heroStatLabel: { color: "rgba(246,241,230,0.7)", fontSize: 11, marginTop: 2 },
   syncChipRow: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 16 },
   syncChipText: { fontSize: 11, fontWeight: "600", flex: 1 },
@@ -1039,12 +1086,12 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 10,
   },
-  metricValue: { fontSize: 24, fontWeight: "800", letterSpacing: -0.7 },
+  metricValue: { fontSize: 26, fontFamily: displayFont },
   metricLabel: { fontSize: 11, lineHeight: 15, marginTop: 2 },
   metricNote: { fontSize: 10, fontWeight: "800", marginTop: 5 },
+  tileShell: { flexBasis: "47%", flexGrow: 1 },
   tile: {
-    flexBasis: "47%",
-    flexGrow: 1,
+    flex: 1,
     borderWidth: 1,
     borderRadius: 20,
     padding: 14,
@@ -1122,7 +1169,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 12,
   },
-  emptyTitle: { fontSize: 16, fontWeight: "800", textAlign: "center" },
+  emptyTitle: { fontSize: 18, fontFamily: displayFont, textAlign: "center" },
   emptyDetail: {
     fontSize: 13,
     lineHeight: 19,
@@ -1131,7 +1178,9 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 290,
   },
-  loadingBlock: { minHeight: 80, alignItems: "center", justifyContent: "center", gap: 8 },
+  loadingBlock: { minHeight: 80, justifyContent: "center", gap: 10, paddingVertical: 8 },
+  loadingRow: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "center" },
+  shimmer: { height: 14, borderRadius: 7 },
   loadingText: { fontSize: 12 },
   errorCard: {
     borderWidth: 1,
@@ -1175,7 +1224,7 @@ export const styles = StyleSheet.create({
   },
   sheetHandle: { alignSelf: "center", width: 44, height: 5, borderRadius: 3, marginTop: 10 },
   sheetHeader: { flexDirection: "row", alignItems: "center", paddingVertical: 14, gap: 10 },
-  sheetTitle: { fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+  sheetTitle: { fontSize: 22, fontFamily: displayFont },
   sheetSubtitle: { fontSize: 12, marginTop: 3, lineHeight: 17 },
   sheetFooter: { paddingTop: 10, gap: 10 },
   pressed: { opacity: 0.82, transform: [{ scale: 0.985 }] },

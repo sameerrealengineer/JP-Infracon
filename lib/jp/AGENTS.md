@@ -22,6 +22,12 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `attachment-policy.ts` | Allowed evidence types, file-signature sniffing, safe names, size formatting |
 | `csv.ts` | CSV cells safe from formula injection, UTF-8 BOM, exact paise to rupees |
 | `attendance-domain.ts` | Attendance hours (hundredths), estimated earnings in paise, entry validation |
+| `delegation-policy.ts` | Delegation bundles, durations, state and time-left text |
+| `invite-code.ts` | Invite code alphabet, normalising and unbiased generation from random bytes |
+| `notify-policy.ts` | Indian mobile normalising and request builders for WAHA, Evolution API, WhatsApp Cloud, SMS gateways and Expo push |
+| `ai-extraction.ts` | JSON schemas and prompts for bills/issues, re-validation of AI output into safe drafts |
+| `geo.ts` | Distances, coordinate checks, geofence plausibility, map links |
+| `pdf-report.ts` | Escaped printable HTML for PDF exports |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions

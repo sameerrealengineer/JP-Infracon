@@ -13,6 +13,11 @@ import "react-native-reanimated";
 import { Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
+import {
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+  useFonts,
+} from "@expo-google-fonts/playfair-display";
 import { LanguageProvider } from "@/lib/i18n";
 import {
   SafeAreaFrameContext,
@@ -42,6 +47,8 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  // Headings switch to the serif once loaded; the app never waits on the font.
+  useFonts({ PlayfairDisplay_600SemiBold, PlayfairDisplay_700Bold });
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? DEFAULT_WEB_FRAME;
 

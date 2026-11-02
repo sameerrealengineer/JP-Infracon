@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Tabs } from "expo-router";
-import type { ComponentProps } from "react";
+import { useEffect, type ComponentProps } from "react";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { Platform, StyleSheet, View, type ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -23,10 +24,17 @@ function TabIcon({
   focused: boolean;
 }) {
   const colors = useColors();
+  const scale = useSharedValue(focused ? 1.08 : 1);
+  useEffect(() => {
+    scale.value = withSpring(focused ? 1.08 : 1, { damping: 12, stiffness: 180 });
+  }, [focused, scale]);
+  const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
-    <View style={[styles.iconWrap, focused && { backgroundColor: `${colors.accent}22` }]}>
+    <Animated.View
+      style={[styles.iconWrap, focused && { backgroundColor: `${colors.accent}22` }, animated]}
+    >
       <MaterialIcons size={23} name={name} color={color} />
-    </View>
+    </Animated.View>
   );
 }
 
