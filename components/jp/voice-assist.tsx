@@ -11,16 +11,14 @@ import { ChipGroup, InlineError, SecondaryButton } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { readBase64 } from "@/lib/device-files";
 import type { IssueDraftFields } from "@/lib/jp/ai-extraction";
+import type { ReportDraftFields } from "@/lib/jp/ai-report-extraction";
 import { trpc } from "@/lib/trpc";
 
 const languages = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
 type Lang = keyof typeof languages;
 const MAX_SECONDS = 28;
 
-/**
- * Speak (Odia, Hindi or English) or type freely; the server transcribes with Sarvam AI and
- * fills the issue form. The person still reviews every field before sending.
- */
+/** Voice or typed text → issue form fields. */
 export function VoiceIssueAssist({
   siteId,
   onFields,
@@ -28,10 +26,64 @@ export function VoiceIssueAssist({
   siteId: string;
   onFields: (fields: IssueDraftFields) => void;
 }) {
+  const fill = trpc.jp.ai.fillIssue.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt="Tap the mic and describe the problem"
+      textLabel="Describe the issue in your own words"
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
+    />
+  );
+}
+
+/** Voice or typed day summary → daily report draft fields (work lines for a DPR). */
+export function VoiceReportAssist({
+  siteId,
+  reportKind,
+  onFields,
+}: {
+  siteId: string;
+  reportKind: "DPR" | "DLR";
+  onFields: (fields: ReportDraftFields) => void;
+}) {
+  const fill = trpc.jp.ai.fillReport.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt={
+        reportKind === "DPR"
+          ? "Tap the mic and say what work was done today, where, and how much"
+          : "Tap the mic and say who worked today, by trade"
+      }
+      textLabel="Describe today's work in your own words"
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, reportKind, text }))}
+    />
+  );
+}
+
+/**
+ * Speak (Odia, Hindi or English) or type freely; the server transcribes with Sarvam AI and
+ * an AI model fills the form. The person still reviews every field before saving.
+ */
+function VoiceAssist({
+  siteId,
+  prompt,
+  textLabel,
+  filling,
+  onFill,
+}: {
+  siteId: string;
+  prompt: string;
+  textLabel: string;
+  filling: boolean;
+  onFill: (text: string) => Promise<void>;
+}) {
   const colors = useColors();
   const status = trpc.jp.ai.status.useQuery();
   const transcribe = trpc.jp.ai.transcribe.useMutation();
-  const fill = trpc.jp.ai.fillIssue.useMutation();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [language, setLanguage] = useState<Lang>("od-IN");
   const [recording, setRecording] = useState(false);
@@ -40,7 +92,7 @@ export function VoiceIssueAssist({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (status.data && !status.data.formFill) return null;
-  const busy = transcribe.isPending || fill.isPending;
+  const busy = transcribe.isPending || filling;
 
   const stop = async () => {
     if (timer.current) clearTimeout(timer.current);
@@ -80,7 +132,7 @@ export function VoiceIssueAssist({
   const fillForm = async () => {
     setError(null);
     try {
-      onFields(await fill.mutateAsync({ siteId, text: text.trim() }));
+      await onFill(text.trim());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The form could not be filled.");
     }
@@ -121,9 +173,7 @@ export function VoiceIssueAssist({
             )}
           </Pressable>
           <Text style={[styles.hint, { color: colors.muted }]}>
-            {recording
-              ? `Listening… tap to stop (max ${MAX_SECONDS} s)`
-              : "Tap the mic and describe the problem"}
+            {recording ? `Listening… tap to stop (max ${MAX_SECONDS} s)` : prompt}
           </Text>
         </>
       ) : null}
@@ -133,7 +183,7 @@ export function VoiceIssueAssist({
         multiline
         placeholder="…or type in your own words, any language"
         placeholderTextColor={colors.muted}
-        accessibilityLabel="Describe the issue in your own words"
+        accessibilityLabel={textLabel}
         style={[
           styles.input,
           { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.surface },
@@ -142,7 +192,7 @@ export function VoiceIssueAssist({
       {error ? <InlineError message={error} title="AI assist" /> : null}
       <SecondaryButton
         icon="auto-fix-high"
-        label={fill.isPending ? "Filling…" : "Fill the form with AI"}
+        label={filling ? "Filling…" : "Fill the form with AI"}
         disabled={text.trim().length < 3 || busy}
         onPress={() => void fillForm()}
       />

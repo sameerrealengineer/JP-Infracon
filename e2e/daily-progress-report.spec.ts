@@ -9,6 +9,7 @@ const TASK = "55555555-5555-4555-8555-555555555555";
 
 async function setup(page: Page) {
   const created: unknown[] = [];
+  const filled: unknown[] = [];
   await mockTrpc(page, {
     "auth.me": () =>
       ({
@@ -77,8 +78,32 @@ async function setup(page: Page) {
       return { id: "66666666-6666-4666-8666-666666666666" } as never;
     },
     "jp.reports.list": () => [],
+    "jp.ai.status": () => ({ billScan: false, voice: false, formFill: true }),
+    "jp.ai.fillReport": (input) => {
+      filled.push(input);
+      return {
+        title: "Plaster, first floor",
+        weatherCode: "Rain" as const,
+        overallStatus: "Delayed" as const,
+        remarks: "Rain stopped work for two hours.",
+        nextDayPlan: "",
+        items: [
+          {
+            taskId: TASK,
+            description: "Internal plaster",
+            locationLabel: "",
+            unitCode: "sqft",
+            completedQuantityToday: "150",
+            cumulativeQuantity: "",
+            plannedQuantity: "",
+            remarks: "",
+          },
+        ],
+        warnings: [],
+      };
+    },
   });
-  return created;
+  return Object.assign(created, { filled });
 }
 
 test("a work line continues from the last report and is saved with its quantities", async ({
@@ -131,4 +156,30 @@ test("a line beyond the planned total is stopped before saving", async ({ page }
   await page.getByText("Save draft").click();
   await page.waitForTimeout(300);
   expect(created).toHaveLength(0);
+});
+
+test("AI fills the report from a spoken summary and the person reviews it", async ({ page }) => {
+  const created = await setup(page);
+  await page.goto(`/report-editor?siteId=${SITE}`);
+  await page
+    .getByRole("textbox", { name: "Describe today's work in your own words" })
+    .fill("aaj first floor pe 150 sqft plaster hua, baarish se 2 ghante kaam ruka");
+  await page.getByText("Fill the form with AI").click();
+  await expect(
+    page.getByText("AI filled the form. Check every field before saving."),
+  ).toBeVisible();
+  expect(created.filled[0]).toMatchObject({ siteId: SITE, reportKind: "DPR" });
+  await expect(page.getByRole("textbox", { name: "Title" })).toHaveValue("Plaster, first floor");
+  await expect(page.getByRole("textbox", { name: "Done so far" })).toHaveValue("550");
+  await expect(page.getByRole("textbox", { name: "Planned total" })).toHaveValue("1000");
+  expect(created).toHaveLength(0);
+
+  await page.getByText("Save draft").click();
+  await expect.poll(() => created.length).toBe(1);
+  expect(created[0]).toMatchObject({
+    weatherCode: "Rain",
+    overallStatus: "Delayed",
+    remarks: "Rain stopped work for two hours.",
+    items: [{ taskId: TASK, completedQuantityToday: "150", cumulativeQuantity: "550" }],
+  });
 });

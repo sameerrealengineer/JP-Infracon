@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { auditEvents } from "../../drizzle/schema";
+import { and, asc, eq, ne } from "drizzle-orm";
+import { auditEvents, workTasks } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getSiteScope } from "./access";
@@ -15,9 +16,38 @@ import {
   parseModelJson,
 } from "../../lib/jp/ai-extraction";
 import { sniffContentType } from "../../lib/jp/attachment-policy";
+import {
+  normalizeReportFields,
+  reportJsonSchema,
+  reportPrompt,
+} from "../../lib/jp/ai-report-extraction";
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
+/** Up to 50 terms of up to 64 characters each (Sarvam speech-to-text limits). */
+const SITE_KEYTERMS = [
+  "DPR",
+  "DLR",
+  "mistri",
+  "mason",
+  "helper",
+  "bar bender",
+  "shuttering",
+  "centering",
+  "plaster",
+  "brickwork",
+  "RCC",
+  "PCC",
+  "slab",
+  "column",
+  "footing",
+  "sqft",
+  "sqm",
+  "cum",
+  "rmt",
+  "cement",
+  "TMT",
+];
 
 function geminiKey() {
   return process.env.GEMINI_API_KEY?.trim() || "";
@@ -228,8 +258,11 @@ export const aiRouter = router({
       const form = new FormData();
       const ext = input.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "m4a";
       form.append("file", new Blob([bytes], { type: input.mimeType }), `note.${ext}`);
-      form.append("model", process.env.SARVAM_STT_MODEL?.trim() || "saaras:v4");
+      const sttModel = process.env.SARVAM_STT_MODEL?.trim() || "saaras:v4";
+      form.append("model", sttModel);
       form.append("language_code", input.language);
+      // Site words the model should expect (supported by saaras:v4 only).
+      if (sttModel === "saaras:v4") form.append("keyterms", JSON.stringify(SITE_KEYTERMS));
       const response = await fetch("https://api.sarvam.ai/speech-to-text", {
         method: "POST",
         headers: { "api-subscription-key": key },
@@ -271,5 +304,51 @@ export const aiRouter = router({
           );
       await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.issue_drafted");
       return normalizeIssueFields(raw);
+    }),
+
+  /**
+   * Free text (typed or transcribed) → daily report draft fields. Task names are matched only
+   * to this site's tasks; doubtful lines come back with warnings. Nothing is saved here.
+   */
+  fillReport: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().uuid(),
+        reportKind: z.enum(["DPR", "DLR"]),
+        text: z.string().trim().min(3).max(4000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = await getSiteScope(
+        ctx.user,
+        input.siteId,
+        input.reportKind === "DPR" ? "dpr.create" : "dlr.create",
+      );
+      rateLimit(ctx.user.id);
+      const db = await getDb();
+      const tasks = db
+        ? await db
+            .select({ id: workTasks.id, title: workTasks.title })
+            .from(workTasks)
+            .where(and(eq(workTasks.siteId, scope.siteId), ne(workTasks.status, "Cancelled")))
+            .orderBy(asc(workTasks.plannedStart))
+            .limit(60)
+        : [];
+      const prompt = reportPrompt(
+        input.reportKind,
+        tasks.map((task) => task.title),
+      );
+      const raw = geminiKey()
+        ? await geminiJson(
+            [{ text: `${prompt}\n\nSupervisor said:\n"""${input.text}"""` }],
+            reportJsonSchema,
+          )
+        : await sarvamJson(
+            `${prompt} Use keys title, weather, siteStatus, notes, nextDayPlan and workLines ` +
+              "(each with task, description, location, unit, doneToday, doneSoFar, planned).",
+            input.text,
+          );
+      await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.report_drafted");
+      return normalizeReportFields(raw, input.reportKind, tasks);
     }),
 });

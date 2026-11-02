@@ -5,6 +5,8 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 import { AuthGate } from "@/components/jp/auth-gate";
 import { LabourSummaryCard } from "@/components/jp/labour-summary";
+import { VoiceReportAssist } from "@/components/jp/voice-assist";
+import type { ReportDraftFields } from "@/lib/jp/ai-report-extraction";
 import {
   AppHeader,
   Card,
@@ -293,6 +295,7 @@ function ReportForm({
   const [nextDayPlan, setNextDayPlan] = useState(initial?.nextDayPlan ?? "");
   const [lines, setLines] = useState<EditorLine[]>(initial?.lines ?? []);
   const [message, setMessage] = useState<string | null>(null);
+  const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const reportDate = initial?.reportDate ?? today();
@@ -347,6 +350,54 @@ function ReportForm({
       // Keep what was typed until today's quantity is a valid number.
     }
     setLine(line.key, { completedQuantityToday: value, cumulativeQuantity: cumulative });
+  };
+
+  /** AI fields fill empty header fields and add work lines; the person reviews before saving. */
+  const applyAi = (fields: ReportDraftFields) => {
+    if (fields.title) setTitle((current) => current.trim() || fields.title);
+    if (fields.weatherCode) setWeather(fields.weatherCode);
+    if (fields.overallStatus) setOverall(fields.overallStatus);
+    if (fields.remarks)
+      setRemarks((current) =>
+        current.trim() ? `${current.trim()}\n${fields.remarks}` : fields.remarks,
+      );
+    if (fields.nextDayPlan) setNextDayPlan((current) => current.trim() || fields.nextDayPlan);
+    if (fields.items.length) {
+      const added = fields.items.map((item): EditorLine => {
+        const last = context.data?.lastLines.find((row) =>
+          item.taskId
+            ? row.taskId === item.taskId
+            : row.description.toLowerCase() === item.description.toLowerCase(),
+        );
+        const previous = last ? text(last.cumulativeQuantity) || null : null;
+        let cumulative = item.cumulativeQuantity ?? "";
+        if (!cumulative) {
+          try {
+            cumulative = suggestCumulative(previous, item.completedQuantityToday ?? null) ?? "";
+          } catch {
+            cumulative = "";
+          }
+        }
+        return {
+          key: createClientMutationId(),
+          taskId: item.taskId ?? null,
+          description: item.description,
+          locationLabel: item.locationLabel || last?.locationLabel || "",
+          unitCode: item.unitCode || last?.unitCode || "",
+          plannedQuantity: item.plannedQuantity || text(last?.plannedQuantity),
+          completedQuantityToday: item.completedQuantityToday ?? "",
+          cumulativeQuantity: cumulative,
+          previousCumulative: previous,
+          remarks: item.remarks ?? "",
+        };
+      });
+      setLines((current) => [...current, ...added].slice(0, MAX_DPR_ITEMS));
+    }
+    setAiNotice(
+      fields.warnings.length
+        ? `AI filled the form. Check these before saving: ${fields.warnings.join(" ")}`
+        : "AI filled the form. Check every field before saving.",
+    );
   };
 
   const payloadItems = () => (kind === "DPR" ? lines.map(toInput) : []);
@@ -477,6 +528,13 @@ function ReportForm({
             <Text style={[styles.metaValue, { color: colors.foreground }]}>
               {initial.returnReason}
             </Text>
+          </Card>
+        ) : null}
+
+        {siteId ? <VoiceReportAssist siteId={siteId} reportKind={kind} onFields={applyAi} /> : null}
+        {aiNotice ? (
+          <Card accent={aiNotice.includes("Check these") ? "warning" : "info"}>
+            <Text style={[styles.muted, { color: colors.foreground }]}>{aiNotice}</Text>
           </Card>
         ) : null}
 
