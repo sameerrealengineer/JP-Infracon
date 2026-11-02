@@ -23,12 +23,14 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 const filters = ["All", "Active", "On Hold", "Completed", "Inactive"] as const;
 type Filter = (typeof filters)[number];
 
 export default function SitesScreen() {
   const colors = useColors();
+  const { t } = useT();
   const router = useRouter();
   const { canManageSites } = useWorkspace();
   const { online } = useConnectivity();
@@ -67,8 +69,8 @@ export default function SitesScreen() {
         }
       >
         <AppHeader
-          eyebrow="Portfolio"
-          title="Sites"
+          eyebrow={t("Portfolio")}
+          title={t("Sites")}
           subtitle="Every site you can access, with status and your role."
         />
         <OfflineBanner
@@ -87,11 +89,14 @@ export default function SitesScreen() {
 
         <HeroCard>
           <View style={styles.heroStats}>
-            <HeroStat value={sitesQuery.data ? String(count("Active")) : "—"} label="Active" />
+            <HeroStat value={sitesQuery.data ? String(count("Active")) : "—"} label={t("Active")} />
             <View style={styles.heroDivider} />
-            <HeroStat value={sitesQuery.data ? String(count("On Hold")) : "—"} label="On hold" />
+            <HeroStat
+              value={sitesQuery.data ? String(count("On Hold")) : "—"}
+              label={t("On hold")}
+            />
             <View style={styles.heroDivider} />
-            <HeroStat value={sitesQuery.data ? String(projectCount) : "—"} label="Projects" />
+            <HeroStat value={sitesQuery.data ? String(projectCount) : "—"} label={t("Projects")} />
           </View>
         </HeroCard>
 
@@ -102,7 +107,7 @@ export default function SitesScreen() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Search site, code, project or place"
+            placeholder={t("Search site, code, project or place")}
             placeholderTextColor={colors.muted}
             accessibilityLabel="Search sites"
             style={[styles.searchInput, { color: colors.foreground }]}
@@ -177,7 +182,11 @@ export default function SitesScreen() {
         )}
       </ScrollView>
       {canManageSites ? (
-        <Fab icon="add-business" label="Manage" onPress={() => router.push("/projects" as never)} />
+        <Fab
+          icon="add-business"
+          label={t("Manage")}
+          onPress={() => router.push("/projects" as never)}
+        />
       ) : null}
     </Screen>
   );

@@ -30,6 +30,7 @@ import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { inboxIcon } from "@/components/jp/inbox-meta";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 function greeting(date = new Date()) {
   const hour = date.getHours();
@@ -40,6 +41,7 @@ function greeting(date = new Date()) {
 
 export default function HomeScreen() {
   const colors = useColors();
+  const { t } = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
   const workspace = useWorkspace();
@@ -175,8 +177,8 @@ export default function HomeScreen() {
         }
       >
         <AppHeader
-          eyebrow={greeting()}
-          title={`Hello, ${firstName}`}
+          eyebrow={t(greeting())}
+          title={t("Hello, {name}", { name: firstName })}
           subtitle={`${prettyRole(workspace.role)} · ${today}`}
         />
         <OfflineBanner
@@ -191,20 +193,22 @@ export default function HomeScreen() {
         ) : null}
 
         <HeroCard>
-          <Text style={styles.heroKicker}>TODAY&apos;S BRIEF</Text>
+          <Text style={styles.heroKicker}>{t("TODAY'S BRIEF")}</Text>
           <Text style={styles.heroTitle}>
             {items.length > 0
-              ? `${items.length} item${items.length === 1 ? "" : "s"} need${items.length === 1 ? "s" : ""} your attention`
+              ? items.length === 1
+                ? t("1 item needs your attention")
+                : t("{count} items need your attention", { count: items.length })
               : inbox.isSuccess
-                ? "You are all caught up"
-                : "Gathering your site brief…"}
+                ? t("You are all caught up")
+                : t("Gathering your site brief…")}
           </Text>
           <View style={styles.heroStats}>
-            <HeroStat value={sites.data ? String(activeSites) : "—"} label="Active sites" />
+            <HeroStat value={sites.data ? String(activeSites) : "—"} label={t("Active sites")} />
             <View style={styles.heroDivider} />
-            <HeroStat value={inbox.data ? String(items.length) : "—"} label="Waiting on you" />
+            <HeroStat value={inbox.data ? String(items.length) : "—"} label={t("Waiting on you")} />
             <View style={styles.heroDivider} />
-            <HeroStat value={inbox.data ? String(overdue) : "—"} label="Overdue tasks" />
+            <HeroStat value={inbox.data ? String(overdue) : "—"} label={t("Overdue tasks")} />
           </View>
         </HeroCard>
 
@@ -214,7 +218,7 @@ export default function HomeScreen() {
               <MetricCard
                 icon="fact-check"
                 value={String(dashboard.data.reportsNeedingReview)}
-                label="Reports in review"
+                label={t("Reports in review")}
                 tone="info"
                 onPress={() => router.push("/(tabs)/reports" as never)}
               />
@@ -223,7 +227,7 @@ export default function HomeScreen() {
               <MetricCard
                 icon="assignment-return"
                 value={String(dashboard.data.reportsReturned)}
-                label="Returned reports"
+                label={t("Returned reports")}
                 tone={dashboard.data.reportsReturned > 0 ? "error" : "success"}
                 onPress={() => router.push("/(tabs)/reports" as never)}
               />
@@ -232,7 +236,7 @@ export default function HomeScreen() {
               <MetricCard
                 icon="local-shipping"
                 value={String(dashboard.data.pendingMaterialRequests)}
-                label="Material pending"
+                label={t("Material pending")}
                 tone="accent"
                 onPress={() => router.push("/(tabs)/requests" as never)}
               />
@@ -242,14 +246,14 @@ export default function HomeScreen() {
 
         {visibleActions.length > 0 ? (
           <>
-            <SectionHeader title="Quick actions" />
+            <SectionHeader title={t("Quick actions")} />
             <View style={styles.grid}>
               {visibleActions.map((action) => (
                 <ModuleTile
                   key={action.title}
                   icon={action.icon}
-                  title={action.title}
-                  detail={action.detail}
+                  title={t(action.title)}
+                  detail={t(action.detail)}
                   tone={action.tone}
                   onPress={() => router.push(action.route as never)}
                 />
@@ -259,8 +263,8 @@ export default function HomeScreen() {
         ) : null}
 
         <SectionHeader
-          title="Waiting on you"
-          action={items.length > 0 ? "View all" : undefined}
+          title={t("Waiting on you")}
+          action={items.length > 0 ? t("View all") : undefined}
           onPress={() => router.push("/notifications" as never)}
         />
         {inbox.isLoading ? (
@@ -268,7 +272,7 @@ export default function HomeScreen() {
         ) : items.length === 0 ? (
           <EmptyState
             icon="task-alt"
-            title="Nothing pending"
+            title={t("Nothing pending")}
             detail="Reviews, approvals, returned reports and overdue tasks for your sites will appear here."
           />
         ) : (
@@ -291,9 +295,9 @@ export default function HomeScreen() {
         )}
 
         <SectionHeader
-          title="Your sites"
+          title={t("Your sites")}
           caption={sites.data ? `${siteList.length} in your access` : undefined}
-          action={siteList.length > 0 ? "All sites" : undefined}
+          action={siteList.length > 0 ? t("All sites") : undefined}
           onPress={() => router.push("/(tabs)/sites" as never)}
         />
         {sites.isLoading ? (

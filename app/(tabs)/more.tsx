@@ -30,9 +30,11 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { useThemeContext } from "@/lib/theme-provider";
 import { trpc } from "@/lib/trpc";
+import { languageNames, useT } from "@/lib/i18n";
 
 export default function MoreScreen() {
   const colors = useColors();
+  const { t, language, setLanguage } = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
   const auth = useAuth({ autoFetch: false });
@@ -172,7 +174,7 @@ export default function MoreScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 36 }}
         >
-          <AppHeader eyebrow="Workspace" title="More" />
+          <AppHeader eyebrow="Workspace" title={t("More")} />
           <OfflineBanner
             pendingCount={pending.length}
             connected={online === false ? false : sites.isSuccess ? true : online}
@@ -199,7 +201,7 @@ export default function MoreScreen() {
             </View>
           </HeroCard>
 
-          <SectionHeader title="Modules" caption="Only what your role allows" />
+          <SectionHeader title={t("Modules")} caption={t("Only what your role allows")} />
           <View style={styles.grid}>
             {modules
               .filter((module) => module.show)
@@ -207,15 +209,15 @@ export default function MoreScreen() {
                 <ModuleTile
                   key={module.title}
                   icon={module.icon}
-                  title={module.title}
-                  detail={module.detail}
+                  title={t(module.title)}
+                  detail={t(module.detail)}
                   tone={module.tone}
                   onPress={() => router.push(module.route as never)}
                 />
               ))}
           </View>
 
-          <SectionHeader title="Appearance" />
+          <SectionHeader title={t("Appearance")} />
           <Card style={{ marginBottom: 22 }}>
             <View style={{ flex: 1 }}>
               <ChipGroup
@@ -224,11 +226,18 @@ export default function MoreScreen() {
                 onChange={setColorScheme}
                 format={(value) => (value === "light" ? "Ivory (light)" : "Midnight (dark)")}
               />
+              <ChipGroup
+                label={t("Language")}
+                options={["en", "hi", "or"] as const}
+                value={language}
+                onChange={setLanguage}
+                format={(value) => languageNames[value]}
+              />
             </View>
           </Card>
 
           <SectionHeader
-            title="Offline drafts"
+            title={t("Offline drafts")}
             caption="Saved on this phone until the server confirms them"
             action="Refresh"
             onPress={() => void refresh()}
@@ -238,7 +247,7 @@ export default function MoreScreen() {
               <ListRow
                 icon="cloud-done"
                 tone="success"
-                title="Everything is synced"
+                title={t("Everything is synced")}
                 detail="No drafts are waiting on this device."
               />
             ) : (
@@ -263,7 +272,7 @@ export default function MoreScreen() {
             )}
           </Card>
 
-          <SectionHeader title="Company" />
+          <SectionHeader title={t("Company")} />
           <Card style={{ marginBottom: 22 }}>
             <View style={styles.company}>
               <Image
@@ -301,7 +310,7 @@ export default function MoreScreen() {
 
           <PrimaryButton
             icon="logout"
-            label={signingOut ? "Signing out…" : "Sign out"}
+            label={signingOut ? t("Signing out…") : t("Sign out")}
             tone="danger"
             loading={signingOut}
             onPress={() => void signOut()}

@@ -17,6 +17,11 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `domain.ts` | Shared presentation and domain types |
 | `local-repository.ts` | AsyncStorage drafts and sync queue, `createClientMutationId` |
 | `site-admin-policy.ts` | Site/project status transitions, site-role assignment rules, `prettyRole`, inbox item type and ordering |
+| `issue-policy.ts` | Issue categories, severities, transitions, who may close High/Critical, issue codes |
+| `issue-drafts.ts` | Offline issue drafts in AsyncStorage and which sync errors are retryable |
+| `attachment-policy.ts` | Allowed evidence types, file-signature sniffing, safe names, size formatting |
+| `csv.ts` | CSV cells safe from formula injection, UTF-8 BOM, exact paise to rupees |
+| `attendance-domain.ts` | Attendance hours (hundredths), estimated earnings in paise, entry validation |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions

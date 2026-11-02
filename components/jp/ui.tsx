@@ -25,6 +25,7 @@ import {
   type WorkflowStatus,
 } from "@/lib/jp/domain";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 export type IconName = ComponentProps<typeof MaterialIcons>["name"];
 export type Tone = "success" | "warning" | "error" | "info" | "accent";
@@ -152,6 +153,7 @@ export function AppHeader({
 }) {
   const router = useRouter();
   const colors = useColors();
+  const { t } = useT();
   const segments = useSegments();
   const inTabs = segments[0] === "(tabs)";
   const inboxCount = useInboxCount();
@@ -169,7 +171,9 @@ export function AppHeader({
             />
             <View>
               <Text style={[styles.brandName, { color: colors.foreground }]}>JP INFRACON</Text>
-              <Text style={[styles.brandTag, { color: colors.accent }]}>Build with certainty</Text>
+              <Text style={[styles.brandTag, { color: colors.accent }]}>
+                {t("Build with certainty")}
+              </Text>
             </View>
           </View>
         ) : (
@@ -179,7 +183,7 @@ export function AppHeader({
           {right}
           <IconButton
             icon="notifications-none"
-            label="Open notifications"
+            label={t("Open notifications")}
             badge={notificationCount ?? inboxCount}
             onPress={() => router.push("/notifications" as never)}
           />
@@ -254,12 +258,14 @@ export function OfflineBanner({
   retrying?: boolean;
 }) {
   const colors = useColors();
+  const { t } = useT();
   if (connected === true && pendingCount === 0) {
     return (
       <View style={styles.syncChipRow}>
         <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
         <Text style={[styles.syncChipText, { color: colors.muted }]}>
-          Live{lastSyncedAt ? ` · updated ${lastSyncedAt}` : ""}
+          {t("Live")}
+          {lastSyncedAt ? ` · ${t("updated {time}", { time: lastSyncedAt })}` : ""}
         </Text>
         {onRetry ? (
           <Pressable
@@ -282,10 +288,10 @@ export function OfflineBanner({
   const tone = connected === false ? colors.warning : colors.primary;
   const title =
     connected === false
-      ? "You are offline"
+      ? t("You are offline")
       : pendingCount > 0
-        ? "Drafts waiting to sync"
-        : "Connecting to server…";
+        ? t("Drafts waiting to sync")
+        : t("Connecting to server…");
   const detail =
     connected === false
       ? `Showing records saved on this device${lastSyncedAt ? ` (last updated ${lastSyncedAt})` : ""}. Drafts stay here until you are back online.`
@@ -315,7 +321,7 @@ export function OfflineBanner({
           hitSlop={8}
         >
           <Text style={[styles.retryText, { color: colors.primary }]}>
-            {retrying ? "Checking…" : "Retry"}
+            {retrying ? t("Checking…") : t("Retry")}
           </Text>
         </Pressable>
       ) : null}
@@ -707,12 +713,13 @@ export function EmptyState({
   );
 }
 
-export function LoadingBlock({ label = "Loading…" }: { label?: string }) {
+export function LoadingBlock({ label }: { label?: string }) {
   const colors = useColors();
+  const { t } = useT();
   return (
-    <View style={styles.loadingBlock} accessibilityLabel={label}>
+    <View style={styles.loadingBlock} accessibilityLabel={label ?? t("Loading…")}>
       <ActivityIndicator color={colors.primary} />
-      <Text style={[styles.loadingText, { color: colors.muted }]}>{label}</Text>
+      <Text style={[styles.loadingText, { color: colors.muted }]}>{label ?? t("Loading…")}</Text>
     </View>
   );
 }
@@ -726,13 +733,14 @@ function friendlyError(message: string) {
 export function InlineError({
   message,
   onRetry,
-  title = "Something went wrong",
+  title,
 }: {
   message: string;
   onRetry?: () => void;
   title?: string;
 }) {
   const colors = useColors();
+  const { t } = useT();
   return (
     <View
       style={[
@@ -743,12 +751,14 @@ export function InlineError({
     >
       <MaterialIcons name="error-outline" size={19} color={colors.error} />
       <View style={{ flex: 1 }}>
-        <Text style={[styles.errorTitle, { color: colors.foreground }]}>{title}</Text>
+        <Text style={[styles.errorTitle, { color: colors.foreground }]}>
+          {title ?? t("Something went wrong")}
+        </Text>
         <Text style={[styles.errorDetail, { color: colors.muted }]}>{friendlyError(message)}</Text>
       </View>
       {onRetry ? (
         <Pressable accessibilityRole="button" onPress={onRetry} hitSlop={8}>
-          <Text style={[styles.retryText, { color: colors.primary }]}>Retry</Text>
+          <Text style={[styles.retryText, { color: colors.primary }]}>{t("Retry")}</Text>
         </Pressable>
       ) : null}
     </View>

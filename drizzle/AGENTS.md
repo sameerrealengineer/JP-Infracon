@@ -28,6 +28,7 @@ pnpm db:push   # drizzle-kit generate + migrate; needs DATABASE_URL and hits the
 ## Gotchas
 
 - At the 2 November 2026 handoff the shared database had migrations through 0009. Migrations 0010 (petty cash tables) and 0011 (expense attestation, task snapshots) were not applied. Check before assuming they exist, and ask before applying.
+- Migration 0012 (`site_issues`, `site_issue_events`, additive) was generated on 2 November 2026 and is not applied. The Issues screens and exports need it; the inbox skips sections whose tables are missing.
 - Do not run `pnpm db:push` casually: it generates and migrates against the shared database in one step.
 - The database exposes no CHECK constraints, so value rules live in the API.
 

@@ -27,6 +27,7 @@ import { useIssueDraftSync } from "@/hooks/use-issue-draft-sync";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { isIssueOverdue, severityTone, type IssueStatus } from "@/lib/jp/issue-policy";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 const statusViews = ["Active", "Open", "In Progress", "Resolved", "Closed"] as const;
 type StatusView = (typeof statusViews)[number];
@@ -34,6 +35,7 @@ const PAGE = 30;
 
 export default function IssuesScreen() {
   const colors = useColors();
+  const { t } = useT();
   const router = useRouter();
   const { online } = useConnectivity();
   const { sitesWith } = useWorkspace();
@@ -74,8 +76,8 @@ export default function IssuesScreen() {
           }
         >
           <AppHeader
-            eyebrow="Safety & quality"
-            title="Site issues"
+            eyebrow={t("Safety & quality")}
+            title={t("Site issues")}
             subtitle="Hazards, incidents, defects and blockers — owned, tracked and closed with evidence."
           />
           <OfflineBanner
@@ -100,11 +102,11 @@ export default function IssuesScreen() {
 
           <HeroCard>
             <View style={styles.heroStats}>
-              <HeroStat value={counts ? String(counts.open) : "—"} label="Open now" />
+              <HeroStat value={counts ? String(counts.open) : "—"} label={t("Open now")} />
               <View style={styles.heroDivider} />
-              <HeroStat value={counts ? String(counts.critical) : "—"} label="Critical" />
+              <HeroStat value={counts ? String(counts.critical) : "—"} label={t("Critical")} />
               <View style={styles.heroDivider} />
-              <HeroStat value={counts ? String(counts.stopWork) : "—"} label="Stop work" />
+              <HeroStat value={counts ? String(counts.stopWork) : "—"} label={t("Stop work")} />
             </View>
           </HeroCard>
 
@@ -254,7 +256,7 @@ export default function IssuesScreen() {
           )}
         </ScrollView>
         {createSites.length ? (
-          <Fab icon="report" label="Report issue" onPress={() => setFormOpen(true)} />
+          <Fab icon="report" label={t("Report issue")} onPress={() => setFormOpen(true)} />
         ) : null}
         <IssueFormSheet
           visible={formOpen}

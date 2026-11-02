@@ -52,6 +52,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. There are no demo logins; the first Super Admin comes from the one time bootstrap flow.
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
 - The React Query cache is persisted to AsyncStorage (`app/_layout.tsx`) so synced records stay viewable offline; sign out calls `queryClient.clear()` so the next user of the phone sees nothing.
+- UI text goes through `useT()` from `lib/i18n` (keys are the English text; Hindi and Odia in `lib/i18n/strings.ts`, kept in step by a test). Untranslated text falls back to English.
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
 ## Agent skills

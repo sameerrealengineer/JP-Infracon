@@ -13,6 +13,7 @@ import {
 } from "@/lib/jp/issue-policy";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 export function IssueFormSheet({
   visible,
@@ -54,6 +55,7 @@ function IssueForm({
   onSaved: (result: { id?: string; offline: boolean }) => void;
 }) {
   const colors = useColors();
+  const { t } = useT();
   const utils = trpc.useUtils();
   const create = trpc.jp.issues.create.useMutation();
   const [mutationId] = useState(createClientMutationId);
@@ -124,13 +126,13 @@ function IssueForm({
   return (
     <Sheet
       visible
-      title="Report an issue"
+      title={t("Report an issue")}
       subtitle="Safety, quality, material, access or any problem holding up work."
       onClose={onClose}
       footer={
         <PrimaryButton
           icon={online === false ? "save" : "send"}
-          label={online === false ? "Save on phone — sync later" : "Report issue"}
+          label={online === false ? "Save on phone — sync later" : t("Report issue")}
           tone={severity === "Critical" ? "danger" : "primary"}
           onPress={() => void submit()}
           disabled={!valid}
@@ -148,9 +150,14 @@ function IssueForm({
           format={(id) => sites.find((site) => site.id === id)?.name ?? id}
         />
       ) : null}
-      <ChipGroup label="Type" options={issueCategories} value={category} onChange={setCategory} />
       <ChipGroup
-        label="Severity"
+        label={t("Type")}
+        options={issueCategories}
+        value={category}
+        onChange={setCategory}
+      />
+      <ChipGroup
+        label={t("Severity")}
         options={issueSeverities}
         value={severity}
         onChange={setSeverity}
@@ -170,26 +177,26 @@ function IssueForm({
         </View>
       ) : null}
       <Field
-        label="Short title"
+        label={t("Short title")}
         value={title}
         onChangeText={setTitle}
         placeholder="e.g. Trench edge not barricaded"
       />
       <Field
-        label="What did you see?"
+        label={t("What did you see?")}
         value={description}
         onChangeText={setDescription}
         multiline
         placeholder="Describe the problem, who or what is affected"
       />
       <Field
-        label="Exact location"
+        label={t("Exact location")}
         value={location}
         onChangeText={setLocation}
         placeholder="e.g. Chainage 2+350, near valve chamber"
       />
       <Field
-        label="Immediate action taken"
+        label={t("Immediate action taken")}
         value={immediate}
         onChangeText={setImmediate}
         multiline
@@ -209,7 +216,7 @@ function IssueForm({
           />
           <View style={{ flex: 1 }}>
             <Text style={[styles.stopTitle, { color: colors.foreground }]}>
-              Stop work in this area
+              {t("Stop work in this area")}
             </Text>
             <Text style={[styles.stopText, { color: colors.muted }]}>
               Flags the issue as STOP WORK for every site lead until it is resolved.

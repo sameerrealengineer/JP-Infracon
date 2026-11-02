@@ -29,11 +29,13 @@ import {
 } from "@/lib/jp/issue-policy";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 export default function IssueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const issueId = typeof id === "string" ? id : "";
   const colors = useColors();
+  const { t } = useT();
   const detail = trpc.jp.issues.detail.useQuery({ issueId }, { enabled: Boolean(issueId) });
   const [action, setAction] = useState<IssueAction | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -159,7 +161,7 @@ export default function IssueDetailScreen() {
                   {actions.map((next) => (
                     <PrimaryButton
                       key={next}
-                      label={actionButtonLabel(next)}
+                      label={t(actionButtonLabel(next))}
                       icon={
                         next === "resolve"
                           ? "task-alt"
@@ -191,12 +193,15 @@ export default function IssueDetailScreen() {
                     entityType="site_issue"
                     entityId={issue.id}
                     canUpload={data.permissions.comment}
-                    title="Photos & evidence"
+                    title={t("Photos & evidence")}
                   />
                 </View>
               </Card>
 
-              <SectionHeader title="History" caption="Every step is kept and cannot be edited" />
+              <SectionHeader
+                title={t("History")}
+                caption="Every step is kept and cannot be edited"
+              />
               <View style={{ marginBottom: 14 }}>
                 {data.events.map((event, index) => (
                   <View key={event.id} style={styles.event}>
@@ -246,7 +251,7 @@ export default function IssueDetailScreen() {
                       <InlineError message={commentError} title="Not posted" />
                     ) : null}
                     <Field
-                      label="Add an update"
+                      label={t("Add an update")}
                       value={comment}
                       onChangeText={setComment}
                       multiline
@@ -254,7 +259,7 @@ export default function IssueDetailScreen() {
                     />
                     <PrimaryButton
                       icon="send"
-                      label="Post update"
+                      label={t("Post update")}
                       disabled={comment.trim().length < 2}
                       loading={addComment.isPending}
                       onPress={() => void postComment()}

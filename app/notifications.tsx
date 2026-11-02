@@ -20,12 +20,14 @@ import {
 import { useColors } from "@/hooks/use-colors";
 import { useConnectivity } from "@/hooks/use-connectivity";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 const views = ["All", "Urgent", "Approvals", "My corrections"] as const;
 type View_ = (typeof views)[number];
 
 export default function NotificationsScreen() {
   const colors = useColors();
+  const { t } = useT();
   const router = useRouter();
   const { online } = useConnectivity();
   const inbox = trpc.jp.workspace.inbox.useQuery();
@@ -58,7 +60,7 @@ export default function NotificationsScreen() {
         >
           <AppHeader
             eyebrow="Inbox"
-            title="Notifications"
+            title={t("Notifications")}
             subtitle="Work waiting on you, built live from records on your sites."
           />
           <OfflineBanner

@@ -8,6 +8,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 type IconName = ComponentProps<typeof MaterialIcons>["name"];
 
@@ -30,6 +31,7 @@ function TabIcon({
 
 export default function TabLayout() {
   const colors = useColors();
+  const { t } = useT();
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   const capabilities = trpc.jp.workspace.myCapabilities.useQuery();
@@ -63,7 +65,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: "Home",
+            title: t("Home"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="space-dashboard" color={color} focused={focused} />
             ),
@@ -72,7 +74,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="sites"
           options={{
-            title: "Sites",
+            title: t("Sites"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="location-city" color={color} focused={focused} />
             ),
@@ -82,7 +84,7 @@ export default function TabLayout() {
           name="reports"
           options={{
             href: canOpenReports ? undefined : null,
-            title: "Reports",
+            title: t("Reports"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="assignment" color={color} focused={focused} />
             ),
@@ -92,7 +94,7 @@ export default function TabLayout() {
           name="requests"
           options={{
             href: canOpenRequests ? undefined : null,
-            title: "Requests",
+            title: t("Requests"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="local-shipping" color={color} focused={focused} />
             ),
@@ -101,7 +103,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="more"
           options={{
-            title: "More",
+            title: t("More"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="apps" color={color} focused={focused} />
             ),

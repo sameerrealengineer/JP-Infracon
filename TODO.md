@@ -6,6 +6,17 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-02 (b) — issues, evidence, exports, attendance, languages
+
+Delivered in source (typecheck, lint with 0 errors, 151 unit tests, API build, web export and 14 Playwright flows pass; not exercised against the shared database or on an Android device):
+
+- Outcome 9 (partial): safety/quality/constraint issues — report (category, severity, stop-work, location, immediate action), assign owner and target date, start, resolve with corrective/preventive action, verify and close (High/Critical closed by a different person), send back, reopen with reason; append-only history and comments; inbox items for critical, assigned, unowned and to-verify issues. **Needs additive migration 0012 applied.** Push delivery and escalation notifications remain open.
+- Outcome 4/8: private evidence — JPEG/PNG/WebP/PDF up to 8 MB, type checked from file bytes, SHA-256 checksum, no replacement, opened only via a short-lived signed link after a fresh permission check; on issues, daily reports, invoices, payments and petty cash entries. "Accepted" means signature and size verified; no antivirus scan is claimed.
+- Outcome 11 (partial): CSV exports for daily reports, material requests, stock movements, tasks, issues, supplier invoices, supplier payments, petty cash and audit — site/permission scoped, with organisation, sites, period, generated time, row count and a continuation note past 5000 rows; spreadsheet-formula-safe cells; each export audited. PDF exports remain open.
+- Outcome 4/6 (partial): daily attendance on existing `attendance_records` — supervisor marks, a different PM/admin approves, overtime pending until approved, approved rows locked; labour cost per worker shows approved earnings separately from estimates awaiting approval, flags missing rates. Worker payment allocation/balances remain open.
+- Outcome 10 (partial): issues reported offline stay on the phone and are sent automatically on reconnect with the same idempotency key.
+- Outcome 1 (partial): English, Hindi and Odia for sign-in, navigation, Home, Sites, More, Notifications, Issues and Attendance, chosen on the sign-in screen or in More. Translations need a native-speaker review; deeper finance/inventory/workforce screens are still English.
+
 ## Increment 2026-11-02 — premium shell, site administration, derived inbox, offline cache
 
 Delivered in source (typecheck, lint with 0 errors, 121 unit tests, API build, web export and 3 new Playwright flows pass; not yet exercised against the shared database or on an Android device):

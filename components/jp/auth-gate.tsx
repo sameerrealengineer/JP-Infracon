@@ -14,12 +14,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { languageNames, useT, type Language } from "@/lib/i18n";
 import * as Auth from "@/lib/_core/auth";
 
 const companyLogo = require("../../assets/images/icon.png");
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const colors = useColors();
+  const { t, language, setLanguage } = useT();
   const utils = trpc.useUtils();
   const me = trpc.auth.me.useQuery(undefined, { retry: false, staleTime: 0 });
   const setup = trpc.auth.bootstrapStatus.useQuery(undefined, {
@@ -174,6 +176,21 @@ export function AuthGate({ children }: { children: ReactNode }) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
         >
+          <View style={styles.langRow}>
+            {(Object.keys(languageNames) as Language[]).map((code) => (
+              <Pressable
+                key={code}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: language === code }}
+                onPress={() => setLanguage(code)}
+                style={[styles.langChip, language === code && styles.langChipOn]}
+              >
+                <Text style={[styles.langText, language === code && styles.langTextOn]}>
+                  {languageNames[code]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <View style={styles.logoRing}>
             <Image
               source={companyLogo}
@@ -190,7 +207,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 ? "Set a new password"
                 : firstRun
                   ? "Create the Super Admin"
-                  : "Welcome back"}
+                  : t("Welcome back")}
             </Text>
             {mustChangePassword ? (
               <>
@@ -342,13 +359,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
             ) : (
               <>
                 <Text style={[styles.detail, { color: colors.muted }]}>
-                  Sign in with the username and password your administrator gave you.
+                  {t("Sign in with the username and password your administrator gave you.")}
                 </Text>
                 <TextInput
                   accessibilityLabel="Username"
                   value={username}
                   onChangeText={setUsername}
-                  placeholder="Username"
+                  placeholder={t("Username")}
                   placeholderTextColor={colors.muted}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -366,7 +383,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                   accessibilityLabel="Password"
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Password"
+                  placeholder={t("Password")}
                   placeholderTextColor={colors.muted}
                   secureTextEntry
                   autoCapitalize="none"
@@ -419,12 +436,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ? "Update password"
                     : firstRun
                       ? "Create Super Admin account"
-                      : "Sign in"}
+                      : t("Sign in")}
                 </Text>
               )}
             </Pressable>
             <Text style={[styles.privacy, { color: colors.muted }]}>
-              Individual accounts only. Never share your password.
+              {t("Individual accounts only. Never share your password.")}
             </Text>
           </View>
           <Text style={styles.leadership}>
@@ -445,6 +462,17 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     gap: 12,
   },
+  langRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
+  langChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  langChipOn: { backgroundColor: "#D9B76A", borderColor: "#D9B76A" },
+  langText: { color: "rgba(255,255,255,0.85)", fontSize: 12, fontWeight: "700" },
+  langTextOn: { color: "#0E1A26" },
   logoRing: {
     width: 112,
     height: 112,
@@ -455,6 +483,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#D9B76A",
     marginBottom: 6,
+    overflow: "hidden",
   },
   logo: { width: 84, height: 84 },
   title: {

@@ -30,6 +30,7 @@ import { formatMinorAsRupees } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 type Entry = { status: AttendanceStatus; regularHours: string; overtimeHours: string };
 const views = ["Mark attendance", "Labour cost"] as const;
@@ -47,6 +48,7 @@ function isoDay(offset = 0) {
 
 export default function AttendanceScreen() {
   const colors = useColors();
+  const { t } = useT();
   const { online } = useConnectivity();
   const { sitesWith } = useWorkspace();
   const sites = trpc.jp.workspace.mySites.useQuery();
@@ -70,7 +72,7 @@ export default function AttendanceScreen() {
         >
           <AppHeader
             eyebrow="Workforce"
-            title="Attendance"
+            title={t("Attendance")}
             subtitle="Mark daily attendance, approve it, and see the estimated labour cost."
           />
           {sites.isLoading ? <LoadingBlock /> : null}
@@ -128,6 +130,7 @@ function MarkDay({
   online: boolean | null;
 }) {
   const colors = useColors();
+  const { t } = useT();
   const utils = trpc.useUtils();
   const [dayChoice, setDayChoice] = useState<"Today" | "Yesterday">("Today");
   const workDate = dayChoice === "Today" ? isoDay(0) : isoDay(-1);
@@ -218,9 +221,9 @@ function MarkDay({
       />
       <HeroCard>
         <View style={styles.heroStats}>
-          <HeroStat value={roster.data ? String(rows.length) : "—"} label="On roster" />
+          <HeroStat value={roster.data ? String(rows.length) : "—"} label={t("On roster")} />
           <View style={styles.heroDivider} />
-          <HeroStat value={roster.data ? String(present) : "—"} label="Present" />
+          <HeroStat value={roster.data ? String(present) : "—"} label={t("Present")} />
           <View style={styles.heroDivider} />
           <HeroStat
             value={roster.data ? String(rows.filter((row) => row.record?.approved).length) : "—"}
@@ -397,6 +400,7 @@ function MarkDay({
 
 function LabourCost({ siteId }: { siteId: string }) {
   const colors = useColors();
+  const { t } = useT();
   const now = new Date();
   const from = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)).toISOString().slice(0, 10);
   const to = isoDay(0);
@@ -419,12 +423,12 @@ function LabourCost({ siteId }: { siteId: string }) {
         <View style={[styles.heroStats, { marginTop: 10 }]}>
           <HeroStat
             value={data ? formatMinorAsRupees(data.totals.approvedMinor) : "—"}
-            label="Approved earnings"
+            label={t("Approved earnings")}
           />
           <View style={styles.heroDivider} />
           <HeroStat
             value={data ? formatMinorAsRupees(data.totals.pendingMinor) : "—"}
-            label="Awaiting approval"
+            label={t("Awaiting approval")}
           />
         </View>
       </HeroCard>
