@@ -67,6 +67,13 @@ export default function SiteDetailScreen() {
       show: has("material.request.view"),
     },
     {
+      icon: "health-and-safety",
+      title: "Issues",
+      tone: "error",
+      route: "/issues",
+      show: has("issue.view"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       tone: "info",

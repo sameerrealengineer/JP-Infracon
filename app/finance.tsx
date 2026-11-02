@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -782,6 +783,14 @@ export default function FinanceScreen() {
                                     : ""}
                                 </Text>
                               ) : null}
+                              <View style={{ marginTop: 10 }}>
+                                <AttachmentStrip
+                                  entityType="supplier_invoice"
+                                  entityId={invoice.id}
+                                  canUpload={canCreateInvoice}
+                                  title="Invoice copy & evidence"
+                                />
+                              </View>
                             </View>
                           ) : null
                         ) : null}

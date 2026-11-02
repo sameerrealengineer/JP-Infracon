@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -83,6 +84,7 @@ export function PettyCashLedger(props: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [chosenFundId, setSelectedFundId] = useState("");
   const [page, setPage] = useState(0);
+  const [evidenceFor, setEvidenceFor] = useState<string | null>(null);
   const [fundModalVisible, setFundModalVisible] = useState(false);
   const [fundName, setFundName] = useState("");
   const [custodianUserId, setCustodianUserId] = useState(0);
@@ -746,7 +748,24 @@ export function PettyCashLedger(props: Props) {
                           onPress={() => openAction(movement.id, "cancel")}
                         />
                       ) : null}
+                      <SecondaryButton
+                        icon="receipt"
+                        label={evidenceFor === movement.id ? "Hide receipts" : "Receipts"}
+                        onPress={() =>
+                          setEvidenceFor((value) => (value === movement.id ? null : movement.id))
+                        }
+                      />
                     </View>
+                    {evidenceFor === movement.id ? (
+                      <View style={{ marginTop: 12 }}>
+                        <AttachmentStrip
+                          entityType="petty_cash_movement"
+                          entityId={movement.id}
+                          canUpload={props.canCreateMovement}
+                          title="Receipt photos"
+                        />
+                      </View>
+                    ) : null}
                   </View>
                 );
               })}

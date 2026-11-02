@@ -13,6 +13,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
+import { issueCategories } from "../lib/jp/issue-policy";
 
 /** Authentication identity and organisation-scoped business memberships are separate records. */
 export const users = mysqlTable("users", {
@@ -1356,6 +1357,91 @@ export const pettyCashMovements = mysqlTable(
       columns: [table.siteId, table.taskId],
       foreignColumns: [workTasks.siteId, workTasks.id],
     }).onDelete("restrict"),
+  }),
+);
+
+/** Safety, quality and site-constraint issues. Status is set by the server; history is append-only. */
+export const siteIssues = mysqlTable(
+  "site_issues",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    issueCode: varchar("issueCode", { length: 48 }).notNull(),
+    category: mysqlEnum("category", issueCategories).notNull(),
+    severity: mysqlEnum("severity", ["Low", "Medium", "High", "Critical"]).notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    description: text("description").notNull(),
+    locationLabel: varchar("locationLabel", { length: 180 }),
+    immediateAction: text("immediateAction"),
+    stopWork: mysqlEnum("stopWork", ["No", "Yes"]).default("No").notNull(),
+    observedAt: timestamp("observedAt").notNull(),
+    status: mysqlEnum("status", ["Open", "In Progress", "Resolved", "Closed"])
+      .default("Open")
+      .notNull(),
+    ownerUserId: int("ownerUserId").references(() => users.id, { onDelete: "restrict" }),
+    ownerNameSnapshot: varchar("ownerNameSnapshot", { length: 180 }),
+    targetDate: date("targetDate", { mode: "string" }),
+    correctiveAction: text("correctiveAction"),
+    preventiveAction: text("preventiveAction"),
+    closureNote: text("closureNote"),
+    raisedBy: int("raisedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    resolvedBy: int("resolvedBy").references(() => users.id, { onDelete: "restrict" }),
+    resolvedAt: timestamp("resolvedAt"),
+    closedBy: int("closedBy").references(() => users.id, { onDelete: "restrict" }),
+    closedAt: timestamp("closedAt"),
+    reopenCount: int("reopenCount").default(0).notNull(),
+    recordVersion: int("recordVersion").default(1).notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    issueCodeUnique: uniqueIndex("site_issue_org_code_uq").on(
+      table.organizationId,
+      table.issueCode,
+    ),
+    issueSiteStatusIndex: index("site_issue_site_status_idx").on(
+      table.siteId,
+      table.status,
+      table.severity,
+    ),
+    issueOwnerIndex: index("site_issue_owner_idx").on(table.ownerUserId, table.status),
+  }),
+);
+
+export const siteIssueEvents = mysqlTable(
+  "site_issue_events",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    issueId: varchar("issueId", { length: 36 })
+      .notNull()
+      .references(() => siteIssues.id, { onDelete: "restrict" }),
+    organizationId: varchar("organizationId", { length: 36 }).notNull(),
+    siteId: varchar("siteId", { length: 36 }).notNull(),
+    eventType: mysqlEnum("eventType", [
+      "Raised",
+      "Comment",
+      "Assigned",
+      "Status Changed",
+      "Reopened",
+    ]).notNull(),
+    fromStatus: varchar("fromStatus", { length: 32 }),
+    toStatus: varchar("toStatus", { length: 32 }),
+    note: text("note"),
+    actorUserId: int("actorUserId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    issueEventIndex: index("site_issue_event_issue_idx").on(table.issueId, table.createdAt),
   }),
 );
 

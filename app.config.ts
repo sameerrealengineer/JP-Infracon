@@ -104,14 +104,22 @@ const config = {
       },
     ],
     [
+      "expo-image-picker",
+      {
+        photosPermission: "Allow JP Infracon to attach site photos you choose as evidence.",
+        cameraPermission:
+          "Allow JP Infracon to take site photos as evidence for reports and issues.",
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/images/splash-icon.png",
         imageWidth: 200,
         resizeMode: "contain",
-        backgroundColor: "#FFFFFF",
+        backgroundColor: "#F4F1EA",
         dark: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: "#0A121B",
         },
       },
     ],

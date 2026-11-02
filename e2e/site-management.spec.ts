@@ -74,6 +74,7 @@ const supervisorKeys = [
 ];
 
 const inbox: Outputs["jp"]["workspace"]["inbox"] = {
+  unavailable: [],
   asOf: new Date("2026-11-02T09:00:00.000Z").toISOString(),
   items: [
     {
@@ -130,7 +131,7 @@ async function signIn(page: Page, role: "admin" | "supervisor") {
       pendingMaterialRequests: 2,
       asOf: new Date().toISOString(),
     }),
-    "jp.workspace.inbox": () => (admin ? inbox : { asOf: inbox.asOf, items: [] }),
+    "jp.workspace.inbox": () => (admin ? inbox : { asOf: inbox.asOf, unavailable: [], items: [] }),
     "jp.sitesAdmin.siteDetail": () => ({
       site: {
         id: SITE_A,

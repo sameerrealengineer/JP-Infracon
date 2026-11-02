@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -644,6 +645,14 @@ export function SupplierPaymentLedger(props: Props) {
                           Review reason: {detailQuery.data.payment.reviewReason}
                         </Text>
                       ) : null}
+                      <View style={{ marginTop: 10 }}>
+                        <AttachmentStrip
+                          entityType="supplier_payment"
+                          entityId={payment.id}
+                          canUpload={props.canCreate}
+                          title="Payment proof"
+                        />
+                      </View>
                     </View>
                   ) : null
                 ) : null}

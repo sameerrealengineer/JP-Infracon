@@ -53,6 +53,14 @@ export default function MoreScreen() {
     show: boolean;
   }[] = [
     {
+      icon: "health-and-safety",
+      title: "Safety & quality",
+      detail: "Hazards, defects, blockers",
+      tone: "error",
+      route: "/issues",
+      show: can("issue.view"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       detail: "Tasks, dependencies, revisions",
@@ -99,6 +107,23 @@ export default function MoreScreen() {
       tone: "info",
       route: "/users",
       show: workspace.canManageAccounts,
+    },
+    {
+      icon: "file-download",
+      title: "Export data",
+      detail: "CSV for Excel / Sheets",
+      tone: "accent",
+      route: "/exports",
+      show: can(
+        "dpr.view",
+        "material.request.view",
+        "inventory.view",
+        "task.view",
+        "issue.view",
+        "finance.invoice.view",
+        "finance.cash.view",
+        "audit.view",
+      ),
     },
     {
       icon: "history",

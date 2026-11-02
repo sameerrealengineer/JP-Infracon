@@ -92,7 +92,10 @@ export type InboxItem = {
     | "cash.review"
     | "cash.post"
     | "cash.acknowledge"
-    | "task.overdue";
+    | "task.overdue"
+    | "issue.critical"
+    | "issue.assigned"
+    | "issue.verify";
   title: string;
   detail: string;
   siteId: string;

@@ -13,4 +13,7 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "cash.post": { icon: "price-check", tone: "success" },
   "cash.acknowledge": { icon: "how-to-reg", tone: "warning" },
   "task.overdue": { icon: "event-busy", tone: "error" },
+  "issue.critical": { icon: "report", tone: "error" },
+  "issue.assigned": { icon: "assignment-ind", tone: "warning" },
+  "issue.verify": { icon: "verified", tone: "success" },
 };

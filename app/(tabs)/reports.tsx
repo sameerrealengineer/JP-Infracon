@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -350,24 +351,35 @@ export default function ReportsScreen() {
                     capability.siteId === report.siteId && capability[submitPermission],
                 ),
               );
+              const canAttach = Boolean(
+                capabilitiesQuery.data?.some(
+                  (capability) =>
+                    capability.siteId === report.siteId &&
+                    (capability["dpr.create"] || capability["dlr.create"]),
+                ),
+              );
               return (
-                <ReportCard
-                  key={report.id}
-                  report={report}
-                  localDraft={localDraft}
-                  canSubmit={canSubmit}
-                  submitting={submitMutation.isPending}
-                  onSubmit={() => {
-                    if (serverReport) void submitReport(serverReport.id);
-                  }}
-                  onSync={() => {
-                    void syncOne(report)
-                      .then(() => setSavedMessage("Local draft saved to the server as a draft."))
-                      .catch((error) =>
-                        setSavedMessage(`Sync is still unconfirmed: ${errorText(error)}`),
-                      );
-                  }}
-                />
+                <View key={report.id}>
+                  <ReportCard
+                    report={report}
+                    localDraft={localDraft}
+                    canSubmit={canSubmit}
+                    submitting={submitMutation.isPending}
+                    onSubmit={() => {
+                      if (serverReport) void submitReport(serverReport.id);
+                    }}
+                    onSync={() => {
+                      void syncOne(report)
+                        .then(() => setSavedMessage("Local draft saved to the server as a draft."))
+                        .catch((error) =>
+                          setSavedMessage(`Sync is still unconfirmed: ${errorText(error)}`),
+                        );
+                    }}
+                  />
+                  {serverReport ? (
+                    <ReportPhotos reportId={serverReport.id} canUpload={canAttach} />
+                  ) : null}
+                </View>
               );
             })}
           </View>
@@ -699,3 +711,24 @@ const styles = StyleSheet.create({
   },
   draftCalloutText: { fontSize: 12, lineHeight: 18, flex: 1 },
 });
+
+function ReportPhotos({ reportId, canUpload }: { reportId: string; canUpload: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ marginTop: 6, gap: 8 }}>
+      <SecondaryButton
+        icon="photo-library"
+        label={open ? "Hide site photos" : "Site photos"}
+        onPress={() => setOpen((value) => !value)}
+      />
+      {open ? (
+        <AttachmentStrip
+          entityType="daily_report"
+          entityId={reportId}
+          canUpload={canUpload}
+          title="Site photos"
+        />
+      ) : null}
+    </View>
+  );
+}

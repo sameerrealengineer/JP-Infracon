@@ -83,3 +83,17 @@ export async function saveMaterialRequest(request: MaterialRequest): Promise<Dra
   await writeDraftStore(next);
   return next;
 }
+
+/** Adds or replaces one entry in the device sync queue shown on the More screen. */
+export async function upsertSyncQueueItem(item: SyncQueueItem): Promise<void> {
+  const store = await readDraftStore();
+  await writeDraftStore({
+    ...store,
+    syncQueue: [...store.syncQueue.filter((row) => row.id !== item.id), item],
+  });
+}
+
+export async function removeSyncQueueItem(id: string): Promise<void> {
+  const store = await readDraftStore();
+  await writeDraftStore({ ...store, syncQueue: store.syncQueue.filter((row) => row.id !== id) });
+}

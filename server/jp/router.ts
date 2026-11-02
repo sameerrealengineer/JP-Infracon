@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { and, count, desc, eq, gte, inArray, isNull, lte, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, ne, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   auditEvents,
-  dailyReportItems,
   dailyReports,
   materialRequestItems,
   materialRequests,
@@ -14,26 +13,22 @@ import {
   projects,
   siteAssignments,
   sites,
-  taskDependencies,
-  taskScheduleChanges,
-  taskScheduleRevisions,
   users,
-  workTasks,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getAccessibleSites, getSiteScope, assertActiveAccount } from "./access";
-import {
-  resolveOrganizationPermission,
-  resolveSitePermission,
-  type PermissionGrantForResolution,
-} from "./policy";
+import { resolveOrganizationPermission, type PermissionGrantForResolution } from "./policy";
 import { taskRouter } from "./tasks";
 import { workforceRouter } from "./workforce";
 import { inventoryRouter } from "./inventory";
 import { financeRouter } from "./finance";
 import { accountsRouter } from "./accounts";
 import { sitesAdminRouter } from "./sites-admin";
+import { issuesRouter } from "./issues";
+import { attachmentsRouter } from "./attachments";
+import { exportsRouter } from "./exports";
 import { buildInbox } from "./inbox";
+import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
 const codeSchema = z
   .string()
@@ -66,139 +61,6 @@ function requireDb(db: Awaited<ReturnType<typeof import("../db").getDb>>) {
 
 function safeRequestId(value: string | string[] | undefined) {
   return typeof value === "string" && value.length <= 100 ? value : undefined;
-}
-
-const permissionKeys = [
-  "site.view",
-  "site.manage",
-  "user.manage",
-  "dpr.view",
-  "dpr.create",
-  "dpr.submit",
-  "dpr.review",
-  "dlr.view",
-  "dlr.create",
-  "dlr.submit",
-  "dlr.review",
-  "material.request.view",
-  "material.request",
-  "material.review",
-  "audit.view",
-  "task.view",
-  "task.manage",
-  "task.status.update",
-  "workforce.view",
-  "workforce.manage",
-  "workforce.kyc.view",
-  "workforce.kyc.review",
-  "workforce.review",
-  "compensation.view",
-  "compensation.manage",
-  "compensation.review",
-  "inventory.view",
-  "inventory.catalog.manage",
-  "inventory.transact",
-  "inventory.review",
-  "vendor.view",
-  "vendor.create",
-  "finance.invoice.view",
-  "finance.invoice.create",
-  "finance.invoice.submit",
-  "finance.invoice.review",
-  "finance.payment.view",
-  "finance.payment.create",
-  "finance.payment.submit",
-  "finance.payment.review",
-  "finance.payment.post",
-  "finance.payment.cancel",
-  "finance.cash.view",
-  "finance.cash.fund.manage",
-  "finance.cash.movement.create",
-  "finance.cash.movement.submit",
-  "finance.cash.movement.review",
-  "finance.cash.movement.post",
-  "finance.cash.movement.cancel",
-] as const;
-type PermissionKey = (typeof permissionKeys)[number];
-type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];
-type SiteCapability = { siteId: string } & Record<PermissionKey, boolean>;
-
-async function siteCapabilities(
-  user: Parameters<typeof getSiteScope>[0],
-  scopedSites: AccessibleSite[],
-): Promise<SiteCapability[]> {
-  if (scopedSites.length === 0) return [];
-  const db = requireDb(await (await import("../db")).getDb());
-  const now = new Date();
-  const organizationIds = [...new Set(scopedSites.map((site) => site.organizationId))];
-  const grants = await db
-    .select()
-    .from(permissionGrants)
-    .where(
-      and(
-        eq(permissionGrants.userId, user.id),
-        eq(permissionGrants.status, "Active"),
-        inArray(permissionGrants.organizationId, organizationIds),
-        lte(permissionGrants.effectiveFrom, now),
-        or(isNull(permissionGrants.effectiveTo), gte(permissionGrants.effectiveTo, now)),
-      ),
-    );
-  return scopedSites.map((site) => {
-    const capabilities = {} as Record<PermissionKey, boolean>;
-    for (const permissionKey of permissionKeys) {
-      const siteIsAvailable = site.status === "Active" || permissionKey.endsWith(".view");
-      capabilities[permissionKey] = siteIsAvailable
-        ? [
-            "inventory.catalog.manage",
-            "vendor.view",
-            "vendor.create",
-            "site.manage",
-            "user.manage",
-          ].includes(permissionKey)
-          ? resolveOrganizationPermission({
-              role: site.businessRole,
-              permissionKey,
-              organizationId: site.organizationId,
-              grants: grants as PermissionGrantForResolution[],
-              now,
-            }) &&
-            resolveSitePermission({
-              role: site.businessRole,
-              permissionKey,
-              scope: {
-                organizationId: site.organizationId,
-                projectId: site.projectId,
-                siteId: site.id,
-              },
-              grants: grants as PermissionGrantForResolution[],
-              now,
-            })
-          : resolveSitePermission({
-              role: site.businessRole,
-              permissionKey,
-              scope: {
-                organizationId: site.organizationId,
-                projectId: site.projectId,
-                siteId: site.id,
-              },
-              grants: grants as PermissionGrantForResolution[],
-              now,
-            })
-        : false;
-    }
-    return { siteId: site.id, ...capabilities };
-  });
-}
-
-function sitesWithPermission(
-  capabilities: SiteCapability[],
-  siteIds: string[],
-  permissionKey: PermissionKey,
-) {
-  const requested = new Set(siteIds);
-  return capabilities
-    .filter((capability) => requested.has(capability.siteId) && capability[permissionKey])
-    .map((capability) => capability.siteId);
 }
 
 async function createAudit(
@@ -282,6 +144,9 @@ export const jpRouter = router({
   finance: financeRouter,
   accounts: accountsRouter,
   sitesAdmin: sitesAdminRouter,
+  issues: issuesRouter,
+  attachments: attachmentsRouter,
+  exports: exportsRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

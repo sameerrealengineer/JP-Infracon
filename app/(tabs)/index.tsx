@@ -99,6 +99,14 @@ export default function HomeScreen() {
       show: can("material.request"),
     },
     {
+      icon: "report",
+      title: "Report issue",
+      detail: "Safety, quality, blockers",
+      tone: "error",
+      route: "/issues",
+      show: can("issue.view"),
+    },
+    {
       icon: "event-note",
       title: "Schedule",
       detail: "Tasks & revisions",

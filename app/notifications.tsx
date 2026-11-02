@@ -71,6 +71,12 @@ export default function NotificationsScreen() {
           {inbox.error && online !== false ? (
             <InlineError message={inbox.error.message} onRetry={() => void inbox.refetch()} />
           ) : null}
+          {inbox.data?.unavailable.length ? (
+            <InlineError
+              title="Some checks are unavailable"
+              message={`Could not check: ${inbox.data.unavailable.join(", ")}. Ask your administrator to finish the database update.`}
+            />
+          ) : null}
           <ChipGroup options={views} value={view} onChange={setView} />
           {inbox.isLoading ? (
             <LoadingBlock label="Checking your queue…" />

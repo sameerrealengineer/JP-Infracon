@@ -22,10 +22,13 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { useConnectivity } from "@/hooks/use-connectivity";
+import { useIssueDraftSync } from "@/hooks/use-issue-draft-sync";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 
 function ConnectivitySync() {
-  useConnectivity();
+  const { online } = useConnectivity();
+  // Drafts saved offline are sent as soon as the phone reconnects.
+  useIssueDraftSync(online);
   return null;
 }
 
