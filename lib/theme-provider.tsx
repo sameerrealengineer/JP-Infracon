@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Appearance, View, useColorScheme as useSystemColorScheme } from "react-native";
 import { colorScheme as nativewindColorScheme, vars } from "nativewind";
@@ -10,6 +11,13 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+/** The chosen appearance is remembered on this phone (per device, like the language). */
+const THEME_KEY = "jp-infracon.theme.v1";
+
+function isColorScheme(value: unknown): value is ColorScheme {
+  return value === "light" || value === "dark";
+}
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useSystemColorScheme() === "dark" ? "dark" : "light";
@@ -33,9 +41,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     (scheme: ColorScheme) => {
       setColorSchemeState(scheme);
       applyScheme(scheme);
+      AsyncStorage.setItem(THEME_KEY, scheme).catch(() => undefined);
     },
     [applyScheme],
   );
+
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(THEME_KEY)
+      .then((saved) => {
+        if (active && isColorScheme(saved)) setColorSchemeState(saved);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     applyScheme(colorScheme);
