@@ -43,6 +43,24 @@
       "skillPath": "skills/mysql/SKILL.md",
       "computedHash": "6cb0725d61db4940f9eab79436753fe4ecb261f57ae8a08b2ac28676f82cbecc"
     },
+    "playwright-best-practices": {
+      "source": "currents-dev/playwright-best-practices-skill",
+      "sourceType": "github",
+      "skillPath": "playwright-best-practices/SKILL.md",
+      "computedHash": "7eb144f734450fee649dc1d209114775ddda07cbf45be84fe969d3d4f3971dce"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "computedHash": "56941c3c0464ad22ccdf3ec975fc4bd518c5daea34b73329c232bc1f37f9a6b7"
+    },
+    "react-testing-library": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.experimental/react-testing-library/SKILL.md",
+      "computedHash": "f5aa250de3181d75f34945936dce277811288feac799198d28ef0ff91ef54d42"
+    },
     "styling-nativewind-v4-expo": {
       "source": "tristanmanchester/agent-skills",
       "sourceType": "github",

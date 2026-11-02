@@ -11,7 +11,7 @@ Construction management app for field teams (sites, daily reports, tasks, workfo
 
 ## Build approach
 
-<TBD, set by /scope>
+Tracer Bullet (each feature is built end to end, through schema, server rules, screen, and tests, and works before the next one starts). Source: `docs/scope/index.md`.
 
 ## Commands
 
@@ -19,11 +19,15 @@ Construction management app for field teams (sites, daily reports, tasks, workfo
 pnpm install                 # Install
 pnpm dev                     # API on :3000 + Expo Metro web on :8081 (fixed ports)
 pnpm check                   # Typecheck (tsc --noEmit)
-pnpm lint                    # expo lint
+pnpm lint                    # expo lint (errors fail CI; warnings do not)
+pnpm format:check            # Prettier check (pnpm format writes)
 pnpm test                    # Vitest, database free tests only
+pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
 pnpm build                   # Bundle the API to dist/ with esbuild
 npx expo export --platform web --output-dir /tmp/jp-web-export   # Web bundle check
 ```
+
+A Husky pre commit hook runs lint-staged (`eslint --fix` and Prettier on staged files). GitHub Actions (`.github/workflows/ci.yml`) runs check, lint, format:check, test, and build on every push and pull request.
 
 ## Specs
 
@@ -38,6 +42,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - Mutations carry a `clientMutationId` for idempotency. Offline drafts live only in AsyncStorage (`lib/jp/local-repository.ts`) and are never shown as approved or posted.
 - Screens show real persisted records with honest loading, empty, denied, offline, and error states. No hardcoded names, totals, or fake approvals.
 - Import with the `@/` alias (repo root) and `@shared/`. Put pure logic in `lib/jp/` with a colocated `*.test.ts`.
+- Never correct state inside `useEffect` (lint error `react-hooks/set-state-in-effect`). Derive the value during render (`lib/jp/selection.ts` keeps a chosen site, role, or page valid) or adjust state while rendering, keyed on the previous value.
 - Mark a `TODO.md` outcome done only with evidence the behavior works, not because a screen exists.
 
 ## Gotchas
@@ -45,6 +50,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - One managed MySQL database serves both development and production. Never point tests at it, seed demo data, or run destructive cleanup.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. There are no demo logins; the first Super Admin comes from the one time bootstrap flow.
+- The web bundle (`expo export`, so also `pnpm test:e2e`) fails to resolve `react-native-css-interop/jsx-runtime` because pnpm does not hoist NativeWind's runtime package; it builds once that package is resolvable (for example as a direct dependency).
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
 ## Agent skills
@@ -57,13 +63,17 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - [vercel-react-native-skills](.claude/skills/vercel-react-native-skills/): `vercel-labs/agent-skills`, React Native performance and component practice
 - [styling-nativewind-v4-expo](.claude/skills/styling-nativewind-v4-expo/): `tristanmanchester/agent-skills`, NativeWind v4 with Tailwind v3
 - [vitest](.claude/skills/vitest/): `antfu/skills`, writing and running Vitest tests
+- [playwright-cli](.claude/skills/playwright-cli/): `microsoft/playwright-cli`, Playwright test authoring and browser automation
+- [playwright-best-practices](.claude/skills/playwright-best-practices/): `currents-dev/playwright-best-practices-skill`, e2e patterns, API mocking, flake fixing, CI
+- [react-testing-library](.claude/skills/react-testing-library/): `pproenca/dot-skills`, Testing Library queries and hook tests (used with Vitest + jsdom)
 
-MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended)
+MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended), Playwright MCP (recommended)
 
 ## Context files
 
 - [server/jp/AGENTS.md](server/jp/AGENTS.md) (tRPC business procedures: site scope, permissions, audit, idempotency)
 - [lib/jp/AGENTS.md](lib/jp/AGENTS.md) (pure shared domain logic: paise math, policies, scheduling, offline drafts)
 - [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the shared MySQL database)
+- [e2e/AGENTS.md](e2e/AGENTS.md) (Playwright tests on the static web export with a faked tRPC API)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

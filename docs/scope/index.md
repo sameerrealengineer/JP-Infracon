@@ -20,7 +20,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 5 | [Workforce register, KYC status & rates](field.md) | Existing | existing |
 | 6 | [Inventory ledger](field.md) | Existing | existing |
 | 7 | [Supplier payment ledger](finance.md) | Existing | existing |
-| 8 | [Coding standards & tooling](platform.md) | Foundation | in-progress |
+| 8 | [Coding standards & tooling](platform.md) | Foundation | done |
 | 9 | [Environment separation & backups](platform.md) | Foundation | planned |
 | 10 | [Error reporting](platform.md) | Foundation | planned |
 | 11 | [Text resources for translation](platform.md) | Foundation | planned |

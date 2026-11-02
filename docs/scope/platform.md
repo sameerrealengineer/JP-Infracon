@@ -15,7 +15,7 @@ First organisation, project, and site onboarding; memberships, site assignments,
 
 ## Foundations
 
-### 8. Coding standards & tooling · in-progress
+### 8. Coding standards & tooling · done
 Conventions are captured; add the missing enforcement (pre commit checks and a CI run of check, lint, test, build) so every later change is checked the same way.
 **Done when:** root `AGENTS.md` reflects the real stack, and lint, format, typecheck, and tests run clean locally and on every push.
 code in `.github/workflows/ci.yml`, `.husky/pre-commit`, `package.json` (`lint-staged`, `format:check`), `.prettierrc.json`, `eslint.config.js`

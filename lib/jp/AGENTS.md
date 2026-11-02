@@ -16,6 +16,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `scheduling.ts` | Date math and dependency impact for rescheduling |
 | `domain.ts` | Shared presentation and domain types |
 | `local-repository.ts` | AsyncStorage drafts and sync queue, `createClientMutationId` |
+| `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions
 
