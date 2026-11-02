@@ -12,7 +12,7 @@ import {
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { getSiteScope } from "./access";
+import { getSiteScope, selfApprovalAllowed } from "./access";
 import {
   attendanceStatuses,
   estimateEarning,
@@ -266,6 +266,7 @@ export const attendanceRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const scope = await getSiteScope(ctx.user, input.siteId, "attendance.approve");
+      const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
       const db = requireDb(await getDb());
       const [prior] = await db
         .select({ id: auditEvents.id })
@@ -295,7 +296,7 @@ export const attendanceRouter = router({
           .for("update");
         for (const row of rows) {
           // Maker-checker: nobody approves attendance they marked themselves.
-          if (row.markedBy === ctx.user.id) {
+          if (row.markedBy === ctx.user.id && !selfOk) {
             skippedOwn += 1;
             continue;
           }

@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { and, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -8,6 +8,7 @@ import {
   organizationMemberships,
   organizations,
   permissionGrants,
+  registrationInvites,
   projects,
   siteAssignments,
   sites,
@@ -34,6 +35,7 @@ import {
   mayManageRole,
   rolesAssignableBy,
 } from "../../lib/jp/account-role-policy";
+import { formatInviteCode, inviteCodeFromBytes } from "../../lib/jp/invite-code";
 
 const organizationWideRoles = new Set<BusinessRole>(["admin", "director"]);
 const newAccountSchema = z.object({
@@ -240,7 +242,158 @@ async function createAudit(
   await tx.insert(auditEvents).values({ id: randomUUID(), ...values });
 }
 
+function newInviteCode() {
+  let code = "";
+  while (code.length < 10) code = inviteCodeFromBytes(randomBytes(32));
+  return code;
+}
+
 export const accountsRouter = router({
+  /** One-time sign-up code for a named person; shown once, stored only as a hash. */
+  createInvite: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string().uuid(),
+        inviteeName: z.string().trim().min(2).max(120),
+        businessRole: z.enum(assignableBusinessRoles),
+        siteId: z.string().uuid().optional(),
+        validDays: z.number().int().min(1).max(30).default(7),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { organization, managerRole } = await assertCanManageOrganization(
+        ctx.user,
+        input.organizationId,
+      );
+      if (!rolesAssignableBy(managerRole).includes(input.businessRole))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your role cannot invite someone with this role.",
+        });
+      if (organization.status !== "Active")
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "The organisation is not active.",
+        });
+      const broad = organizationWideRoles.has(input.businessRole);
+      if (broad && input.siteId)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Director and Admin roles cover every site; do not pick one.",
+        });
+      if (!broad && !input.siteId)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Choose the site this person will work on.",
+        });
+      const db = requireDb(await getDb());
+      if (input.siteId) {
+        const [site] = await db
+          .select({ id: sites.id })
+          .from(sites)
+          .where(
+            and(
+              eq(sites.id, input.siteId),
+              eq(sites.organizationId, input.organizationId),
+              eq(sites.status, "Active"),
+            ),
+          )
+          .limit(1);
+        if (!site)
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Choose an active site in this organisation.",
+          });
+      }
+      const code = newInviteCode();
+      const id = randomUUID();
+      const expiresAt = new Date(Date.now() + input.validDays * 86_400_000);
+      await db.transaction(async (tx) => {
+        await tx.insert(registrationInvites).values({
+          id,
+          organizationId: input.organizationId,
+          codeHash: createHash("sha256").update(code).digest("hex"),
+          codeHint: code.slice(-4),
+          inviteeName: input.inviteeName,
+          businessRole: input.businessRole,
+          siteId: input.siteId ?? null,
+          expiresAt,
+          createdBy: ctx.user.id,
+        });
+        await createAudit(tx, {
+          organizationId: input.organizationId,
+          siteId: input.siteId ?? null,
+          actorUserId: ctx.user.id,
+          action: "invite.created",
+          entityType: "registration_invite",
+          entityId: id,
+          afterSummary: JSON.stringify({
+            inviteeName: input.inviteeName,
+            businessRole: input.businessRole,
+            expiresAt,
+          }),
+        });
+      });
+      return { id, code: formatInviteCode(code), expiresAt };
+    }),
+
+  listInvites: protectedProcedure
+    .input(z.object({ organizationId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      await assertCanManageOrganization(ctx.user, input.organizationId);
+      const db = requireDb(await getDb());
+      try {
+        return await db
+          .select({
+            id: registrationInvites.id,
+            inviteeName: registrationInvites.inviteeName,
+            businessRole: registrationInvites.businessRole,
+            siteName: sites.name,
+            codeHint: registrationInvites.codeHint,
+            status: registrationInvites.status,
+            expiresAt: registrationInvites.expiresAt,
+            usedAt: registrationInvites.usedAt,
+            createdAt: registrationInvites.createdAt,
+          })
+          .from(registrationInvites)
+          .leftJoin(sites, eq(registrationInvites.siteId, sites.id))
+          .where(eq(registrationInvites.organizationId, input.organizationId))
+          .orderBy(desc(registrationInvites.createdAt))
+          .limit(100);
+      } catch {
+        return [];
+      }
+    }),
+
+  revokeInvite: protectedProcedure
+    .input(z.object({ inviteId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      const [invite] = await db
+        .select()
+        .from(registrationInvites)
+        .where(eq(registrationInvites.id, input.inviteId))
+        .limit(1);
+      if (!invite) throw new TRPCError({ code: "NOT_FOUND", message: "Invite not found." });
+      await assertCanManageOrganization(ctx.user, invite.organizationId);
+      if (invite.status !== "Active") return { id: invite.id };
+      await db.transaction(async (tx) => {
+        await tx
+          .update(registrationInvites)
+          .set({ status: "Revoked" })
+          .where(eq(registrationInvites.id, invite.id));
+        await createAudit(tx, {
+          organizationId: invite.organizationId,
+          siteId: invite.siteId,
+          actorUserId: ctx.user.id,
+          action: "invite.revoked",
+          entityType: "registration_invite",
+          entityId: invite.id,
+        });
+      });
+      return { id: invite.id };
+    }),
+
   options: protectedProcedure.query(async ({ ctx }) => manageableOrganizations(ctx.user)),
 
   list: protectedProcedure

@@ -111,6 +111,14 @@ export default function MoreScreen() {
       show: workspace.canManageSites,
     },
     {
+      icon: "key",
+      title: "Delegate authority",
+      detail: "Temporary powers & self-approval",
+      tone: "accent",
+      route: "/delegation",
+      show: workspace.canManageSites,
+    },
+    {
       icon: "manage-accounts",
       title: "Team accounts",
       detail: "Logins, roles, site access",
@@ -136,12 +144,28 @@ export default function MoreScreen() {
       ),
     },
     {
+      icon: "vpn-key",
+      title: "Invite codes",
+      detail: "Let people sign themselves up",
+      tone: "accent",
+      route: "/invites",
+      show: workspace.canManageAccounts,
+    },
+    {
       icon: "history",
       title: "Audit trail",
       detail: "Who changed what, and why",
       tone: "info",
       route: "/audit",
       show: can("audit.view"),
+    },
+    {
+      icon: "campaign",
+      title: "Alerts",
+      detail: "Push, WhatsApp, SMS",
+      tone: "info",
+      route: "/alert-settings",
+      show: true,
     },
     {
       icon: "notifications-none",

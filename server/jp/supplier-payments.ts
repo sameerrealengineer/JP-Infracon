@@ -19,7 +19,7 @@ import {
 } from "../../lib/jp/finance-domain";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope } from "./access";
+import { getSiteScope, selfApprovalAllowed } from "./access";
 
 const uuidSchema = z.string().uuid();
 const mutationIdSchema = z.string().trim().min(16).max(64);
@@ -346,7 +346,7 @@ function toMinorAllocations(allocations: readonly { invoiceId: string; amountRup
 async function getPaymentAllocations(
   queryable: any,
   paymentId: string,
-): Promise<Array<{ invoiceId: string; invoiceNumber: string; amountMinor: string }>> {
+): Promise<{ invoiceId: string; invoiceNumber: string; amountMinor: string }[]> {
   return queryable
     .select({
       invoiceId: supplierPaymentAllocations.invoiceId,
@@ -868,7 +868,10 @@ export const supplierPaymentRouter = router({
             code: "NOT_FOUND",
             message: "Supplier payment not found for this assigned site.",
           });
-        if (payment.createdBy === ctx.user.id)
+        if (
+          payment.createdBy === ctx.user.id &&
+          !(await selfApprovalAllowed(ctx.user, payment.siteId))
+        )
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "The payment creator cannot review their own payment.",
@@ -985,7 +988,10 @@ export const supplierPaymentRouter = router({
             code: "NOT_FOUND",
             message: "Supplier payment not found for this assigned site.",
           });
-        if (payment.createdBy === ctx.user.id)
+        if (
+          payment.createdBy === ctx.user.id &&
+          !(await selfApprovalAllowed(ctx.user, payment.siteId))
+        )
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "The payment creator cannot post their own payment.",

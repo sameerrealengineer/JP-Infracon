@@ -1517,3 +1517,197 @@ export const auditEvents = mysqlTable(
     auditEntityIndex: index("audit_entity_idx").on(table.entityType, table.entityId),
   }),
 );
+
+/** One-time sign-up codes an administrator issues so a named person can create their own login. */
+export const registrationInvites = mysqlTable(
+  "registration_invites",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    codeHash: varchar("codeHash", { length: 64 }).notNull().unique(),
+    codeHint: varchar("codeHint", { length: 8 }).notNull(),
+    inviteeName: varchar("inviteeName", { length: 120 }).notNull(),
+    businessRole: mysqlEnum("businessRole", [
+      "director",
+      "admin",
+      "project_manager",
+      "supervisor",
+      "accounts",
+      "storekeeper",
+      "auditor",
+    ]).notNull(),
+    siteId: varchar("siteId", { length: 36 }).references(() => sites.id, { onDelete: "restrict" }),
+    status: mysqlEnum("status", ["Active", "Used", "Revoked"]).default("Active").notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    usedBy: int("usedBy").references(() => users.id, { onDelete: "restrict" }),
+    usedAt: timestamp("usedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    inviteOrgStatusIndex: index("registration_invite_org_status_idx").on(
+      table.organizationId,
+      table.status,
+    ),
+  }),
+);
+
+/** Expo push tokens per signed-in device. */
+export const pushDevices = mysqlTable(
+  "push_devices",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    expoPushToken: varchar("expoPushToken", { length: 255 }).notNull().unique(),
+    platform: varchar("platform", { length: 16 }).notNull(),
+    status: mysqlEnum("status", ["Active", "Disabled"]).default("Active").notNull(),
+    lastSeenAt: timestamp("lastSeenAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    pushDeviceUserIndex: index("push_device_user_idx").on(table.userId, table.status),
+  }),
+);
+
+/** Delivery log for push/WhatsApp/SMS alerts. Message bodies are not stored. */
+export const notificationDeliveries = mysqlTable(
+  "notification_deliveries",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 }).notNull(),
+    siteId: varchar("siteId", { length: 36 }),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    channel: mysqlEnum("channel", ["push", "whatsapp", "sms"]).notNull(),
+    eventKind: varchar("eventKind", { length: 64 }).notNull(),
+    status: mysqlEnum("status", ["Sent", "Failed", "Skipped"]).notNull(),
+    detail: varchar("detail", { length: 255 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    deliveryUserTimeIndex: index("notification_delivery_user_time_idx").on(
+      table.userId,
+      table.createdAt,
+    ),
+  }),
+);
+
+/** Arrival/departure at a site geofence, recorded only for people who opted in on their phone. */
+export const sitePresenceEvents = mysqlTable(
+  "site_presence_events",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 }).notNull(),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    eventType: mysqlEnum("eventType", ["Arrived", "Left"]).notNull(),
+    latitude: decimal("latitude", { precision: 9, scale: 6 }),
+    longitude: decimal("longitude", { precision: 9, scale: 6 }),
+    accuracyM: int("accuracyM"),
+    occurredAt: timestamp("occurredAt").notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    presenceSiteTimeIndex: index("site_presence_site_time_idx").on(table.siteId, table.occurredAt),
+  }),
+);
+
+/** Contact and alert preferences, kept apart from `users` so older code paths never depend on them. */
+export const userContactPreferences = mysqlTable("user_contact_preferences", {
+  userId: int("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "restrict" }),
+  /** E.164 mobile number for WhatsApp/SMS alerts; used only when the person opts in. */
+  phone: varchar("phone", { length: 20 }),
+  whatsappOptIn: mysqlEnum("whatsappOptIn", ["No", "Yes"]).default("No").notNull(),
+  smsOptIn: mysqlEnum("smsOptIn", ["No", "Yes"]).default("No").notNull(),
+  pushOptIn: mysqlEnum("pushOptIn", ["No", "Yes"]).default("Yes").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Site boundary used for arrival/departure alerts and GPS photo checks. */
+export const siteGeofences = mysqlTable("site_geofences", {
+  siteId: varchar("siteId", { length: 36 })
+    .primaryKey()
+    .references(() => sites.id, { onDelete: "restrict" }),
+  latitude: decimal("latitude", { precision: 9, scale: 6 }).notNull(),
+  longitude: decimal("longitude", { precision: 9, scale: 6 }).notNull(),
+  radiusM: int("radiusM").notNull(),
+  setBy: int("setBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Where an evidence photo was taken, when the phone shared its location. */
+export const attachmentLocations = mysqlTable("attachment_locations", {
+  attachmentId: varchar("attachmentId", { length: 36 })
+    .primaryKey()
+    .references(() => attachments.id, { onDelete: "restrict" }),
+  latitude: decimal("latitude", { precision: 9, scale: 6 }).notNull(),
+  longitude: decimal("longitude", { precision: 9, scale: 6 }).notNull(),
+  accuracyM: int("accuracyM"),
+  distanceFromSiteM: int("distanceFromSiteM"),
+  capturedAt: timestamp("capturedAt").notNull(),
+});
+
+/** A time-limited handover of authority from an administrator to a named person. */
+export const delegations = mysqlTable(
+  "delegations",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    scopeType: mysqlEnum("scopeType", ["project", "site"]).notNull(),
+    scopeId: varchar("scopeId", { length: 36 }).notNull(),
+    bundles: varchar("bundles", { length: 120 }).notNull(),
+    reason: text("reason").notNull(),
+    effectiveFrom: timestamp("effectiveFrom").notNull(),
+    effectiveTo: timestamp("effectiveTo"),
+    status: mysqlEnum("status", ["Active", "Revoked"]).default("Active").notNull(),
+    grantedBy: int("grantedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    revokedBy: int("revokedBy").references(() => users.id, { onDelete: "restrict" }),
+    revokedAt: timestamp("revokedAt"),
+    revokeReason: text("revokeReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    delegationOrgIndex: index("delegation_org_status_idx").on(table.organizationId, table.status),
+    delegationUserIndex: index("delegation_user_idx").on(table.userId, table.status),
+  }),
+);
+
+/** Links each delegation to the permission grants it created, so revoking one revokes them all. */
+export const delegationGrants = mysqlTable(
+  "delegation_grants",
+  {
+    delegationId: varchar("delegationId", { length: 36 })
+      .notNull()
+      .references(() => delegations.id, { onDelete: "restrict" }),
+    grantId: varchar("grantId", { length: 36 })
+      .notNull()
+      .references(() => permissionGrants.id, { onDelete: "restrict" }),
+  },
+  (table) => ({
+    delegationGrantUnique: uniqueIndex("delegation_grant_uq").on(table.delegationId, table.grantId),
+  }),
+);

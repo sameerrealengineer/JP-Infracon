@@ -20,7 +20,7 @@ import {
 } from "../../lib/jp/inventory-domain";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope } from "./access";
+import { getSiteScope, selfApprovalAllowed } from "./access";
 import { resolveOrganizationPermission, type PermissionGrantForResolution } from "./policy";
 
 const movementTypes = [
@@ -646,7 +646,8 @@ export const inventoryRouter = router({
       await getSiteScope(ctx.user, initial.siteId, "inventory.view");
       if (scope.organizationId !== initial.organizationId)
         throw new TRPCError({ code: "NOT_FOUND", message: "Inventory movement not found." });
-      if (initial.createdBy === ctx.user.id)
+      const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
+      if (initial.createdBy === ctx.user.id && !selfOk)
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "The person who submitted this movement cannot review or post it.",
@@ -706,7 +707,7 @@ export const inventoryRouter = router({
           .limit(1);
         if (!lockedMovement)
           throw new TRPCError({ code: "NOT_FOUND", message: "Inventory movement not found." });
-        if (lockedMovement.createdBy === ctx.user.id)
+        if (lockedMovement.createdBy === ctx.user.id && !selfOk)
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "The person who submitted this movement cannot review or post it.",

@@ -299,3 +299,16 @@ export async function getAccessibleSiteIds(user: User): Promise<string[]> {
   const sitesInScope = await getAccessibleSites(user);
   return sitesInScope.map((site) => site.id);
 }
+
+/**
+ * True when a director/admin has delegated "approve own work" (`approval.self`) for this site,
+ * typically for a limited time. Maker-checker checks skip the different-person rule only then.
+ */
+export async function selfApprovalAllowed(user: User, siteId: string): Promise<boolean> {
+  try {
+    await getSiteScope(user, siteId, "approval.self");
+    return true;
+  } catch {
+    return false;
+  }
+}

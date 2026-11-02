@@ -39,6 +39,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const registerMutation = trpc.auth.registerWithInvite.useMutation();
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -64,6 +67,31 @@ export function AuthGate({ children }: { children: ReactNode }) {
     });
     await utils.auth.me.invalidate();
     await me.refetch();
+  };
+
+  const register = async () => {
+    setSubmitting(true);
+    setFormError(null);
+    if (password !== confirmPassword) {
+      setFormError(t("The passwords do not match."));
+      setSubmitting(false);
+      return;
+    }
+    try {
+      const result = await registerMutation.mutateAsync({
+        code: inviteCode.trim(),
+        username: username.trim(),
+        password,
+      });
+      await completeSignIn(result);
+      setInviteCode("");
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : t("Account could not be created. Check the code."),
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const signIn = async () => {
@@ -152,14 +180,21 @@ export function AuthGate({ children }: { children: ReactNode }) {
     ? changeTemporaryPassword
     : firstRun
       ? initializeSuperAdmin
-      : signIn;
+      : registering
+        ? register
+        : signIn;
   const disabled =
     submitting ||
     (mustChangePassword
       ? !currentPassword || newPassword.length < 12 || !confirmPassword
       : !username.trim() ||
         !password ||
-        (firstRun && (!bootstrapSecret.trim() || !displayName.trim())));
+        (firstRun && (!bootstrapSecret.trim() || !displayName.trim())) ||
+        (registering &&
+          !firstRun &&
+          (inviteCode.replace(/[\s-]/g, "").length !== 10 ||
+            password.length < 12 ||
+            !confirmPassword)));
 
   return (
     <LinearGradient
@@ -207,7 +242,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 ? "Set a new password"
                 : firstRun
                   ? "Create the Super Admin"
-                  : t("Welcome back")}
+                  : registering
+                    ? t("Create your account")
+                    : t("Welcome back")}
             </Text>
             {mustChangePassword ? (
               <>
@@ -356,6 +393,88 @@ export function AuthGate({ children }: { children: ReactNode }) {
                   ]}
                 />
               </>
+            ) : registering ? (
+              <>
+                <Text style={[styles.detail, { color: colors.muted }]}>
+                  {t(
+                    "Enter the invite code your director or administrator gave you, then choose your own username and password.",
+                  )}
+                </Text>
+                <TextInput
+                  accessibilityLabel="Invite code"
+                  value={inviteCode}
+                  onChangeText={setInviteCode}
+                  placeholder={t("Invite code (e.g. ABCDE-FGH23)")}
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  autoComplete="off"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Choose username"
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder={t("Choose a username")}
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="username"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Choose password"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={t("Password (12+ characters)")}
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+                <TextInput
+                  accessibilityLabel="Confirm password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder={t("Confirm password")}
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  style={[
+                    styles.input,
+                    {
+                      color: colors.foreground,
+                      backgroundColor: colors.background,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                />
+              </>
             ) : (
               <>
                 <Text style={[styles.detail, { color: colors.muted }]}>
@@ -436,10 +555,30 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ? "Update password"
                     : firstRun
                       ? "Create Super Admin account"
-                      : t("Sign in")}
+                      : registering
+                        ? t("Create account")
+                        : t("Sign in")}
                 </Text>
               )}
             </Pressable>
+            {!mustChangePassword && !firstRun ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setRegistering((value) => !value);
+                  setFormError(null);
+                  setPassword("");
+                  setConfirmPassword("");
+                }}
+                hitSlop={8}
+              >
+                <Text style={[styles.switchLink, { color: colors.primary }]}>
+                  {registering
+                    ? t("Already have an account? Sign in")
+                    : t("Have an invite code? Create account")}
+                </Text>
+              </Pressable>
+            ) : null}
             <Text style={[styles.privacy, { color: colors.muted }]}>
               {t("Individual accounts only. Never share your password.")}
             </Text>
@@ -521,6 +660,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     fontSize: 15,
   },
+  switchLink: { fontSize: 13, fontWeight: "800", marginTop: 4 },
   error: { fontSize: 12, lineHeight: 18, textAlign: "center", maxWidth: 360 },
   loginButton: {
     width: "100%",

@@ -8,6 +8,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { usePushRegistration } from "@/hooks/use-push-registration";
 import { useT } from "@/lib/i18n";
 
 type IconName = ComponentProps<typeof MaterialIcons>["name"];
@@ -45,6 +46,7 @@ export default function TabLayout() {
 
   return (
     <AuthGate>
+      <PushRegistration />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
@@ -123,3 +125,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+/** Rendered only inside AuthGate, so it registers for push after a successful sign-in. */
+function PushRegistration() {
+  usePushRegistration(true);
+  return null;
+}

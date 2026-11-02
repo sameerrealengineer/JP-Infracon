@@ -9,13 +9,19 @@ import {
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import {
+  auditEvents,
   authSessions,
   loginAttempts,
+  organizationMemberships,
+  registrationInvites,
+  siteAssignments,
+  sites,
   systemBootstrap,
   userCredentials,
   users,
   type User,
 } from "../../drizzle/schema";
+import { isWellFormedInviteCode, normalizeInviteCode } from "../../lib/jp/invite-code";
 import { getDb } from "../db";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
@@ -420,3 +426,136 @@ export async function revokeSession(sessionId: string, userId?: number): Promise
 }
 
 export const credentialSessionLifetimeMs = SESSION_LIFETIME_MS;
+
+/**
+ * Creates a login from an administrator-issued invite code. The code is single-use, expires,
+ * fixes the organisation, role and site, and failed attempts are throttled per client address.
+ */
+export async function registerWithInvite(input: {
+  code: string;
+  username: string;
+  password: string;
+  clientKey: string;
+}) {
+  const throttle = throttleKey(`invite_redeem:${input.clientKey}`);
+  const code = normalizeInviteCode(input.code);
+  const blocked = await isLoginBlocked(throttle);
+  if (blocked || !isWellFormedInviteCode(code)) {
+    if (!blocked) await recordFailedLogin(throttle);
+    throw new TRPCError({ code: "UNAUTHORIZED", message: INVALID_INVITE_MESSAGE });
+  }
+  const username = normalizeUsername(input.username);
+  if (!isValidUsername(username))
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Username must be 3–32 characters using letters, numbers, dot, dash, or underscore.",
+    });
+  if (!validatePassword(input.password))
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Use a password of at least 12 characters.",
+    });
+  const db = await getDb();
+  if (!db)
+    throw new TRPCError({
+      code: "SERVICE_UNAVAILABLE",
+      message: "Sign-up is temporarily unavailable.",
+    });
+  const codeHash = createHash("sha256").update(code).digest("hex");
+  const passwordHash = await hashPassword(input.password);
+  let user: User | undefined;
+  try {
+    await db.transaction(async (tx) => {
+      const [invite] = await tx
+        .select()
+        .from(registrationInvites)
+        .where(eq(registrationInvites.codeHash, codeHash))
+        .limit(1)
+        .for("update");
+      if (!invite || invite.status !== "Active" || invite.expiresAt.getTime() < Date.now())
+        throw new TRPCError({ code: "UNAUTHORIZED", message: INVALID_INVITE_MESSAGE });
+      if (invite.siteId) {
+        const [site] = await tx
+          .select({ status: sites.status })
+          .from(sites)
+          .where(eq(sites.id, invite.siteId))
+          .limit(1);
+        if (site?.status !== "Active")
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "The invited site is not active.",
+          });
+      }
+      const openId = `local_${randomUUID().replaceAll("-", "")}`;
+      const now = new Date();
+      await tx.insert(users).values({
+        openId,
+        name: invite.inviteeName,
+        email: null,
+        loginMethod: "username_password",
+        role: "user",
+        accountStatus: "Active",
+        lastSignedIn: now,
+      });
+      [user] = await tx.select().from(users).where(eq(users.openId, openId)).limit(1);
+      if (!user) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sign-up failed." });
+      await tx.insert(userCredentials).values({
+        id: randomUUID(),
+        userId: user.id,
+        username,
+        passwordHash,
+        mustChangePassword: 0,
+        passwordChangedAt: now,
+      });
+      await tx.insert(organizationMemberships).values({
+        id: randomUUID(),
+        organizationId: invite.organizationId,
+        userId: user.id,
+        businessRole: invite.businessRole,
+        status: "Active",
+        createdBy: invite.createdBy,
+      });
+      if (invite.siteId)
+        await tx.insert(siteAssignments).values({
+          id: randomUUID(),
+          siteId: invite.siteId,
+          userId: user.id,
+          assignmentRole: invite.businessRole,
+          effectiveFrom: now,
+          status: "Active",
+          assignedBy: invite.createdBy,
+        });
+      await tx
+        .update(registrationInvites)
+        .set({ status: "Used", usedBy: user.id, usedAt: now })
+        .where(eq(registrationInvites.id, invite.id));
+      await tx.insert(auditEvents).values({
+        id: randomUUID(),
+        organizationId: invite.organizationId,
+        siteId: invite.siteId,
+        actorUserId: user.id,
+        action: "account.registered_with_invite",
+        entityType: "user_account",
+        entityId: String(user.id),
+        afterSummary: JSON.stringify({
+          username,
+          businessRole: invite.businessRole,
+          inviteId: invite.id,
+        }),
+      });
+    });
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      if (error.code === "UNAUTHORIZED") await recordFailedLogin(throttle);
+      throw error;
+    }
+    if (String(error).toLowerCase().includes("duplicate"))
+      throw new TRPCError({ code: "CONFLICT", message: "That username is already in use." });
+    console.error("[Auth] Invite sign-up failed");
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Sign-up failed. Try again." });
+  }
+  await clearFailedLogin(throttle);
+  return issueSession(user!, false);
+}
+
+const INVALID_INVITE_MESSAGE = "This invite code is not valid, has expired, or was already used.";

@@ -29,6 +29,7 @@ import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { inboxIcon } from "@/components/jp/inbox-meta";
+import { delegationBundles, timeLeft } from "@/lib/jp/delegation-policy";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
 
@@ -50,6 +51,7 @@ export default function HomeScreen() {
   const sites = trpc.jp.workspace.mySites.useQuery();
   const dashboard = trpc.jp.workspace.dashboard.useQuery();
   const inbox = trpc.jp.workspace.inbox.useQuery();
+  const delegated = trpc.jp.delegation.mine.useQuery();
   const [refreshing, setRefreshing] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
 
@@ -192,6 +194,21 @@ export default function HomeScreen() {
           <InlineError message={dataError.message} onRetry={refresh} />
         ) : null}
 
+        {(delegated.data ?? []).map((row) => (
+          <Card key={row.id} accent="accent" style={{ marginBottom: 14 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.delegatedTitle, { color: colors.foreground }]}>
+                {t("Temporary authority from {name}", { name: row.grantedByName ?? "admin" })}
+              </Text>
+              <Text style={[styles.delegatedText, { color: colors.muted }]}>
+                {row.bundles
+                  .map((bundle) => delegationBundles[bundle]?.label ?? bundle)
+                  .join(" · ")}{" "}
+                · {timeLeft(row.effectiveTo)}
+              </Text>
+            </View>
+          </Card>
+        ))}
         <HeroCard>
           <Text style={styles.heroKicker}>{t("TODAY'S BRIEF")}</Text>
           <Text style={styles.heroTitle}>
@@ -425,5 +442,7 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 10,
   },
+  delegatedTitle: { fontSize: 14, fontWeight: "800" },
+  delegatedText: { fontSize: 12, marginTop: 3 },
   footerText: { fontSize: 11 },
 });

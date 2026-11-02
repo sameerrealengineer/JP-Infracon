@@ -13,7 +13,21 @@ export const languageNames: Record<Language, string> = {
 type Dictionary = Record<string, string>;
 
 export const hi: Dictionary = {
+  "Create your account": "अपना खाता बनाएँ",
+  "Create account": "खाता बनाएँ",
+  "Have an invite code? Create account": "इनवाइट कोड है? खाता बनाएँ",
+  "Already have an account? Sign in": "पहले से खाता है? साइन इन करें",
+  "Enter the invite code your director or administrator gave you, then choose your own username and password.":
+    "डायरेक्टर या एडमिन से मिला इनवाइट कोड डालें, फिर अपना यूज़रनेम और पासवर्ड चुनें।",
+  "Invite code (e.g. ABCDE-FGH23)": "इनवाइट कोड (जैसे ABCDE-FGH23)",
+  "Choose a username": "यूज़रनेम चुनें",
+  "Password (12+ characters)": "पासवर्ड (12+ अक्षर)",
+  "Confirm password": "पासवर्ड दोबारा लिखें",
+  "The passwords do not match.": "पासवर्ड मेल नहीं खाते।",
+  "Account could not be created. Check the code.": "खाता नहीं बना। कोड जाँचें।",
   // Navigation
+  "Temporary authority from {name}": "{name} से अस्थायी अधिकार",
+  "Delegate authority": "अधिकार सौंपें",
   Home: "होम",
   Sites: "साइट्स",
   Reports: "रिपोर्ट",
@@ -148,6 +162,20 @@ export const hi: Dictionary = {
 };
 
 export const or: Dictionary = {
+  "Temporary authority from {name}": "{name}ଙ୍କଠାରୁ ଅସ୍ଥାୟୀ ଅଧିକାର",
+  "Delegate authority": "ଅଧିକାର ସମର୍ପଣ",
+  "Create your account": "ନିଜ ଖାତା ତିଆରି କରନ୍ତୁ",
+  "Create account": "ଖାତା ତିଆରି କରନ୍ତୁ",
+  "Have an invite code? Create account": "ଇନଭାଇଟ କୋଡ ଅଛି? ଖାତା ତିଆରି କରନ୍ତୁ",
+  "Already have an account? Sign in": "ଖାତା ଅଛି? ସାଇନ ଇନ କରନ୍ତୁ",
+  "Enter the invite code your director or administrator gave you, then choose your own username and password.":
+    "ଡାଇରେକ୍ଟର ବା ଆଡମିନ ଦେଇଥିବା ଇନଭାଇଟ କୋଡ ଦିଅନ୍ତୁ, ତାପରେ ନିଜ ୟୁଜରନେମ ଓ ପାସୱାର୍ଡ ବାଛନ୍ତୁ।",
+  "Invite code (e.g. ABCDE-FGH23)": "ଇନଭାଇଟ କୋଡ (ଯଥା ABCDE-FGH23)",
+  "Choose a username": "ୟୁଜରନେମ ବାଛନ୍ତୁ",
+  "Password (12+ characters)": "ପାସୱାର୍ଡ (12+ ଅକ୍ଷର)",
+  "Confirm password": "ପାସୱାର୍ଡ ପୁଣି ଲେଖନ୍ତୁ",
+  "The passwords do not match.": "ପାସୱାର୍ଡ ମେଳ ଖାଉନାହିଁ।",
+  "Account could not be created. Check the code.": "ଖାତା ତିଆରି ହେଲା ନାହିଁ। କୋଡ ଯାଞ୍ଚ କରନ୍ତୁ।",
   Home: "ହୋମ",
   Sites: "ସାଇଟ",
   Reports: "ରିପୋର୍ଟ",

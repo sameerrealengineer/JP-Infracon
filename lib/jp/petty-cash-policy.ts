@@ -87,6 +87,8 @@ export function pettyCashMovementTransitionError(input: {
   fundStatus?: string;
   hasReviewAuthority?: boolean;
   hasDirectPostReason?: boolean;
+  /** Delegated "approve own work" for this site. */
+  selfApprovalAllowed?: boolean;
 }): PettyCashPolicyError | null {
   if (input.action === "submit") {
     if (input.actorUserId !== input.createdBy) {
@@ -105,7 +107,7 @@ export function pettyCashMovementTransitionError(input: {
     if (input.status !== "Submitted") {
       return { code: "CONFLICT", message: "Only a Submitted petty-cash movement can be reviewed." };
     }
-    if (input.actorUserId === input.createdBy) {
+    if (input.actorUserId === input.createdBy && !input.selfApprovalAllowed) {
       return {
         code: "FORBIDDEN",
         message: "The movement creator cannot review their own petty-cash entry.",
@@ -115,7 +117,7 @@ export function pettyCashMovementTransitionError(input: {
   }
 
   if (input.action === "post") {
-    if (input.actorUserId === input.createdBy) {
+    if (input.actorUserId === input.createdBy && !input.selfApprovalAllowed) {
       return {
         code: "FORBIDDEN",
         message: "The movement creator cannot post their own petty-cash entry.",

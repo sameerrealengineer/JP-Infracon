@@ -12,6 +12,7 @@ import {
   changeOwnPassword,
   credentialSessionLifetimeMs,
   passwordLogin,
+  registerWithInvite,
   revokeSession,
 } from "./_core/credential-auth";
 import { sdk } from "./_core/sdk";
@@ -44,6 +45,26 @@ export const appRouter = router({
       )
       .mutation(async ({ ctx, input }) => {
         const result = await passwordLogin(input.username, input.password);
+        ctx.res.cookie(getSessionCookieName(ctx.req), result.sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: credentialSessionLifetimeMs,
+        });
+        const webClient = ctx.req.headers["x-jp-client-platform"] === "web";
+        return { user: result.user, sessionToken: webClient ? null : result.sessionToken };
+      }),
+    registerWithInvite: publicProcedure
+      .input(
+        z.object({
+          code: z.string().trim().min(5).max(20),
+          username: z.string().trim().min(3).max(32),
+          password: z.string().min(12).max(128),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const result = await registerWithInvite({
+          ...input,
+          clientKey: String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
+        });
         ctx.res.cookie(getSessionCookieName(ctx.req), result.sessionToken, {
           ...getSessionCookieOptions(ctx.req),
           maxAge: credentialSessionLifetimeMs,

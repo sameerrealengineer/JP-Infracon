@@ -16,7 +16,12 @@ import {
   users,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getAccessibleSites, getSiteScope, assertActiveAccount } from "./access";
+import {
+  getAccessibleSites,
+  getSiteScope,
+  assertActiveAccount,
+  selfApprovalAllowed,
+} from "./access";
 import { resolveOrganizationPermission, type PermissionGrantForResolution } from "./policy";
 import { taskRouter } from "./tasks";
 import { workforceRouter } from "./workforce";
@@ -28,6 +33,8 @@ import { issuesRouter } from "./issues";
 import { attachmentsRouter } from "./attachments";
 import { exportsRouter } from "./exports";
 import { attendanceRouter } from "./attendance";
+import { delegationRouter } from "./delegation";
+import { notificationsRouter } from "./notify";
 import { buildInbox } from "./inbox";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
@@ -149,6 +156,8 @@ export const jpRouter = router({
   attachments: attachmentsRouter,
   exports: exportsRouter,
   attendance: attendanceRouter,
+  delegation: delegationRouter,
+  notifications: notificationsRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);
@@ -658,7 +667,8 @@ export const jpRouter = router({
         if (!report) throw new TRPCError({ code: "NOT_FOUND", message: "Report not found." });
         const reviewPermission = report.reportKind === "DPR" ? "dpr.review" : "dlr.review";
         const scope = await getSiteScope(ctx.user, report.siteId, reviewPermission);
-        if (report.createdBy === ctx.user.id)
+        const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
+        if (report.createdBy === ctx.user.id && !selfOk)
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "The person who submitted this report cannot review it.",
@@ -678,7 +688,7 @@ export const jpRouter = router({
             .limit(1);
           if (!lockedReport)
             throw new TRPCError({ code: "NOT_FOUND", message: "Report not found." });
-          if (lockedReport.createdBy === ctx.user.id)
+          if (lockedReport.createdBy === ctx.user.id && !selfOk)
             throw new TRPCError({
               code: "FORBIDDEN",
               message: "The person who submitted this report cannot review it.",
@@ -887,7 +897,8 @@ export const jpRouter = router({
         if (!request)
           throw new TRPCError({ code: "NOT_FOUND", message: "Material request not found." });
         const scope = await getSiteScope(ctx.user, request.siteId, "material.review");
-        if (request.requestedBy === ctx.user.id)
+        const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
+        if (request.requestedBy === ctx.user.id && !selfOk)
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "The requester cannot approve or reject their own request.",
@@ -907,7 +918,7 @@ export const jpRouter = router({
             .limit(1);
           if (!lockedRequest)
             throw new TRPCError({ code: "NOT_FOUND", message: "Material request not found." });
-          if (lockedRequest.requestedBy === ctx.user.id)
+          if (lockedRequest.requestedBy === ctx.user.id && !selfOk)
             throw new TRPCError({
               code: "FORBIDDEN",
               message: "The requester cannot approve or reject their own request.",

@@ -74,7 +74,7 @@ function isDuplicate(error: unknown) {
 }
 
 /** Owner/Director/Admin (or a matching org-scoped grant) and the platform Super Admin manage projects and sites. */
-async function assertSiteManager(
+export async function assertSiteManager(
   user: User,
   organizationId: string,
 ): Promise<BusinessRole | "super_admin"> {

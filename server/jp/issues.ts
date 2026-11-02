@@ -13,8 +13,14 @@ import {
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { assertActiveAccount, getAccessibleSites, getSiteScope } from "./access";
+import {
+  assertActiveAccount,
+  getAccessibleSites,
+  getSiteScope,
+  selfApprovalAllowed,
+} from "./access";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
+import { dispatchAlert, siteLeadIds } from "./notify";
 import {
   formatIssueCode,
   isIssuePolicyError,
@@ -334,6 +340,22 @@ export const issuesRouter = router({
           }),
         });
       });
+      if (input.stopWork || input.severity === "High" || input.severity === "Critical")
+        void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+          dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: "issue.raised",
+            title: input.stopWork
+              ? "STOP WORK flagged on site"
+              : `${input.severity} ${input.category.toLowerCase()} reported`,
+            detail: `${issueCode} · ${input.title}`,
+            route: `/issue/${id}`,
+            recipientUserIds,
+            urgent: input.stopWork || input.severity === "Critical",
+          }),
+        );
       return { id, issueCode };
     }),
 
@@ -406,6 +428,18 @@ export const issuesRouter = router({
           reason: input.note || null,
         });
       });
+      if (owner.userId !== ctx.user.id)
+        void dispatchAlert({
+          organizationId: scope.organizationId,
+          siteId: scope.siteId,
+          siteName: scope.siteName,
+          kind: "issue.assigned",
+          title: "An issue has been assigned to you",
+          detail: `${issue.issueCode} · ${issue.title}`,
+          route: `/issue/${issue.id}`,
+          recipientUserIds: [owner.userId],
+          urgent: issue.severity === "Critical",
+        });
       return { id: issue.id };
     }),
 
@@ -424,6 +458,7 @@ export const issuesRouter = router({
       const db = requireDb(await getDb());
       const issue = await loadIssue(db, input.issueId);
       const scope = await getSiteScope(ctx.user, issue.siteId, issueActionPermission[input.action]);
+      const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
       const prior = await priorMutation(db, ctx.user.id, input.clientMutationId);
       if (prior) return { id: prior.entityId };
       let nextStatus = issue.status;
@@ -438,7 +473,7 @@ export const issuesRouter = router({
           status: locked.status,
           severity: locked.severity,
           actorUserId: ctx.user.id,
-          resolvedBy: locked.resolvedBy,
+          resolvedBy: selfOk ? null : locked.resolvedBy,
           note: input.note,
           correctiveAction: input.correctiveAction,
         });

@@ -16,7 +16,7 @@ import {
 } from "../../lib/jp/finance-domain";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope } from "./access";
+import { getSiteScope, selfApprovalAllowed } from "./access";
 import { resolveOrganizationPermission, type PermissionGrantForResolution } from "./policy";
 import { supplierPaymentRouter } from "./supplier-payments";
 import { pettyCashRouter } from "./petty-cash";
@@ -879,7 +879,10 @@ export const financeRouter = router({
               code: "NOT_FOUND",
               message: "Supplier invoice not found for this assigned site.",
             });
-          if (invoice.createdBy === ctx.user.id)
+          if (
+            invoice.createdBy === ctx.user.id &&
+            !(await selfApprovalAllowed(ctx.user, invoice.siteId))
+          )
             throw new TRPCError({
               code: "FORBIDDEN",
               message: "The invoice creator cannot review their own invoice.",

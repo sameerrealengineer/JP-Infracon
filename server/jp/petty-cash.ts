@@ -28,7 +28,7 @@ import {
 } from "../../lib/jp/petty-cash-policy";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope, type SiteScope } from "./access";
+import { getSiteScope, selfApprovalAllowed, type SiteScope } from "./access";
 
 type CashMovementType = "Funding" | "Expense" | "Cash Return";
 type CashPermission = "finance.cash.movement.review" | "finance.cash.movement.post";
@@ -1200,6 +1200,7 @@ export const pettyCashRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const scope = await getSiteScope(ctx.user, input.siteId, "finance.cash.movement.review");
+      const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
       const db = requireDb(await getDb());
       const existingEvent = await findMutationEvent(db, ctx.user.id, input.clientMutationId);
       if (existingEvent) {
@@ -1217,6 +1218,7 @@ export const pettyCashRouter = router({
         enforcePolicyError(
           pettyCashMovementTransitionError({
             action: "review",
+            selfApprovalAllowed: selfOk,
             status: movement.status,
             actorUserId: ctx.user.id,
             createdBy: movement.createdBy,
@@ -1273,6 +1275,7 @@ export const pettyCashRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const scope = await getSiteScope(ctx.user, input.siteId, "finance.cash.movement.post");
+      const selfOk = await selfApprovalAllowed(ctx.user, scope.siteId);
       const db = requireDb(await getDb());
       const cleanReason = input.reason?.trim() || null;
       const existingEvent = await findMutationEvent(db, ctx.user.id, input.clientMutationId);
@@ -1320,6 +1323,7 @@ export const pettyCashRouter = router({
         enforcePolicyError(
           pettyCashMovementTransitionError({
             action: "post",
+            selfApprovalAllowed: selfOk,
             status: movement.status,
             actorUserId: ctx.user.id,
             createdBy: movement.createdBy,

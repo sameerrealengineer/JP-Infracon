@@ -70,3 +70,6 @@ Thumbs.db
 dist-web/
 test-results/
 playwright-report/
+
+# server secrets
+.env
