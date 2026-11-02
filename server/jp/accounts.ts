@@ -36,6 +36,7 @@ import {
   rolesAssignableBy,
 } from "../../lib/jp/account-role-policy";
 import { formatInviteCode, inviteCodeFromBytes } from "../../lib/jp/invite-code";
+import { effectiveNow } from "../../lib/jp/effective-time";
 
 const organizationWideRoles = new Set<BusinessRole>(["admin", "director"]);
 const newAccountSchema = z.object({
@@ -504,7 +505,7 @@ export const accountsRouter = router({
     const temporaryPassword = generateTemporaryPassword();
     const passwordHash = await hashPassword(temporaryPassword);
     const openId = `local_${randomUUID().replaceAll("-", "")}`;
-    const now = new Date();
+    const now = effectiveNow();
     try {
       const userId = await db.transaction(async (tx) => {
         await tx.insert(users).values({

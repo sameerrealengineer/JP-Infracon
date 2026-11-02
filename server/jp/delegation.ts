@@ -17,6 +17,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { assertActiveAccount } from "./access";
 import { assertSiteManager } from "./sites-admin";
+import { effectiveNow } from "../../lib/jp/effective-time";
 import { dispatchAlert } from "./notify";
 import {
   delegationBundleIds,
@@ -249,7 +250,7 @@ export const delegationRouter = router({
           message:
             "Assign this person to the site first; authority can only be delegated where they work.",
         });
-      const now = new Date();
+      const now = effectiveNow();
       const end = delegationEnd(input.duration, now);
       const id = randomUUID();
       const keys = delegationKeys(input.bundles);

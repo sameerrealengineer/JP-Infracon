@@ -22,6 +22,7 @@ import {
   type User,
 } from "../../drizzle/schema";
 import { isWellFormedInviteCode, normalizeInviteCode } from "../../lib/jp/invite-code";
+import { effectiveNow } from "../../lib/jp/effective-time";
 import { getDb } from "../db";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
@@ -487,7 +488,7 @@ export async function registerWithInvite(input: {
           });
       }
       const openId = `local_${randomUUID().replaceAll("-", "")}`;
-      const now = new Date();
+      const now = effectiveNow();
       await tx.insert(users).values({
         openId,
         name: invite.inviteeName,

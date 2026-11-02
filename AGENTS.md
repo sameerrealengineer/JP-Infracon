@@ -24,6 +24,7 @@ pnpm format:check            # Prettier check (pnpm format writes)
 pnpm test                    # Vitest, database free tests only
 pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
 pnpm build                   # Bundle the API to dist/ with esbuild
+pnpm build:server            # Bundle the API into one file (dist-server/index.mjs) for the Docker image
 npx expo export --platform web --output-dir /tmp/jp-web-export   # Web bundle check
 ```
 
@@ -53,6 +54,8 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
 - The React Query cache is persisted to AsyncStorage (`app/_layout.tsx`) so synced records stay viewable offline; sign out calls `queryClient.clear()` so the next user of the phone sees nothing.
 - UI text goes through `useT()` from `lib/i18n` (keys are the English text; Hindi and Odia in `lib/i18n/strings.ts`, kept in step by a test). Untranslated text falls back to English.
+- Self-hosting: `Dockerfile` + `deploy/docker-compose.yml` (MySQL 8.4, API, Caddy, optional WAHA); guide in `docs/deploy/self-hosting.md`. `pnpm build:server` bundles the API into one file; `RUN_MIGRATIONS=true` applies `drizzle/` on start; `STORAGE_DIR` (disk) or `S3_*` (R2/S3) replaces Manus Forge storage; `PUBLIC_BASE_URL` builds 5-minute `/api/files/:token` links. `scripts/selfhost-smoke.mts` checks a fresh server end to end — never against real data.
+- The APK lets the person set the server address on the sign-in screen (`lib/server-address.ts`).
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
 ## Agent skills

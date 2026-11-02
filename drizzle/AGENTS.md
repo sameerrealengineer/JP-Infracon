@@ -31,6 +31,7 @@ pnpm db:push   # drizzle-kit generate + migrate; needs DATABASE_URL and hits the
 - Migration 0012 (`site_issues`, `site_issue_events`, additive) was generated on 2 November 2026 and is not applied. The Issues screens and exports need it; the inbox skips sections whose tables are missing.
 - Migration 0013 (additive, new tables only: delegations, delegation_grants, registration_invites, push_devices, notification_deliveries, user_contact_preferences, site_geofences, attachment_locations, site_presence_events) is generated and not applied. Code that reads these tables catches a missing table so older screens keep working; new columns are never added to existing hot tables (users, sites, permission_grants, attachments) for that reason.
 - Do not run `pnpm db:push` casually: it generates and migrates against the shared database in one step.
+- `RUN_MIGRATIONS=true` (`server/_core/migrate.ts`) applies every pending migration in `drizzle/` when the API starts. Use it only on a self hosted database you have backed up; never with `DATABASE_URL` pointing at the shared database.
 - The database exposes no CHECK constraints, so value rules live in the API.
 
 ## Agent skills

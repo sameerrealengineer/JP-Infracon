@@ -4,9 +4,11 @@ import { createServer } from "http";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerCredentialRoutes } from "./credential-routes";
 import { registerStorageProxy } from "./storageProxy";
+import { registerFileRoute } from "../s3-storage";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { createCorsMiddleware } from "./cors";
+import { runMigrations } from "./migrate";
 
 async function startServer() {
   const app = express();
@@ -18,6 +20,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
   registerStorageProxy(app);
+  registerFileRoute(app);
   registerCredentialRoutes(app);
 
   app.get("/api/health", (_req, res) => {
@@ -32,12 +35,19 @@ async function startServer() {
     }),
   );
 
+  if (process.env.RUN_MIGRATIONS === "true") await runMigrations();
   const port = parseInt(process.env.PORT || "3000");
   server.listen(port, () => {
     console.log("[api] server listening");
   });
 }
 
-startServer().catch(() => {
-  console.error("[api] server failed to start");
+startServer().catch((error) => {
+  console.error(
+    "[api] server failed to start",
+    error instanceof Error
+      ? `${error.message} ${String((error as { cause?: unknown }).cause ?? "")}`
+      : "",
+  );
+  process.exit(1);
 });

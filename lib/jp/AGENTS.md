@@ -28,6 +28,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `ai-extraction.ts` | JSON schemas and prompts for bills/issues, re-validation of AI output into safe drafts |
 | `geo.ts` | Distances, coordinate checks, geofence plausibility, map links |
 | `pdf-report.ts` | Escaped printable HTML for PDF exports |
+| `effective-time.ts` | `effectiveNow()`: whole-second start time so MySQL rounding never makes an immediate grant/assignment start in the future |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions
