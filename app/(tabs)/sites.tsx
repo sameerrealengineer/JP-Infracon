@@ -55,7 +55,7 @@ export default function SitesScreen() {
   const projectCount = new Set(all.map((site) => site.projectId)).size;
 
   return (
-    <Screen>
+    <Screen inTabs>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: canManageSites ? 100 : 30 }}

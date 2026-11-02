@@ -22,6 +22,7 @@ import {
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import type { RescheduleStrategy, TaskStatus } from "@/lib/jp/scheduling";
@@ -65,7 +66,8 @@ export default function ScheduleScreen() {
   const utils = trpc.useUtils();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [showCreate, setShowCreate] = useState(false);
   const [taskCreateMutationId, setTaskCreateMutationId] = useState<string | null>(null);
   const [title, setTitle] = useState("");

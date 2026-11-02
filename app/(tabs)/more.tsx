@@ -201,7 +201,7 @@ export default function MoreScreen() {
 
   return (
     <AuthGate>
-      <Screen>
+      <Screen inTabs>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 36 }}

@@ -25,6 +25,7 @@ import { useColors } from "@/hooks/use-colors";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { type InventoryMovementType, isAtOrBelowReorderThreshold } from "@/lib/jp/inventory-domain";
 import { clampPageIndex, resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 
 const MOVEMENT_TYPES: { value: InventoryMovementType; label: string; description: string }[] = [
@@ -91,7 +92,8 @@ export default function InventoryScreen() {
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
   const utils = trpc.useUtils();
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [cataloguePage, setCataloguePage] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [catalogueModalVisible, setCatalogueModalVisible] = useState(false);

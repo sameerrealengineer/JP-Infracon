@@ -31,6 +31,7 @@ import {
   parseRupeesToMinor,
 } from "@/lib/jp/finance-domain";
 import { clampPageIndex, resolveChoice, resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 
 const EMPTY_ID = "00000000-0000-4000-8000-000000000000";
@@ -84,7 +85,8 @@ export default function FinanceScreen() {
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
   const utils = trpc.useUtils();
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [chosenSection, setSection] = useState<FinanceSection>("Invoices");
   const [invoicePage, setInvoicePage] = useState(0);
   const [vendorPage, setVendorPage] = useState(0);

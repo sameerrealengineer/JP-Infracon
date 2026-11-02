@@ -43,6 +43,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
+import { siteScopedRoute } from "@/lib/jp/site-route";
 import { trpc } from "@/lib/trpc";
 import { currentPosition } from "@/lib/geofence-task";
 import { mapsLink } from "@/lib/jp/geo";
@@ -248,7 +249,9 @@ export default function SiteDetailScreen() {
                           icon={module.icon}
                           title={module.title}
                           tone={module.tone}
-                          onPress={() => router.push(module.route as never)}
+                          onPress={() =>
+                            router.push(siteScopedRoute(module.route, siteId) as never)
+                          }
                         />
                       ))}
                   </View>

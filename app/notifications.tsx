@@ -19,6 +19,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { useConnectivity } from "@/hooks/use-connectivity";
+import { siteScopedRoute } from "@/lib/jp/site-route";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
 
@@ -98,7 +99,7 @@ export default function NotificationsScreen() {
                     tone={inboxIcon[item.kind].tone}
                     title={item.title}
                     detail={`${item.siteName} · ${item.detail}`}
-                    onPress={() => router.push(item.route as never)}
+                    onPress={() => router.push(siteScopedRoute(item.route, item.siteId) as never)}
                     trailing={
                       item.severity === "high" ? (
                         <StatusPill label="Urgent" tone="error" compact />

@@ -20,6 +20,7 @@ import {
   SectionHeader,
 } from "@/components/jp/ui";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { CompanySetupNeeded, useNeedsCompanySetup } from "@/components/jp/company-setup-needed";
 import { useColors } from "@/hooks/use-colors";
 import { resolveChoice, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
@@ -93,6 +94,7 @@ export default function UserAccountsScreen() {
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const access = trpc.jp.workspace.onboardingState.useQuery();
   const options = trpc.jp.accounts.options.useQuery();
+  const needsCompanySetup = useNeedsCompanySetup();
   const [chosenOrganizationId, setOrganizationId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -325,7 +327,10 @@ export default function UserAccountsScreen() {
                   Loading manageable organizations…
                 </Text>
               ) : null}
-              {!options.isLoading && options.data?.length === 0 ? (
+              {!options.isLoading && options.data?.length === 0 && needsCompanySetup ? (
+                <CompanySetupNeeded />
+              ) : null}
+              {!options.isLoading && options.data?.length === 0 && !needsCompanySetup ? (
                 <EmptyState
                   icon="domain-disabled"
                   title="No manageable organization"

@@ -178,7 +178,7 @@ export default function HomeScreen() {
   const visibleActions = actions.filter((action) => action.show);
 
   return (
-    <Screen>
+    <Screen inTabs>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}

@@ -25,6 +25,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import {
   createClientMutationId,
@@ -59,7 +60,11 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : "The server did not confirm this action.";
 }
 
-export default function RequestsScreen() {
+export default function RequestsScreenTab() {
+  return <RequestsScreen inTabs />;
+}
+
+export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
   const colors = useColors();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const utils = trpc.useUtils();
@@ -74,7 +79,8 @@ export default function RequestsScreen() {
   const [quantity, setQuantity] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [pendingSync, setPendingSync] = useState(false);
 
@@ -226,7 +232,7 @@ export default function RequestsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen inTabs={inTabs}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppHeader
           eyebrow="Material control"

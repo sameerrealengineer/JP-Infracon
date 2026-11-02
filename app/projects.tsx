@@ -23,6 +23,7 @@ import {
   type StatusTarget,
 } from "@/components/jp/site-admin-forms";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { CompanySetupNeeded, useNeedsCompanySetup } from "@/components/jp/company-setup-needed";
 import { useColors } from "@/hooks/use-colors";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { resolveSelectedId } from "@/lib/jp/selection";
@@ -32,6 +33,7 @@ export default function ProjectsScreen() {
   const colors = useColors();
   const router = useRouter();
   const overview = trpc.jp.sitesAdmin.overview.useQuery();
+  const needsCompanySetup = useNeedsCompanySetup();
   const [chosenOrg, setChosenOrg] = useState<string | null>(null);
   const [projectDraft, setProjectDraft] = useState<ProjectDraft | null>(null);
   const [siteDraft, setSiteDraft] = useState<SiteDraft | null>(null);
@@ -64,6 +66,8 @@ export default function ProjectsScreen() {
           ) : null}
           {overview.isLoading ? (
             <LoadingBlock label="Loading projects…" />
+          ) : orgs.length === 0 && needsCompanySetup ? (
+            <CompanySetupNeeded />
           ) : orgs.length === 0 ? (
             <EmptyState
               icon="lock-outline"

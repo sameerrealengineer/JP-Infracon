@@ -29,6 +29,7 @@ import {
 import { formatMinorAsRupees } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
 
@@ -55,7 +56,8 @@ export default function AttendanceScreen() {
   const siteOptions = (sites.data ?? []).filter((site) =>
     sitesWith("attendance.view").includes(site.id),
   );
-  const [chosenSite, setChosenSite] = useState<string | null>(null);
+  const siteParam = useSiteParam();
+  const [chosenSite, setChosenSite] = useState<string | null>(siteParam || null);
   const siteId = resolveSelectedId(siteOptions, chosenSite);
   const [view, setView] = useState<(typeof views)[number]>("Mark attendance");
   const canSeeCost = sitesWith("compensation.view").includes(siteId);

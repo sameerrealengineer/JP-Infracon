@@ -943,9 +943,22 @@ export function Sheet({
   );
 }
 
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+export function Screen({
+  children,
+  scroll = true,
+  inTabs = false,
+}: {
+  children: ReactNode;
+  scroll?: boolean;
+  /** Tab screens skip the bottom inset because the tab bar already covers it. */
+  inTabs?: boolean;
+}) {
   return (
-    <ScreenContainer className="px-5" safeAreaClassName="bg-background">
+    <ScreenContainer
+      className="px-5"
+      safeAreaClassName="bg-background"
+      edges={inTabs ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+    >
       {scroll ? children : <View style={{ flex: 1 }}>{children}</View>}
     </ScreenContainer>
   );
