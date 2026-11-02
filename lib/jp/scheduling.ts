@@ -94,11 +94,15 @@ export function previewTaskReschedule(args: {
 
   const oldStartDay = dayNumber(selected.plannedStart);
   const oldEndDay = dayNumber(selected.plannedEnd);
-  if (oldEndDay < oldStartDay) throw new RangeError("The existing task end date precedes its start date.");
+  if (oldEndDay < oldStartDay)
+    throw new RangeError("The existing task end date precedes its start date.");
   const newStartDay = dayNumber(args.newStartDate);
   const deltaDays = newStartDay - oldStartDay;
-  if (deltaDays === 0) throw new RangeError("Choose a different start date before previewing a reschedule.");
-  const proposed = new Map(args.tasks.map((task) => [task.id, { start: task.plannedStart, end: task.plannedEnd }]));
+  if (deltaDays === 0)
+    throw new RangeError("Choose a different start date before previewing a reschedule.");
+  const proposed = new Map(
+    args.tasks.map((task) => [task.id, { start: task.plannedStart, end: task.plannedEnd }]),
+  );
   proposed.set(selected.id, {
     start: args.newStartDate,
     end: addCalendarDays(selected.plannedEnd, deltaDays),
@@ -115,8 +119,10 @@ export function previewTaskReschedule(args: {
   const visited = new Set<string>();
   const visitDescendants = (taskId: string) => {
     for (const edge of descendantsByPredecessor.get(taskId) ?? []) {
-      if (!taskById.has(edge.successorTaskId)) throw new RangeError("A dependency refers to a task outside this site schedule.");
-      if (visiting.has(edge.successorTaskId)) throw new RangeError("The task dependency graph contains a cycle.");
+      if (!taskById.has(edge.successorTaskId))
+        throw new RangeError("A dependency refers to a task outside this site schedule.");
+      if (visiting.has(edge.successorTaskId))
+        throw new RangeError("The task dependency graph contains a cycle.");
       if (visited.has(edge.successorTaskId)) continue;
       visited.add(edge.successorTaskId);
       visiting.add(edge.successorTaskId);
@@ -149,7 +155,8 @@ export function previewTaskReschedule(args: {
 
   const affectedIds = new Set([selected.id, ...descendantIds]);
   for (const edge of args.dependencies) {
-    if (!affectedIds.has(edge.predecessorTaskId) && !affectedIds.has(edge.successorTaskId)) continue;
+    if (!affectedIds.has(edge.predecessorTaskId) && !affectedIds.has(edge.successorTaskId))
+      continue;
     const predecessor = taskById.get(edge.predecessorTaskId);
     const successor = taskById.get(edge.successorTaskId);
     if (!predecessor || !successor || successor.status === "Cancelled") continue;

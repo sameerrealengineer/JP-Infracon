@@ -17,7 +17,10 @@ const requireUser = t.middleware(async (opts) => {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
   if (ctx.user.mustChangePassword) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Change the temporary password before continuing." });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Change the temporary password before continuing.",
+    });
   }
 
   return next({

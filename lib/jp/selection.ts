@@ -6,7 +6,10 @@
  */
 
 /** Keeps the chosen id while it is still offered, else falls back to the first option ("" when none). */
-export function resolveSelectedId(options: readonly { id: string }[], chosenId: string | null | undefined): string {
+export function resolveSelectedId(
+  options: readonly { id: string }[],
+  chosenId: string | null | undefined,
+): string {
   if (chosenId && options.some((option) => option.id === chosenId)) return chosenId;
   return options[0]?.id ?? "";
 }

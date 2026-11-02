@@ -1,4 +1,9 @@
-export type InventoryMovementType = "Receipt/Inward" | "Issue/Consumption" | "Return to Store" | "Wastage" | "Damage";
+export type InventoryMovementType =
+  | "Receipt/Inward"
+  | "Issue/Consumption"
+  | "Return to Store"
+  | "Wastage"
+  | "Damage";
 export type InventoryDirection = "Inbound" | "Outbound";
 
 const quantityPattern = /^(\d{1,11})(?:\.(\d{1,3}))?$/;
@@ -42,25 +47,38 @@ export function directionForMovement(type: InventoryMovementType): InventoryDire
   return type === "Receipt/Inward" || type === "Return to Store" ? "Inbound" : "Outbound";
 }
 
-export function balanceAfterMovement(balance: string | bigint, quantity: string | bigint, direction: InventoryDirection): bigint {
+export function balanceAfterMovement(
+  balance: string | bigint,
+  quantity: string | bigint,
+  direction: InventoryDirection,
+): bigint {
   const current = typeof balance === "bigint" ? balance : parseSignedBalance(balance);
   const delta = typeof quantity === "bigint" ? quantity : parseStockQuantity(quantity);
   return direction === "Inbound" ? current + delta : current - delta;
 }
 
-export function canPostWithoutNegativeStock(balance: string | bigint, quantity: string | bigint): boolean {
+export function canPostWithoutNegativeStock(
+  balance: string | bigint,
+  quantity: string | bigint,
+): boolean {
   return balanceAfterMovement(balance, quantity, "Outbound") >= 0n;
 }
 
-export function calculatePostedStockBalance(movements: ReadonlyArray<{
-  status: string;
-  movementType: InventoryMovementType;
-  quantity: string;
-}>): string {
+export function calculatePostedStockBalance(
+  movements: ReadonlyArray<{
+    status: string;
+    movementType: InventoryMovementType;
+    quantity: string;
+  }>,
+): string {
   let balance = 0n;
   for (const movement of movements) {
     if (movement.status !== "Posted") continue;
-    balance = balanceAfterMovement(balance, movement.quantity, directionForMovement(movement.movementType));
+    balance = balanceAfterMovement(
+      balance,
+      movement.quantity,
+      directionForMovement(movement.movementType),
+    );
   }
   return formatStockQuantity(balance);
 }

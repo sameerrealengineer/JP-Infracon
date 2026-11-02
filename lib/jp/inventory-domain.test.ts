@@ -30,11 +30,13 @@ describe("inventory quantity and movement rules", () => {
   });
 
   it("excludes submitted and rejected inward entries from official stock", () => {
-    expect(calculatePostedStockBalance([
-      { status: "Submitted", movementType: "Receipt/Inward", quantity: "300" },
-      { status: "Rejected", movementType: "Receipt/Inward", quantity: "12" },
-      { status: "Posted", movementType: "Return to Store", quantity: "0.125" },
-    ])).toBe("0.125");
+    expect(
+      calculatePostedStockBalance([
+        { status: "Submitted", movementType: "Receipt/Inward", quantity: "300" },
+        { status: "Rejected", movementType: "Receipt/Inward", quantity: "12" },
+        { status: "Posted", movementType: "Return to Store", quantity: "0.125" },
+      ]),
+    ).toBe("0.125");
   });
 
   it("uses the correct movement direction and prevents outbound posting below zero", () => {
@@ -44,7 +46,9 @@ describe("inventory quantity and movement rules", () => {
     expect(balanceAfterMovement("1.250", "0.250", "Outbound")).toBe(1000n);
     expect(canPostWithoutNegativeStock("1.25", "1.25")).toBe(true);
     expect(canPostWithoutNegativeStock("1.25", "1.251")).toBe(false);
-    expect(calculatePostedStockBalance([{ status: "Posted", movementType: "Damage", quantity: "2" }])).toBe("-2");
+    expect(
+      calculatePostedStockBalance([{ status: "Posted", movementType: "Damage", quantity: "2" }]),
+    ).toBe("-2");
   });
 
   it("compares low-stock thresholds exactly and keeps missing thresholds distinct", () => {

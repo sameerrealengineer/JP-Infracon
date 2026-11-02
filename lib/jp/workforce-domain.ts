@@ -15,7 +15,8 @@ export function parseRupeesToPaise(value: string): number {
 }
 
 export function formatPaiseAsRupees(value: number): string {
-  if (!Number.isSafeInteger(value) || value < 0) throw new RangeError("Rate must be a non-negative integer in paise.");
+  if (!Number.isSafeInteger(value) || value < 0)
+    throw new RangeError("Rate must be a non-negative integer in paise.");
   const rupees = Math.floor(value / 100);
   const paise = String(value % 100).padStart(2, "0");
   return `₹${rupees.toLocaleString("en-IN")}.${paise}`;
@@ -35,6 +36,9 @@ export function isCalendarDate(value: string): boolean {
 }
 
 /** Effective date endpoints are inclusive calendar dates. */
-export function dateRangesOverlap(a: { from: string; to: string | null }, b: { from: string; to: string | null }): boolean {
+export function dateRangesOverlap(
+  a: { from: string; to: string | null },
+  b: { from: string; to: string | null },
+): boolean {
   return (a.to === null || a.to >= b.from) && (b.to === null || b.to >= a.from);
 }

@@ -72,60 +72,214 @@ describe("server permission policy", () => {
   });
 
   it("requires organization scope to manage the shared material catalogue", () => {
-    const siteGrant = [{ scopeType: "site" as const, scopeId: "site-a", permissionKey: "inventory.catalog.manage", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null }];
-    const organizationGrant = [{ scopeType: "organization" as const, scopeId: "org-a", permissionKey: "inventory.catalog.manage", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null }];
-    expect(resolveOrganizationPermission({ role: "storekeeper", permissionKey: "inventory.catalog.manage", organizationId: "org-a", grants: siteGrant, now })).toBe(false);
-    expect(resolveOrganizationPermission({ role: "storekeeper", permissionKey: "inventory.catalog.manage", organizationId: "org-a", grants: organizationGrant, now })).toBe(true);
-    expect(resolveOrganizationPermission({ role: "admin", permissionKey: "inventory.catalog.manage", organizationId: "org-a", grants: [{ ...organizationGrant[0], effect: "deny" }], now })).toBe(false);
+    const siteGrant = [
+      {
+        scopeType: "site" as const,
+        scopeId: "site-a",
+        permissionKey: "inventory.catalog.manage",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+    ];
+    const organizationGrant = [
+      {
+        scopeType: "organization" as const,
+        scopeId: "org-a",
+        permissionKey: "inventory.catalog.manage",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+    ];
+    expect(
+      resolveOrganizationPermission({
+        role: "storekeeper",
+        permissionKey: "inventory.catalog.manage",
+        organizationId: "org-a",
+        grants: siteGrant,
+        now,
+      }),
+    ).toBe(false);
+    expect(
+      resolveOrganizationPermission({
+        role: "storekeeper",
+        permissionKey: "inventory.catalog.manage",
+        organizationId: "org-a",
+        grants: organizationGrant,
+        now,
+      }),
+    ).toBe(true);
+    expect(
+      resolveOrganizationPermission({
+        role: "admin",
+        permissionKey: "inventory.catalog.manage",
+        organizationId: "org-a",
+        grants: [{ ...organizationGrant[0], effect: "deny" }],
+        now,
+      }),
+    ).toBe(false);
   });
 
   it("requires organisation-level authority for the shared supplier master", () => {
-    const siteGrant = [{ scopeType: "site" as const, scopeId: "site-a", permissionKey: "vendor.create", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null }];
-    const organizationGrant = [{ scopeType: "organization" as const, scopeId: "org-a", permissionKey: "vendor.create", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null }];
-    expect(resolveOrganizationPermission({ role: "supervisor", permissionKey: "vendor.create", organizationId: "org-a", grants: siteGrant, now })).toBe(false);
-    expect(resolveOrganizationPermission({ role: "supervisor", permissionKey: "vendor.create", organizationId: "org-a", grants: organizationGrant, now })).toBe(true);
+    const siteGrant = [
+      {
+        scopeType: "site" as const,
+        scopeId: "site-a",
+        permissionKey: "vendor.create",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+    ];
+    const organizationGrant = [
+      {
+        scopeType: "organization" as const,
+        scopeId: "org-a",
+        permissionKey: "vendor.create",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+    ];
+    expect(
+      resolveOrganizationPermission({
+        role: "supervisor",
+        permissionKey: "vendor.create",
+        organizationId: "org-a",
+        grants: siteGrant,
+        now,
+      }),
+    ).toBe(false);
+    expect(
+      resolveOrganizationPermission({
+        role: "supervisor",
+        permissionKey: "vendor.create",
+        organizationId: "org-a",
+        grants: organizationGrant,
+        now,
+      }),
+    ).toBe(true);
   });
 
   it("lets an explicit scoped grant permit a capability without changing the role", () => {
-    expect(resolveSitePermission({
-      role: "supervisor",
-      permissionKey: "dpr.review",
-      scope,
-      now,
-      grants: [{ scopeType: "site", scopeId: "site-a", permissionKey: "dpr.review", effect: "allow", status: "Active", effectiveFrom: new Date("2026-01-01"), effectiveTo: null }],
-    })).toBe(true);
+    expect(
+      resolveSitePermission({
+        role: "supervisor",
+        permissionKey: "dpr.review",
+        scope,
+        now,
+        grants: [
+          {
+            scopeType: "site",
+            scopeId: "site-a",
+            permissionKey: "dpr.review",
+            effect: "allow",
+            status: "Active",
+            effectiveFrom: new Date("2026-01-01"),
+            effectiveTo: null,
+          },
+        ],
+      }),
+    ).toBe(true);
   });
 
   it("gives matching explicit denies precedence over role defaults and allows", () => {
-    expect(resolveSitePermission({
-      role: "supervisor",
-      permissionKey: "dpr.create",
-      scope,
-      now,
-      grants: [
-        { scopeType: "organization", scopeId: "org-a", permissionKey: "dpr.create", effect: "allow", status: "Active", effectiveFrom: new Date("2026-01-01"), effectiveTo: null },
-        { scopeType: "site", scopeId: "site-a", permissionKey: "dpr.create", effect: "deny", status: "Active", effectiveFrom: new Date("2026-01-01"), effectiveTo: null },
-      ],
-    })).toBe(false);
+    expect(
+      resolveSitePermission({
+        role: "supervisor",
+        permissionKey: "dpr.create",
+        scope,
+        now,
+        grants: [
+          {
+            scopeType: "organization",
+            scopeId: "org-a",
+            permissionKey: "dpr.create",
+            effect: "allow",
+            status: "Active",
+            effectiveFrom: new Date("2026-01-01"),
+            effectiveTo: null,
+          },
+          {
+            scopeType: "site",
+            scopeId: "site-a",
+            permissionKey: "dpr.create",
+            effect: "deny",
+            status: "Active",
+            effectiveFrom: new Date("2026-01-01"),
+            effectiveTo: null,
+          },
+        ],
+      }),
+    ).toBe(false);
   });
 
   it("lets an explicit scoped site.view deny revoke default site metadata visibility", () => {
-    expect(resolveSitePermission({
-      role: "supervisor",
-      permissionKey: "site.view",
-      scope,
-      now,
-      grants: [{ scopeType: "site", scopeId: "site-a", permissionKey: "site.view", effect: "deny", status: "Active", effectiveFrom: new Date("2026-01-01"), effectiveTo: null }],
-    })).toBe(false);
+    expect(
+      resolveSitePermission({
+        role: "supervisor",
+        permissionKey: "site.view",
+        scope,
+        now,
+        grants: [
+          {
+            scopeType: "site",
+            scopeId: "site-a",
+            permissionKey: "site.view",
+            effect: "deny",
+            status: "Active",
+            effectiveFrom: new Date("2026-01-01"),
+            effectiveTo: null,
+          },
+        ],
+      }),
+    ).toBe(false);
   });
 
   it("ignores grants for other sites, revoked grants, and grants outside their dates", () => {
     const grants = [
-      { scopeType: "site" as const, scopeId: "site-b", permissionKey: "dpr.review", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null },
-      { scopeType: "site" as const, scopeId: "site-a", permissionKey: "dpr.review", effect: "allow" as const, status: "Revoked" as const, effectiveFrom: new Date("2026-01-01"), effectiveTo: null },
-      { scopeType: "site" as const, scopeId: "site-a", permissionKey: "dpr.review", effect: "allow" as const, status: "Active" as const, effectiveFrom: new Date("2027-01-01"), effectiveTo: null },
+      {
+        scopeType: "site" as const,
+        scopeId: "site-b",
+        permissionKey: "dpr.review",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+      {
+        scopeType: "site" as const,
+        scopeId: "site-a",
+        permissionKey: "dpr.review",
+        effect: "allow" as const,
+        status: "Revoked" as const,
+        effectiveFrom: new Date("2026-01-01"),
+        effectiveTo: null,
+      },
+      {
+        scopeType: "site" as const,
+        scopeId: "site-a",
+        permissionKey: "dpr.review",
+        effect: "allow" as const,
+        status: "Active" as const,
+        effectiveFrom: new Date("2027-01-01"),
+        effectiveTo: null,
+      },
     ];
-    expect(resolveSitePermission({ role: "supervisor", permissionKey: "dpr.review", scope, grants, now })).toBe(false);
+    expect(
+      resolveSitePermission({
+        role: "supervisor",
+        permissionKey: "dpr.review",
+        scope,
+        grants,
+        now,
+      }),
+    ).toBe(false);
   });
 
   it("separates supplier-payment capture from manager posting and keeps auditors read-only", () => {

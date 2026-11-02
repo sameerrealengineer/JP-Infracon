@@ -43,7 +43,8 @@ const publicRuntime = {
 const config = {
   name: env.appName,
   slug: env.appSlug,
-  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519664045909713/GdcbZZbozOxAtxcY.png",
+  logoUrl:
+    "https://files.manuscdn.com/user_upload_by_module/session_file/310519664045909713/GdcbZZbozOxAtxcY.png",
   version: "1.0.0",
   extra: publicRuntime,
   orientation: "portrait",
@@ -53,9 +54,9 @@ const config = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
-    "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {

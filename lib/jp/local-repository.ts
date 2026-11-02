@@ -12,7 +12,8 @@ type DraftStore = {
 const emptyDraftStore = (): DraftStore => ({ reports: [], requests: [], syncQueue: [] });
 
 export function createClientMutationId(): string {
-  const randomHex = (length: number) => Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const randomHex = (length: number) =>
+    Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16)).join("");
   return `${randomHex(8)}-${randomHex(4)}-4${randomHex(3)}-${(8 + Math.floor(Math.random() * 4)).toString(16)}${randomHex(3)}-${randomHex(12)}`;
 }
 
@@ -40,14 +41,22 @@ export async function saveReportDraft(report: FieldReport): Promise<DraftStore> 
   const reports = [...store.reports.filter((item) => item.id !== report.id), report];
   const syncQueue = [
     ...store.syncQueue.filter((item) => item.id !== report.id),
-    { id: report.id, label: `${report.kind} · ${report.title}`, status: report.syncStatus, updatedAt: report.updatedAt },
+    {
+      id: report.id,
+      label: `${report.kind} · ${report.title}`,
+      status: report.syncStatus,
+      updatedAt: report.updatedAt,
+    },
   ];
   const next = { ...store, reports, syncQueue };
   await writeDraftStore(next);
   return next;
 }
 
-export async function removeLocalDraft(kind: "report" | "request", id: string): Promise<DraftStore> {
+export async function removeLocalDraft(
+  kind: "report" | "request",
+  id: string,
+): Promise<DraftStore> {
   const store = await readDraftStore();
   const next: DraftStore = {
     reports: kind === "report" ? store.reports.filter((item) => item.id !== id) : store.reports,
@@ -63,7 +72,12 @@ export async function saveMaterialRequest(request: MaterialRequest): Promise<Dra
   const requests = [...store.requests.filter((item) => item.id !== request.id), request];
   const syncQueue = [
     ...store.syncQueue.filter((item) => item.id !== request.id),
-    { id: request.id, label: `Material request · ${request.title}`, status: request.syncStatus, updatedAt: request.requestedAt },
+    {
+      id: request.id,
+      label: `Material request · ${request.title}`,
+      status: request.syncStatus,
+      updatedAt: request.requestedAt,
+    },
   ];
   const next = { ...store, requests, syncQueue };
   await writeDraftStore(next);

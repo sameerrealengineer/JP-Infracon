@@ -94,18 +94,14 @@ export function createCorsMiddleware(
     const loopbackOrigin = originHasLoopbackHostname(origin);
     const allowedLocalOrigin =
       localApiRequest(req.hostname) && configuredLocalExpoWebOrigins().has(origin);
-    const allowedConfiguredOrigin =
-      !loopbackOrigin && allowedOrigins.has(origin);
+    const allowedConfiguredOrigin = !loopbackOrigin && allowedOrigins.has(origin);
     if (!allowedConfiguredOrigin && !allowedLocalOrigin) {
       res.status(403).json({ error: "origin_not_allowed" });
       return;
     }
 
     res.header("Access-Control-Allow-Origin", origin);
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    );
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
       "Content-Type, Accept, Authorization, X-Requested-With, X-JP-Client-Platform",
