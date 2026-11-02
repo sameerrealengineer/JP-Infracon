@@ -19,9 +19,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build:server": "esbuild server/_core/index.ts --platform=node --target=node22 --bundle --format=esm --outfile=dist-server/index.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
     "@expo-google-fonts/playfair-display": "^0.4.2",
     "@expo/metro-runtime": "~57.0.16",
     "@expo/vector-icons": "^15.0.2",

@@ -1,0 +1,64 @@
+# Self-hosted JP Infracon server: MySQL 8 + API + Caddy (automatic free HTTPS).
+# Start:  docker compose --env-file .env up -d --build
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: jp_infracon
+      MYSQL_USER: jp
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql://jp:${MYSQL_PASSWORD}@mysql:3306/jp_infracon
+      RUN_MIGRATIONS: "true"
+      STORAGE_DIR: /data/files
+      PUBLIC_BASE_URL: https://${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - files:/data/files
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+  # Optional WhatsApp alerts with WAHA (open source). Start with: --profile whatsapp
+  waha:
+    image: devlikeapro/waha
+    profiles: ["whatsapp"]
+    restart: unless-stopped
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY:-}
+    volumes:
+      - waha-sessions:/app/.sessions
+
+volumes:
+  mysql-data:
+  files:
+  caddy-data:
+  waha-sessions:

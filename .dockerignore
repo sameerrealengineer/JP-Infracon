@@ -1,0 +1,11 @@
+node_modules
+android
+ios
+dist
+dist-web
+dist-server
+test-results
+playwright-report
+.git
+.env
+*.apk

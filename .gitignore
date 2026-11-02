@@ -73,3 +73,5 @@ playwright-report/
 
 # server secrets
 .env
+dist-server
+deploy/.env
