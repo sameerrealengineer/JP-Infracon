@@ -14,6 +14,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import { currentServerAddress, saveServerAddress } from "@/lib/server-address";
+import { getApiBaseUrl } from "@/constants/api";
 import { languageNames, useT, type Language } from "@/lib/i18n";
 import * as Auth from "@/lib/_core/auth";
 
@@ -583,6 +585,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
               {t("Individual accounts only. Never share your password.")}
             </Text>
           </View>
+          <ServerAddress
+            onChanged={() => {
+              void utils.auth.me.invalidate();
+              void setup.refetch();
+            }}
+          />
           <Text style={styles.leadership}>
             Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.
           </Text>
@@ -601,6 +609,25 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     gap: 12,
   },
+  serverBox: { width: "100%", maxWidth: 420, alignItems: "center", gap: 8, marginTop: 6 },
+  serverText: { color: "rgba(246,241,230,0.7)", fontSize: 11, textDecorationLine: "underline" },
+  serverInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#FFFFFF",
+  },
+  serverError: { color: "#FF8A80", fontSize: 12 },
+  serverSave: {
+    backgroundColor: "#D9B76A",
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+  },
+  serverSaveText: { color: "#0E1A26", fontWeight: "800" },
   langRow: { flexDirection: "row", gap: 8, marginBottom: 6 },
   langChip: {
     borderRadius: 999,
@@ -683,3 +710,63 @@ const styles = StyleSheet.create({
     color: "rgba(246,241,230,0.65)",
   },
 });
+
+/** Shows which server the app talks to; lets the user point an installed APK at their server. */
+function ServerAddress({ onChanged }: { onChanged: () => void }) {
+  // An APK built without a server address opens this box so the address can be entered.
+  const [editing, setEditing] = useState(() => Platform.OS !== "web" && !getApiBaseUrl());
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [current, setCurrent] = useState(currentServerAddress);
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      setCurrent(await saveServerAddress(value));
+      setEditing(false);
+      onChanged();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Not saved.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <View style={styles.serverBox}>
+      <Pressable accessibilityRole="button" onPress={() => setEditing((v) => !v)} hitSlop={8}>
+        <Text style={styles.serverText}>
+          Server · {current.replace(/^https?:\/\//, "")} · {editing ? "Close" : "Change"}
+        </Text>
+      </Pressable>
+      {editing ? (
+        <>
+          <TextInput
+            accessibilityLabel="Server address"
+            value={value}
+            onChangeText={setValue}
+            placeholder="https://api.your-company.com"
+            placeholderTextColor="rgba(255,255,255,0.45)"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            style={styles.serverInput}
+          />
+          {error ? <Text style={styles.serverError}>{error}</Text> : null}
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy || !value.trim()}
+            onPress={() => void save()}
+            style={styles.serverSave}
+          >
+            {busy ? (
+              <ActivityIndicator color="#0E1A26" />
+            ) : (
+              <Text style={styles.serverSaveText}>Check & save</Text>
+            )}
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
+}

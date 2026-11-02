@@ -29,6 +29,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { useConnectivity } from "@/hooks/use-connectivity";
+import { loadServerAddress } from "@/lib/server-address";
 import { useIssueDraftSync } from "@/hooks/use-issue-draft-sync";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 
@@ -89,6 +90,17 @@ export default function RootLayout() {
       }),
   );
   const [trpcClient] = useState(() => createTRPCClient());
+  // The saved server address must be known before the first request.
+  const [addressReady, setAddressReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void loadServerAddress().then(() => {
+      if (active) setAddressReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
   const [persister] = useState(() =>
     createAsyncStoragePersister({
       storage: AsyncStorage,
@@ -112,7 +124,7 @@ export default function RootLayout() {
     };
   }, [initialInsets, initialFrame]);
 
-  const content = (
+  const content = !addressReady ? null : (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <PersistQueryClientProvider

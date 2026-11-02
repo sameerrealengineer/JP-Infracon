@@ -45,7 +45,7 @@ const config = {
   slug: env.appSlug,
   logoUrl:
     "https://files.manuscdn.com/user_upload_by_module/session_file/310519664045909713/GdcbZZbozOxAtxcY.png",
-  version: "1.0.0",
+  version: "1.1.0",
   extra: publicRuntime,
   orientation: "portrait",
   icon: "./assets/images/icon.png",
@@ -59,6 +59,7 @@ const config = {
     },
   },
   android: {
+    versionCode: 110,
     adaptiveIcon: {
       backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/images/android-icon-foreground.png",
