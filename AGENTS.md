@@ -47,6 +47,19 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. There are no demo logins; the first Super Admin comes from the one time bootstrap flow.
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
+## Agent skills
+
+- [expo-overview](.claude/skills/expo-overview/): `expo/skills`, entry point for any Expo task; routes to the other expo skills
+- [expo-router](.claude/skills/expo-router/): `expo/skills`, file based routes, stacks, tabs, modals
+- [expo-data-fetching](.claude/skills/expo-data-fetching/): `expo/skills`, network calls, React Query, loading, empty, and error states
+- [expo-upgrade](.claude/skills/expo-upgrade/): `expo/skills`, SDK upgrades and dependency fixes
+- [expo-project-structure](.claude/skills/expo-project-structure/): `expo/skills`, folder layout for new apps only; do not restructure this one
+- [vercel-react-native-skills](.claude/skills/vercel-react-native-skills/): `vercel-labs/agent-skills`, React Native performance and component practice
+- [styling-nativewind-v4-expo](.claude/skills/styling-nativewind-v4-expo/): `tristanmanchester/agent-skills`, NativeWind v4 with Tailwind v3
+- [vitest](.claude/skills/vitest/): `antfu/skills`, writing and running Vitest tests
+
+MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended)
+
 ## Context files
 
 - [server/jp/AGENTS.md](server/jp/AGENTS.md) (tRPC business procedures: site scope, permissions, audit, idempotency)

@@ -34,4 +34,10 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 - Petty cash Expense entries require the site fund attestation; Personal Funds are rejected until the reimbursement workflow exists. Task labels on cash movements are snapshots, so later task edits do not rewrite history.
 - Tests here (`policy.test.ts`) are database free. Do not write tests that hit the shared database.
 
+## Agent skills
+
+- [zod](../../.claude/skills/zod/): `pproenca/dot-skills`, Zod input schemas and validation
+
+Declined: none. tRPC: no installable Agent Skill was found at install time (`trpc/trpc` had no valid SKILL.md).
+
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._
