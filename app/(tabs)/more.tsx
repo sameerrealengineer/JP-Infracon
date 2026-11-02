@@ -37,7 +37,11 @@ export default function MoreScreen() {
     const store = await readDraftStore();
     setQueue(store.syncQueue);
   };
-  useEffect(() => { void refreshQueue(); }, []);
+  useEffect(() => {
+    let mounted = true;
+    void readDraftStore().then((store) => { if (mounted) setQueue(store.syncQueue); });
+    return () => { mounted = false; };
+  }, []);
 
   const signOut = async () => {
     setSigningOut(true);

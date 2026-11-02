@@ -1,9 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppHeader, EmptyState, InlineError, PrimaryButton, Screen, SectionHeader, SecondaryButton, StatusPill } from "@/components/jp/ui";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
+import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import type { RescheduleStrategy, TaskStatus } from "@/lib/jp/scheduling";
@@ -43,7 +44,7 @@ export default function ScheduleScreen() {
   const utils = trpc.useUtils();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
-  const [siteId, setSiteId] = useState("");
+  const [chosenSiteId, setSiteId] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [taskCreateMutationId, setTaskCreateMutationId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -69,9 +70,7 @@ export default function ScheduleScreen() {
   const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
 
   const siteOptions = useMemo(() => (sitesQuery.data ?? []).filter((site) => capabilitiesQuery.data?.some((capability) => capability.siteId === site.id && capability["task.view"])), [sitesQuery.data, capabilitiesQuery.data]);
-  useEffect(() => {
-    if (siteOptions.length > 0 && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id);
-  }, [siteId, siteOptions]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
 
   const activeSite = siteOptions.find((site) => site.id === siteId);
   const capabilities = capabilitiesQuery.data?.find((item) => item.siteId === siteId);

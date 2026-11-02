@@ -1,11 +1,12 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { AppHeader, EmptyState, InlineError, OfflineBanner, PrimaryButton, Screen, SectionHeader, styles as uiStyles } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { type InventoryMovementType, isAtOrBelowReorderThreshold } from "@/lib/jp/inventory-domain";
+import { clampPageIndex, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 const MOVEMENT_TYPES: { value: InventoryMovementType; label: string; description: string }[] = [
@@ -41,7 +42,7 @@ export default function InventoryScreen() {
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
   const utils = trpc.useUtils();
-  const [siteId, setSiteId] = useState("");
+  const [chosenSiteId, setSiteId] = useState("");
   const [cataloguePage, setCataloguePage] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [catalogueModalVisible, setCatalogueModalVisible] = useState(false);
@@ -69,11 +70,12 @@ export default function InventoryScreen() {
   const sites = sitesQuery.data ?? [];
   const capabilityRows = capabilitiesQuery.data ?? [];
   const siteOptions = useMemo(() => sites.filter((site) => capabilityRows.some((capability) => capability.siteId === site.id && capability["inventory.view"])), [sites, capabilityRows]);
-  useEffect(() => {
-    if (siteOptions.length > 0 && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id);
-    if (siteOptions.length === 0 && siteId) setSiteId("");
-  }, [siteId, siteOptions]);
-  useEffect(() => { setCataloguePage(0); }, [siteId]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
+  const [catalogueSiteId, setCatalogueSiteId] = useState(siteId);
+  if (catalogueSiteId !== siteId) {
+    setCatalogueSiteId(siteId);
+    setCataloguePage(0);
+  }
 
   const selectedSiteCapability = capabilityRows.find((capability) => capability.siteId === siteId);
   const canManageCatalogue = Boolean(selectedSiteCapability?.["inventory.catalog.manage"]);
@@ -89,9 +91,9 @@ export default function InventoryScreen() {
   const catalogue = inventoryQuery.data?.catalogue ?? [];
   const catalogueTotal = inventoryQuery.data?.catalogueTotal ?? 0;
   const cataloguePageCount = Math.max(1, Math.ceil(catalogueTotal / CATALOGUE_PAGE_SIZE));
-  useEffect(() => {
-    setCataloguePage((page) => Math.min(page, Math.max(0, Math.ceil(catalogueTotal / CATALOGUE_PAGE_SIZE) - 1)));
-  }, [catalogueTotal]);
+  if (inventoryQuery.data && cataloguePage !== clampPageIndex(cataloguePage, catalogueTotal, CATALOGUE_PAGE_SIZE)) {
+    setCataloguePage(clampPageIndex(cataloguePage, catalogueTotal, CATALOGUE_PAGE_SIZE));
+  }
   const activeItems = catalogue.filter((item) => item.status === "Active");
   const movements = inventoryQuery.data?.movements ?? [];
   const pendingReviewCount = inventoryQuery.data?.pendingReviewCount ?? 0;
@@ -215,7 +217,7 @@ export default function InventoryScreen() {
         {inventoryQuery.isLoading ? <View style={styles.loading}><ActivityIndicator color={colors.primary} /><Text style={[styles.loadingText, { color: colors.muted }]}>Loading site stock and ledger…</Text></View> : inventoryQuery.isError ? null : <>
           <SectionHeader title={`Material catalogue · ${catalogueTotal}`} action="Refresh" onPress={() => { void refresh(); }} />
           {cataloguePageCount > 1 ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}><Pressable accessibilityRole="button" accessibilityState={{ disabled: cataloguePage === 0 }} disabled={cataloguePage === 0} onPress={() => setCataloguePage((page) => Math.max(0, page - 1))} style={[styles.reviewButton, { borderColor: colors.border, opacity: cataloguePage === 0 ? 0.45 : 1 }]}><Text style={[styles.reviewButtonText, { color: colors.foreground }]}>Previous</Text></Pressable><Text style={[styles.movementDate, { color: colors.muted }]}>Page {cataloguePage + 1} of {cataloguePageCount}</Text><Pressable accessibilityRole="button" accessibilityState={{ disabled: cataloguePage + 1 >= cataloguePageCount }} disabled={cataloguePage + 1 >= cataloguePageCount} onPress={() => setCataloguePage((page) => Math.min(cataloguePageCount - 1, page + 1))} style={[styles.reviewButton, { borderColor: colors.border, opacity: cataloguePage + 1 >= cataloguePageCount ? 0.45 : 1 }]}><Text style={[styles.reviewButtonText, { color: colors.foreground }]}>Next</Text></Pressable></View> : null}
-          {catalogueTotal > CATALOGUE_PAGE_SIZE ? <Text style={[styles.hint, { color: colors.muted }]}>The movement form uses active materials on this catalogue page. Page to an item's entry before recording its movement.</Text> : null}
+          {catalogueTotal > CATALOGUE_PAGE_SIZE ? <Text style={[styles.hint, { color: colors.muted }]}>The movement form uses active materials on this catalogue page. Page to an item&apos;s entry before recording its movement.</Text> : null}
           {catalogue.length === 0 ? <EmptyState icon="inventory-2" title="Catalogue is empty" detail="Add a material with its configured base unit. Creating a catalogue item does not create an opening balance." /> : <View style={styles.itemStack}>{catalogue.map((item) => <View key={item.id} style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.itemTop}><View style={[styles.itemIcon, { backgroundColor: `${colors.primary}14` }]}><MaterialIcons name="inventory-2" size={18} color={colors.primary} /></View><View style={styles.itemCopy}><Text style={[styles.itemName, { color: colors.foreground }]}>{item.name}</Text><Text style={[styles.itemMeta, { color: colors.muted }]}>{item.itemCode}{item.category ? ` · ${item.category}` : ""}{item.specification ? ` · ${item.specification}` : ""}</Text></View><View style={[styles.statusBadge, { backgroundColor: item.status === "Active" ? `${colors.success}15` : `${colors.border}70` }]}><Text style={[styles.statusBadgeText, { color: item.status === "Active" ? colors.success : colors.muted }]}>{item.status}</Text></View></View>
             <View style={[styles.balanceRow, { borderTopColor: colors.border }]}><View><Text style={[styles.balanceLabel, { color: colors.muted }]}>SERVER-CALCULATED AVAILABLE</Text><Text style={[styles.balanceValue, { color: colors.foreground }]}>{item.onHand} <Text style={[styles.balanceUnit, { color: colors.muted }]}>{item.baseUnitCode}</Text></Text></View>{isAtOrBelowReorderThreshold(item.onHand, item.reorderThreshold) && item.status === "Active" ? <View style={[styles.lowBadge, { backgroundColor: `${colors.warning}18` }]}><MaterialIcons name="warning-amber" size={14} color={colors.warning} /><Text style={[styles.lowText, { color: colors.warning }]}>At/below threshold</Text></View> : null}</View>
@@ -243,7 +245,7 @@ export default function InventoryScreen() {
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Item code</Text><TextInput value={itemCode} onChangeText={setItemCode} autoCapitalize="characters" placeholder="CEM-OPC53" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Material name</Text><TextInput value={itemName} onChangeText={setItemName} placeholder="OPC 53 grade cement" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Base unit</Text><TextInput value={baseUnitCode} onChangeText={setBaseUnitCode} autoCapitalize="none" placeholder="bag, kg, m3, metre" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />
-        <Text style={[styles.helper, { color: colors.muted }]}>Choose the organisation's explicit stock unit. This slice does not convert bags, truckloads, tonnes, or other units.</Text>
+        <Text style={[styles.helper, { color: colors.muted }]}>Choose the organisation&apos;s explicit stock unit. This slice does not convert bags, truckloads, tonnes, or other units.</Text>
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Category (optional)</Text><TextInput value={category} onChangeText={setCategory} placeholder="Cement" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Specification / grade (optional)</Text><TextInput value={specification} onChangeText={setSpecification} placeholder="OPC 53 grade" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />
         <Text style={[styles.inputLabel, { color: colors.muted }]}>Reorder threshold (optional, base unit)</Text><TextInput value={reorderThreshold} onChangeText={setReorderThreshold} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={colors.muted} style={[styles.input, { color: colors.foreground, backgroundColor: colors.surface, borderColor: colors.border }]} />

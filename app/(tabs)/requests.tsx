@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppHeader, EmptyState, InlineError, OfflineBanner, PrimaryButton, Screen, SectionHeader, SecondaryButton, SyncPill, WorkflowPill, styles as uiStyles } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
+import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId, readDraftStore, removeLocalDraft, saveMaterialRequest } from "@/lib/jp/local-repository";
 import type { MaterialRequest, WorkflowStatus } from "@/lib/jp/domain";
@@ -31,13 +32,13 @@ export default function RequestsScreen() {
   const [quantity, setQuantity] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [siteId, setSiteId] = useState("");
+  const [chosenSiteId, setSiteId] = useState("");
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [pendingSync, setPendingSync] = useState(false);
 
   useEffect(() => { let mounted = true; readDraftStore().then((store) => { if (mounted) setLocalRequests(store.requests); }); return () => { mounted = false; }; }, []);
   const siteOptions = useMemo(() => (sitesQuery.data ?? []).filter((site) => capabilitiesQuery.data?.some((capability) => capability.siteId === site.id && capability["material.request"])), [sitesQuery.data, capabilitiesQuery.data]);
-  useEffect(() => { if (siteOptions.length && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id); }, [siteId, siteOptions]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
 
   const serverRequests: MaterialRequest[] = (requestsQuery.data ?? []).map((request) => {
     const items = request.items ?? [];

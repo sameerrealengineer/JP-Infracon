@@ -1,10 +1,11 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { EmptyState, InlineError, PrimaryButton, SectionHeader } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { calculatePaymentAllocationTotal, formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
+import { clampPageIndex } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 const EMPTY_ID = "00000000-0000-4000-8000-000000000000";
@@ -112,16 +113,19 @@ export function SupplierPaymentLedger(props: Props) {
   const candidateTotal = candidatesQuery.data?.total ?? 0;
   const candidatePageCount = Math.max(1, Math.ceil(candidateTotal / CANDIDATE_PAGE_SIZE));
 
-  useEffect(() => { setPage((current) => Math.min(current, Math.max(0, Math.ceil(total / PAGE_SIZE) - 1))); }, [total]);
-  useEffect(() => { setVendorPage((current) => Math.min(current, Math.max(0, Math.ceil(vendorTotal / VENDOR_PAGE_SIZE) - 1))); }, [vendorTotal]);
-  useEffect(() => { setCandidatePage((current) => Math.min(current, Math.max(0, Math.ceil(candidateTotal / CANDIDATE_PAGE_SIZE) - 1))); }, [candidateTotal]);
-  useEffect(() => {
-    if (!candidatesQuery.data) return;
+  if (paymentsQuery.data && page !== clampPageIndex(page, total, PAGE_SIZE)) setPage(clampPageIndex(page, total, PAGE_SIZE));
+  if (vendorsQuery.data && vendorPage !== clampPageIndex(vendorPage, vendorTotal, VENDOR_PAGE_SIZE)) setVendorPage(clampPageIndex(vendorPage, vendorTotal, VENDOR_PAGE_SIZE));
+  if (candidatesQuery.data && candidatePage !== clampPageIndex(candidatePage, candidateTotal, CANDIDATE_PAGE_SIZE)) setCandidatePage(clampPageIndex(candidatePage, candidateTotal, CANDIDATE_PAGE_SIZE));
+  // Remember server balances from every candidate page seen, so allocations on earlier pages keep their balance.
+  const [mergedCandidateData, setMergedCandidateData] = useState<typeof candidatesQuery.data>(undefined);
+  if (candidatesQuery.data && candidatesQuery.data !== mergedCandidateData) {
+    const freshData = candidatesQuery.data;
+    setMergedCandidateData(freshData);
     setCandidateBalances((current) => ({
       ...current,
-      ...Object.fromEntries(candidatesQuery.data.rows.map((invoice) => [invoice.id, invoice.balanceMinor])),
+      ...Object.fromEntries(freshData.rows.map((invoice) => [invoice.id, invoice.balanceMinor])),
     }));
-  }, [candidatesQuery.data]);
+  }
 
   const selectedAllocations = useMemo(() => Object.entries(allocationAmounts)
     .filter(([, amount]) => amount.trim().length > 0)

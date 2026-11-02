@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AppHeader, EmptyState, InlineError, OfflineBanner, PrimaryButton, Screen, SectionHeader } from "@/components/jp/ui";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
+import { resolveChoice, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 type BusinessRole = "admin" | "director" | "project_manager" | "supervisor" | "accounts" | "storekeeper" | "auditor";
@@ -25,32 +26,23 @@ export default function UserAccountsScreen() {
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const access = trpc.jp.workspace.onboardingState.useQuery();
   const options = trpc.jp.accounts.options.useQuery();
-  const [organizationId, setOrganizationId] = useState("");
+  const [chosenOrganizationId, setOrganizationId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
-  const [businessRole, setBusinessRole] = useState<BusinessRole>("supervisor");
+  const [chosenBusinessRole, setBusinessRole] = useState<BusinessRole>("supervisor");
   const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
   const [revealed, setRevealed] = useState<RevealedCredential | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const organizationId = resolveSelectedId(options.data ?? [], chosenOrganizationId);
   const accounts = trpc.jp.accounts.list.useQuery({ organizationId }, { enabled: Boolean(organizationId), retry: false });
   const create = trpc.jp.accounts.create.useMutation();
   const reset = trpc.jp.accounts.resetPassword.useMutation();
   const setStatus = trpc.jp.accounts.setStatus.useMutation();
   const selectedOrganization = useMemo(() => options.data?.find((item) => item.id === organizationId) ?? null, [options.data, organizationId]);
   const roleOptionsForOrganization = useMemo(() => roleOptions.filter((role) => selectedOrganization?.assignableRoles.includes(role.value)), [selectedOrganization]);
+  const businessRole = resolveChoice(roleOptionsForOrganization.map((role) => role.value), chosenBusinessRole);
   const roleConfig = roleOptions.find((role) => role.value === businessRole)!;
-
-  useEffect(() => {
-    if (!organizationId && options.data?.length) setOrganizationId(options.data[0].id);
-    if (organizationId && !options.data?.some((item) => item.id === organizationId)) setOrganizationId(options.data?.[0]?.id ?? "");
-  }, [organizationId, options.data]);
-
-  useEffect(() => {
-    if (roleOptionsForOrganization.length && !roleOptionsForOrganization.some((role) => role.value === businessRole)) {
-      setBusinessRole(roleOptionsForOrganization[0].value);
-    }
-  }, [businessRole, roleOptionsForOrganization]);
 
   const toggleSite = (siteId: string) => setSelectedSiteIds((current) => current.includes(siteId) ? current.filter((id) => id !== siteId) : [...current, siteId]);
   const clearForm = () => { setDisplayName(""); setUsername(""); setSelectedSiteIds([]); setBusinessRole(roleOptionsForOrganization[0]?.value ?? "supervisor"); };

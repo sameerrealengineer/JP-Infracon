@@ -7,81 +7,86 @@ type UseAuthOptions = {
   autoFetch?: boolean;
 };
 
+type SessionResult = { user: Auth.User | null; error: Error | null };
+
+function toUserInfo(apiUser: NonNullable<Awaited<ReturnType<typeof Api.getMe>>>): Auth.User {
+  return {
+    id: apiUser.id,
+    openId: apiUser.openId,
+    name: apiUser.name,
+    email: apiUser.email,
+    loginMethod: apiUser.loginMethod,
+    lastSignedIn: new Date(apiUser.lastSignedIn),
+  };
+}
+
+/** Resolves the server verified user (or null) and updates the cached profile. Holds no React state. */
+async function loadSessionUser(): Promise<Auth.User | null> {
+  // Web platform: use cookie-based auth, fetch user from API
+  if (Platform.OS === "web") {
+    console.log("[useAuth] Web platform: fetching user from API...");
+    const apiUser = await Api.getMe();
+    if (!apiUser) {
+      console.log("[useAuth] Web: No authenticated user from API");
+      await Auth.clearUserInfo();
+      return null;
+    }
+    const userInfo = toUserInfo(apiUser);
+    // Cache user info in localStorage for faster subsequent loads
+    await Auth.setUserInfo(userInfo);
+    console.log("[useAuth] Web user set from API");
+    return userInfo;
+  }
+
+  // Native platform: use token-based auth.
+  // Never treat a cached display profile as authentication; verify the server session first.
+  console.log("[useAuth] Native platform: checking for session token...");
+  const sessionToken = await Auth.getSessionToken();
+  if (!sessionToken) {
+    console.log("[useAuth] No session token, setting user to null");
+    await Auth.clearUserInfo();
+    return null;
+  }
+
+  const apiUser = await Api.getMe();
+  if (!apiUser) {
+    console.log("[useAuth] No server-verified native session");
+    await Auth.clearUserInfo();
+    return null;
+  }
+  const userInfo = toUserInfo(apiUser);
+  await Auth.setUserInfo(userInfo);
+  return userInfo;
+}
+
+async function resolveSession(): Promise<SessionResult> {
+  try {
+    return { user: await loadSessionUser(), error: null };
+  } catch (err) {
+    console.error("[useAuth] fetchUser error");
+    return { user: null, error: err instanceof Error ? err : new Error("Failed to fetch user") };
+  }
+}
+
 export function useAuth(options?: UseAuthOptions) {
   const { autoFetch = true } = options ?? {};
   const [user, setUser] = useState<Auth.User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(autoFetch);
   const [error, setError] = useState<Error | null>(null);
+
+  const applySession = useCallback((result: SessionResult) => {
+    setUser(result.user);
+    setError(result.error);
+    setLoading(false);
+    console.log("[useAuth] fetchUser completed, loading:", false);
+  }, []);
 
   const fetchUser = useCallback(async () => {
     console.log("[useAuth] fetchUser called");
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Web platform: use cookie-based auth, fetch user from API
-      if (Platform.OS === "web") {
-        console.log("[useAuth] Web platform: fetching user from API...");
-        const apiUser = await Api.getMe();
-
-        if (apiUser) {
-          const userInfo: Auth.User = {
-            id: apiUser.id,
-            openId: apiUser.openId,
-            name: apiUser.name,
-            email: apiUser.email,
-            loginMethod: apiUser.loginMethod,
-            lastSignedIn: new Date(apiUser.lastSignedIn),
-          };
-          setUser(userInfo);
-          // Cache user info in localStorage for faster subsequent loads
-          await Auth.setUserInfo(userInfo);
-          console.log("[useAuth] Web user set from API");
-        } else {
-          console.log("[useAuth] Web: No authenticated user from API");
-          setUser(null);
-          await Auth.clearUserInfo();
-        }
-        return;
-      }
-
-      // Native platform: use token-based auth
-      console.log("[useAuth] Native platform: checking for session token...");
-      const sessionToken = await Auth.getSessionToken();
-      if (!sessionToken) {
-        console.log("[useAuth] No session token, setting user to null");
-        setUser(null);
-        await Auth.clearUserInfo();
-        return;
-      }
-
-      const apiUser = await Api.getMe();
-      if (!apiUser) {
-        console.log("[useAuth] No server-verified native session");
-        setUser(null);
-        await Auth.clearUserInfo();
-      } else {
-        const userInfo: Auth.User = {
-          id: apiUser.id,
-          openId: apiUser.openId,
-          name: apiUser.name,
-          email: apiUser.email,
-          loginMethod: apiUser.loginMethod,
-          lastSignedIn: new Date(apiUser.lastSignedIn),
-        };
-        setUser(userInfo);
-        await Auth.setUserInfo(userInfo);
-      }
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to fetch user");
-      console.error("[useAuth] fetchUser error");
-      setError(error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-      console.log("[useAuth] fetchUser completed, loading:", false);
-    }
-  }, []);
+    setLoading(true);
+    setError(null);
+    applySession(await resolveSession());
+  }, [applySession]);
 
   const logout = useCallback(async () => {
     try {
@@ -100,21 +105,16 @@ export function useAuth(options?: UseAuthOptions) {
   const isAuthenticated = useMemo(() => Boolean(user), [user]);
 
   useEffect(() => {
-    console.log("[useAuth] useEffect triggered");
-    if (autoFetch) {
-      if (Platform.OS === "web") {
-        // Web: fetch user from API directly (user will login manually if needed)
-        console.log("[useAuth] Web: fetching user from API...");
-        fetchUser();
-      } else {
-        // Never treat a cached display profile as authentication; verify the server session first.
-        fetchUser();
-      }
-    } else {
-      console.log("[useAuth] autoFetch disabled, setting loading to false");
-      setLoading(false);
-    }
-  }, [autoFetch, fetchUser]);
+    if (!autoFetch) return;
+    console.log("[useAuth] Verifying the server session...");
+    let active = true;
+    void resolveSession().then((result) => {
+      if (active) applySession(result);
+    });
+    return () => {
+      active = false;
+    };
+  }, [autoFetch, applySession]);
 
   return {
     user,

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppHeader, EmptyState, InlineError, OfflineBanner, PrimaryButton, Screen, SectionHeader, SecondaryButton, SyncPill, WorkflowPill, styles as uiStyles } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
+import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId, readDraftStore, removeLocalDraft, saveReportDraft } from "@/lib/jp/local-repository";
 import type { FieldReport, WorkflowStatus } from "@/lib/jp/domain";
@@ -41,18 +42,18 @@ export default function ReportsScreen() {
   const [composerVisible, setComposerVisible] = useState(false);
   const [title, setTitle] = useState("");
   const [remarks, setRemarks] = useState("");
-  const [kind, setKind] = useState<"DPR" | "DLR">("DPR");
-  const [siteId, setSiteId] = useState("");
+  const [chosenKind, setKind] = useState<"DPR" | "DLR" | null>(null);
+  const [chosenSiteId, setSiteId] = useState("");
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [pendingSync, setPendingSync] = useState(false);
 
   useEffect(() => { let mounted = true; readDraftStore().then((store) => { if (mounted) setLocalReports(store.reports); }); return () => { mounted = false; }; }, []);
+  // DLR only accounts start on the report type they can create; a tap still overrides it.
+  const defaultKind = capabilitiesQuery.data && !capabilitiesQuery.data.some((capability) => capability["dpr.create"]) && capabilitiesQuery.data.some((capability) => capability["dlr.create"]) ? "DLR" : "DPR";
+  const kind = chosenKind ?? defaultKind;
   const createPermissionKey = kind === "DPR" ? "dpr.create" as const : "dlr.create" as const;
   const siteOptions = useMemo(() => (sitesQuery.data ?? []).filter((site) => capabilitiesQuery.data?.some((capability) => capability.siteId === site.id && capability[createPermissionKey])), [sitesQuery.data, capabilitiesQuery.data, createPermissionKey]);
-  useEffect(() => { if (siteOptions.length && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id); }, [siteId, siteOptions]);
-  useEffect(() => {
-    if (capabilitiesQuery.data && !capabilitiesQuery.data.some((capability) => capability["dpr.create"]) && capabilitiesQuery.data.some((capability) => capability["dlr.create"])) setKind("DLR");
-  }, [capabilitiesQuery.data]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
 
   const serverReports: FieldReport[] = (reportsQuery.data ?? []).map((report) => ({
     id: report.id,
@@ -132,7 +133,7 @@ export default function ReportsScreen() {
     setLocalReports((current) => [localDraft, ...current]);
     await saveReportDraft(localDraft);
     setComposerVisible(false);
-    setTitle(""); setRemarks(""); setKind("DPR");
+    setTitle(""); setRemarks(""); setKind(null);
     try {
       await syncOne(localDraft);
       setSavedMessage("Saved to the server as a draft. It has not been submitted for review.");

@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { AppHeader, EmptyState, InlineError, PrimaryButton, Screen, SectionHeader } from "@/components/jp/ui";
@@ -8,6 +8,7 @@ import { PettyCashLedger } from "@/components/jp/petty-cash-ledger";
 import { useColors } from "@/hooks/use-colors";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { calculateInvoiceTotals, formatMinorAsRupees, parsePositiveQuantity, parseRupeesToMinor } from "@/lib/jp/finance-domain";
+import { clampPageIndex, resolveChoice, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 const EMPTY_ID = "00000000-0000-4000-8000-000000000000";
@@ -45,8 +46,8 @@ export default function FinanceScreen() {
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
   const utils = trpc.useUtils();
-  const [siteId, setSiteId] = useState("");
-  const [section, setSection] = useState<FinanceSection>("Invoices");
+  const [chosenSiteId, setSiteId] = useState("");
+  const [chosenSection, setSection] = useState<FinanceSection>("Invoices");
   const [invoicePage, setInvoicePage] = useState(0);
   const [vendorPage, setVendorPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<(typeof INVOICE_STATUSES)[number]>("All");
@@ -87,12 +88,19 @@ export default function FinanceScreen() {
 
   const capabilities = capabilitiesQuery.data ?? [];
   const siteOptions = useMemo(() => (sitesQuery.data ?? []).filter((site) => capabilities.some((capability) => capability.siteId === site.id && (capability["finance.invoice.view"] || capability["finance.payment.view"] || capability["finance.cash.view"] || capability["vendor.view"]))), [sitesQuery.data, capabilities]);
-  useEffect(() => {
-    if (siteOptions.length > 0 && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id);
-    if (siteOptions.length === 0 && siteId) setSiteId("");
-  }, [siteId, siteOptions]);
-  useEffect(() => { setInvoicePage(0); setExpandedInvoiceId(null); }, [siteId, statusFilter]);
-  useEffect(() => { setVendorPage(0); }, [siteId]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
+  const invoiceListKey = `${siteId}|${statusFilter}`;
+  const [shownInvoiceListKey, setShownInvoiceListKey] = useState(invoiceListKey);
+  if (shownInvoiceListKey !== invoiceListKey) {
+    setShownInvoiceListKey(invoiceListKey);
+    setInvoicePage(0);
+    setExpandedInvoiceId(null);
+  }
+  const [shownVendorSiteId, setShownVendorSiteId] = useState(siteId);
+  if (shownVendorSiteId !== siteId) {
+    setShownVendorSiteId(siteId);
+    setVendorPage(0);
+  }
 
   const siteCapability = capabilities.find((capability) => capability.siteId === siteId);
   const canViewVendors = Boolean(siteCapability?.["vendor.view"]);
@@ -109,9 +117,7 @@ export default function FinanceScreen() {
     ["Payments", canViewPayments],
     ["Petty Cash", canViewPettyCash],
   ] as const).filter(([, visible]) => visible).map(([name]) => name);
-  useEffect(() => {
-    if (!visibleSections.includes(section) && visibleSections.length) setSection(visibleSections[0]);
-  }, [section, visibleSections.join("|")]);
+  const section = resolveChoice(visibleSections, chosenSection);
   const invoicesQuery = trpc.jp.finance.listInvoices.useQuery({
     siteId: siteId || EMPTY_ID,
     offset: invoicePage * INVOICE_PAGE_SIZE,
@@ -135,8 +141,12 @@ export default function FinanceScreen() {
   const vendors = vendorsQuery.data?.rows ?? [];
   const vendorTotal = vendorsQuery.data?.total ?? 0;
   const vendorPageCount = Math.max(1, Math.ceil(vendorTotal / VENDOR_PAGE_SIZE));
-  useEffect(() => { setInvoicePage((page) => Math.min(page, Math.max(0, Math.ceil(invoiceTotal / INVOICE_PAGE_SIZE) - 1))); }, [invoiceTotal]);
-  useEffect(() => { setVendorPage((page) => Math.min(page, Math.max(0, Math.ceil(vendorTotal / VENDOR_PAGE_SIZE) - 1))); }, [vendorTotal]);
+  if (invoicesQuery.data && invoicePage !== clampPageIndex(invoicePage, invoiceTotal, INVOICE_PAGE_SIZE)) {
+    setInvoicePage(clampPageIndex(invoicePage, invoiceTotal, INVOICE_PAGE_SIZE));
+  }
+  if (vendorsQuery.data && vendorPage !== clampPageIndex(vendorPage, vendorTotal, VENDOR_PAGE_SIZE)) {
+    setVendorPage(clampPageIndex(vendorPage, vendorTotal, VENDOR_PAGE_SIZE));
+  }
 
   const refresh = async () => {
     await Promise.all([sitesQuery.refetch(), capabilitiesQuery.refetch(), invoicesQuery.refetch(), ...(canViewVendors ? [vendorsQuery.refetch()] : [])]);
@@ -368,10 +378,13 @@ function DateField({ label, value, onChange, minDate, allowClear = false }: { la
     const initial = parseLocalCalendarDate(value) ?? parseLocalCalendarDate(minDate ?? "") ?? new Date();
     return new Date(initial.getFullYear(), initial.getMonth(), 1, 12);
   });
-  useEffect(() => {
+  const cursorSourceKey = `${value}|${minDate ?? ""}`;
+  const [shownCursorSourceKey, setShownCursorSourceKey] = useState(cursorSourceKey);
+  if (shownCursorSourceKey !== cursorSourceKey) {
+    setShownCursorSourceKey(cursorSourceKey);
     const selected = parseLocalCalendarDate(value) ?? parseLocalCalendarDate(minDate ?? "");
     if (selected) setMonthCursor(new Date(selected.getFullYear(), selected.getMonth(), 1, 12));
-  }, [value, minDate]);
+  }
   const year = monthCursor.getFullYear();
   const month = monthCursor.getMonth();
   const leadingBlanks = (new Date(year, month, 1).getDay() + 6) % 7;

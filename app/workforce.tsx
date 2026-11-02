@@ -1,9 +1,10 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AppHeader, EmptyState, InlineError, PrimaryButton, Screen, SectionHeader } from "@/components/jp/ui";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
+import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { formatPaiseAsRupees } from "@/lib/jp/workforce-domain";
@@ -42,7 +43,7 @@ export default function WorkforceScreen() {
   const colors = useColors();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
-  const [siteId, setSiteId] = useState("");
+  const [chosenSiteId, setSiteId] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createKey, setCreateKey] = useState<string | null>(null);
@@ -71,7 +72,7 @@ export default function WorkforceScreen() {
 
   const capabilityRows = capabilitiesQuery.data ?? [];
   const siteOptions = useMemo(() => (sitesQuery.data ?? []).filter((site) => capabilityRows.some((capability) => capability.siteId === site.id && capability["workforce.view"])), [sitesQuery.data, capabilityRows]);
-  useEffect(() => { if (siteOptions.length && !siteOptions.some((site) => site.id === siteId)) setSiteId(siteOptions[0].id); }, [siteId, siteOptions]);
+  const siteId = resolveSelectedId(siteOptions, chosenSiteId);
   const activeSite = siteOptions.find((site) => site.id === siteId);
   const siteCapabilities = capabilityRows.find((capability) => capability.siteId === siteId);
   const canCreate = Boolean(siteCapabilities?.["workforce.manage"]);

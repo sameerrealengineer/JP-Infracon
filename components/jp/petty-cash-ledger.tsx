@@ -1,10 +1,11 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 import { EmptyState, InlineError, PrimaryButton, SecondaryButton, SectionHeader } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
+import { clampPageIndex, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 const EMPTY_ID = "00000000-0000-4000-8000-000000000000";
@@ -52,7 +53,7 @@ export function PettyCashLedger(props: Props) {
   const colors = useColors();
   const utils = trpc.useUtils();
   const [message, setMessage] = useState<string | null>(null);
-  const [selectedFundId, setSelectedFundId] = useState("");
+  const [chosenFundId, setSelectedFundId] = useState("");
   const [page, setPage] = useState(0);
   const [fundModalVisible, setFundModalVisible] = useState(false);
   const [fundName, setFundName] = useState("");
@@ -84,10 +85,8 @@ export function PettyCashLedger(props: Props) {
 
   const fundsQuery = trpc.jp.finance.pettyCash.listFunds.useQuery({ siteId: props.siteId || EMPTY_ID, offset: 0, limit: 50 }, { enabled: Boolean(props.siteId) });
   const funds = fundsQuery.data?.items ?? [];
-  useEffect(() => {
-    if (funds.length && !funds.some((fund) => fund.id === selectedFundId)) setSelectedFundId(funds[0].id);
-    if (!funds.length && selectedFundId) setSelectedFundId("");
-  }, [funds, selectedFundId]);
+  // The choice stays in state, so a newly created fund becomes selected once the refetched list includes it.
+  const selectedFundId = resolveSelectedId(funds, chosenFundId);
   const selectedFund = funds.find((fund) => fund.id === selectedFundId);
   const custodiansQuery = trpc.jp.finance.pettyCash.listCustodianCandidates.useQuery({ siteId: props.siteId || EMPTY_ID }, { enabled: Boolean(fundModalVisible && props.canManageFund) });
   const tasksQuery = trpc.jp.finance.pettyCash.listTaskOptions.useQuery({ siteId: props.siteId || EMPTY_ID }, { enabled: Boolean(props.siteId) });
@@ -115,7 +114,7 @@ export function PettyCashLedger(props: Props) {
   const rows = movementsQuery.data?.items ?? [];
   const total = movementsQuery.data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  useEffect(() => { setPage((current) => Math.min(current, Math.max(0, Math.ceil(total / PAGE_SIZE) - 1))); }, [total]);
+  if (movementsQuery.data && page !== clampPageIndex(page, total, PAGE_SIZE)) setPage(clampPageIndex(page, total, PAGE_SIZE));
 
   const changeFund = (setter: (value: string) => void, value: string) => { setter(value); setFundMutationId(createClientMutationId()); };
   const changeMovement = (setter: (value: string) => void, value: string) => { setter(value); setMovementMutationId(createClientMutationId()); };
