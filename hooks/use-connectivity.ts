@@ -3,6 +3,7 @@ import { useNetworkState } from "expo-network";
 import { useCallback, useEffect, useState } from "react";
 import { readDraftStore } from "@/lib/jp/local-repository";
 import type { SyncQueueItem } from "@/lib/jp/domain";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 /**
  * Device connectivity from the OS. `null` means not yet known.
@@ -10,8 +11,10 @@ import type { SyncQueueItem } from "@/lib/jp/domain";
  */
 export function useConnectivity(): { online: boolean | null } {
   const state = useNetworkState();
-  const online =
-    state.isConnected === undefined
+  // The offline demo answers every call on the phone, so it is never "offline".
+  const online = DEMO_MODE
+    ? true
+    : state.isConnected === undefined
       ? null
       : Boolean(state.isConnected) && state.isInternetReachable !== false;
   useEffect(() => {

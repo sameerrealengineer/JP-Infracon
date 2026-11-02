@@ -1,6 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import {
@@ -122,8 +123,10 @@ export function AttachmentStrip({
 
   const view = (id: string) =>
     run(`open-${id}`, async () => {
-      const { url } = await open.mutateAsync({ attachmentId: id });
-      await WebBrowser.openBrowserAsync(url);
+      const { url, contentType } = await open.mutateAsync({ attachmentId: id });
+      // The offline demo keeps files on the phone; open those with the phone's own viewer.
+      if (url.startsWith("file:")) await Sharing.shareAsync(url, { mimeType: contentType });
+      else await WebBrowser.openBrowserAsync(url);
     });
 
   const rows = files.data ?? [];

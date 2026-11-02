@@ -5,6 +5,8 @@ import { Platform } from "react-native";
 import type { AppRouter } from "@/server/routers";
 import { getApiBaseUrl } from "@/constants/api";
 import * as Auth from "@/lib/_core/auth";
+import { DEMO_MODE } from "@/lib/demo/config";
+import { createDemoLink } from "@/lib/demo/link";
 
 /**
  * tRPC React client for type-safe API calls.
@@ -20,6 +22,9 @@ export const trpc = createTRPCReact<AppRouter>();
  * Call this once in your app's root layout.
  */
 export function createTRPCClient() {
+  // Offline demo: calls are answered on the phone (see lib/demo/backend.ts).
+  if (DEMO_MODE)
+    return trpc.createClient({ links: [createDemoLink(Auth.getSessionToken, Platform.OS)] });
   return trpc.createClient({
     links: [
       httpBatchLink({
@@ -48,6 +53,10 @@ export function createTRPCClient() {
 
 /** Plain (non-React) client for background tasks such as geofence events. */
 export function createBackgroundClient() {
+  if (DEMO_MODE)
+    return createVanillaTRPCClient<AppRouter>({
+      links: [createDemoLink(Auth.getSessionToken, Platform.OS)],
+    });
   return createVanillaTRPCClient<AppRouter>({
     links: [
       httpBatchLink({

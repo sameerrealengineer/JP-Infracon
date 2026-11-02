@@ -25,6 +25,7 @@ pnpm test                    # Vitest, database free tests only
 pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
 pnpm build                   # Bundle the API to dist/ with esbuild
 pnpm build:server            # Bundle the API into one file (dist-server/index.mjs) for the Docker image
+pnpm build:demo-apk          # Offline demo APK on EAS (profile demo); pnpm android:demo builds it locally
 npx expo export --platform web --output-dir /tmp/jp-web-export   # Web bundle check
 ```
 
@@ -50,12 +51,13 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 
 - One managed MySQL database serves both development and production. Never point tests at it, seed demo data, or run destructive cleanup.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
-- Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. There are no demo logins; the first Super Admin comes from the one time bootstrap flow.
+- Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. The normal build has no demo logins; the first Super Admin comes from the one time bootstrap flow. Only the offline demo build (below) has built in demo accounts, and they exist only on the phone.
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
 - The React Query cache is persisted to AsyncStorage (`app/_layout.tsx`) so synced records stay viewable offline; sign out calls `queryClient.clear()` so the next user of the phone sees nothing.
 - UI text goes through `useT()` from `lib/i18n` (keys are the English text; Hindi and Odia in `lib/i18n/strings.ts`, kept in step by a test). Untranslated text falls back to English.
 - Self-hosting: `Dockerfile` + `deploy/docker-compose.yml` (MySQL 8.4, API, Caddy, optional WAHA); guide in `docs/deploy/self-hosting.md`. `pnpm build:server` bundles the API into one file; `RUN_MIGRATIONS=true` applies `drizzle/` on start; `STORAGE_DIR` (disk) or `S3_*` (R2/S3) replaces Manus Forge storage; `PUBLIC_BASE_URL` builds 5-minute `/api/files/:token` links. `scripts/selfhost-smoke.mts` checks a fresh server end to end — never against real data.
 - The APK lets the person set the server address on the sign-in screen (`lib/server-address.ts`).
+- Offline demo build (`EXPO_PUBLIC_JP_DEMO=1`, EAS profile `demo`, `pnpm build:demo-apk`): the app runs the real `server/` router on the phone over SQLite, with seven demo accounts and sample data. No server, no server address on the sign-in screen. Details in `lib/demo/AGENTS.md`.
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
 ## Agent skills
@@ -80,5 +82,6 @@ MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended), Playwright M
 - [lib/jp/AGENTS.md](lib/jp/AGENTS.md) (pure shared domain logic: paise math, policies, scheduling, offline drafts)
 - [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the shared MySQL database)
 - [e2e/AGENTS.md](e2e/AGENTS.md) (Playwright tests on the static web export with a faked tRPC API)
+- [lib/demo/AGENTS.md](lib/demo/AGENTS.md) (offline demo build: real server code on the phone over SQLite, demo accounts, sample data)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

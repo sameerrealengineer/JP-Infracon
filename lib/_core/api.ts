@@ -1,6 +1,7 @@
 import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/api";
 import * as Auth from "./auth";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 type ApiResponse<T> = {
   data?: T;
@@ -76,6 +77,8 @@ export async function apiCall<T>(endpoint: string, options: RequestInit = {}): P
 
 // Logout
 export async function logout(): Promise<void> {
+  // The offline demo has no server; signing out only clears the session on the phone.
+  if (DEMO_MODE) return;
   await apiCall<void>("/api/auth/logout", {
     method: "POST",
   });

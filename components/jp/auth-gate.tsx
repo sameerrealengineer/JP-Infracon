@@ -18,6 +18,7 @@ import { currentServerAddress, saveServerAddress } from "@/lib/server-address";
 import { getApiBaseUrl } from "@/constants/api";
 import { languageNames, useT, type Language } from "@/lib/i18n";
 import * as Auth from "@/lib/_core/auth";
+import { DEMO_ACCOUNTS, DEMO_MODE, DEMO_PASSWORD } from "@/lib/demo/config";
 
 const companyLogo = require("../../assets/images/icon.png");
 
@@ -585,12 +586,25 @@ export function AuthGate({ children }: { children: ReactNode }) {
               {t("Individual accounts only. Never share your password.")}
             </Text>
           </View>
-          <ServerAddress
-            onChanged={() => {
-              void utils.auth.me.invalidate();
-              void setup.refetch();
-            }}
-          />
+          {DEMO_MODE ? (
+            !mustChangePassword && !registering ? (
+              <DemoAccounts
+                selected={username}
+                onPick={(name) => {
+                  setUsername(name);
+                  setPassword(DEMO_PASSWORD);
+                  setFormError(null);
+                }}
+              />
+            ) : null
+          ) : (
+            <ServerAddress
+              onChanged={() => {
+                void utils.auth.me.invalidate();
+                void setup.refetch();
+              }}
+            />
+          )}
           <Text style={styles.leadership}>
             Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.
           </Text>
@@ -609,6 +623,36 @@ const styles = StyleSheet.create({
     paddingVertical: 36,
     gap: 12,
   },
+  demoBox: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: 20,
+    padding: 16,
+    gap: 10,
+    marginTop: 4,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+  demoTitle: { color: "#F6F1E6", fontSize: 15, fontWeight: "800" },
+  demoHint: { color: "rgba(246,241,230,0.75)", fontSize: 12, lineHeight: 17 },
+  demoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  demoChip: {
+    flexGrow: 1,
+    flexBasis: "45%",
+    minHeight: 48,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  demoChipOn: { backgroundColor: "#F6F1E6", borderColor: "#F6F1E6" },
+  demoChipLabel: { color: "#F6F1E6", fontSize: 13, fontWeight: "700" },
+  demoChipUser: { color: "rgba(246,241,230,0.7)", fontSize: 11, marginTop: 2 },
+  demoChipLabelOn: { color: "#0E1A26" },
   serverBox: { width: "100%", maxWidth: 420, alignItems: "center", gap: 8, marginTop: 6 },
   serverText: { color: "rgba(246,241,230,0.7)", fontSize: 11, textDecorationLine: "underline" },
   serverInput: {
@@ -710,6 +754,48 @@ const styles = StyleSheet.create({
     color: "rgba(246,241,230,0.65)",
   },
 });
+
+/** Offline demo: tap a role to fill in its sign-in. Every demo account shares one password. */
+function DemoAccounts({
+  selected,
+  onPick,
+}: {
+  selected: string;
+  onPick: (username: string) => void;
+}) {
+  return (
+    <View style={styles.demoBox}>
+      <Text style={styles.demoTitle}>Demo accounts</Text>
+      <Text style={styles.demoHint}>
+        Tap a role to sign in as that person. Password for all: {DEMO_PASSWORD}
+      </Text>
+      <View style={styles.demoGrid}>
+        {DEMO_ACCOUNTS.map((account) => {
+          const on = selected.trim().toLowerCase() === account.username;
+          return (
+            <Pressable
+              key={account.username}
+              accessibilityRole="button"
+              accessibilityLabel={`Use the ${account.label} demo account`}
+              onPress={() => onPick(account.username)}
+              style={[styles.demoChip, on && styles.demoChipOn]}
+            >
+              <Text style={[styles.demoChipLabel, on && styles.demoChipLabelOn]}>
+                {account.label}
+              </Text>
+              <Text style={[styles.demoChipUser, on && styles.demoChipLabelOn]}>
+                {account.username}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={styles.demoHint}>
+        Everything is stored on this phone only. Nothing is sent to a server.
+      </Text>
+    </View>
+  );
+}
 
 /** Shows which server the app talks to; lets the user point an installed APK at their server. */
 function ServerAddress({ onChanged }: { onChanged: () => void }) {
