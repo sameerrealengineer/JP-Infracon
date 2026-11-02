@@ -21,7 +21,7 @@ Conventions are captured; add the missing enforcement (pre commit checks and a C
 code in `.github/workflows/ci.yml`, `.husky/pre-commit`, `package.json` (`lint-staged`, `format:check`), `.prettierrc.json`, `eslint.config.js`
 - [x] Capture conventions + tooling choices: `/audit`
 - [x] Install the tooling: `/develop tooling`
-- [ ] Check it runs clean: `/test`
+- [x] Check it runs clean: `/test`
 
 ### 9. Environment separation & backups · needs a decision · GA
 Today development and production share one database. Give each environment its own database and config, document backup and restore, then apply migrations 0010 and 0011 safely.
