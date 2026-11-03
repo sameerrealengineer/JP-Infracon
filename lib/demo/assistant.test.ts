@@ -69,4 +69,44 @@ describe("assistant", () => {
     const answer = await supervisor.jp.assistant.ask({ text: "show the budget" });
     expect(answer.action).toEqual({ type: "none" });
   });
+
+  it("fills a material request and a petty cash expense from words, re-checking the AI", async () => {
+    const sites = await supervisor.jp.workspace.mySites();
+    modelReply = {
+      items: [
+        { name: "OPC 53 cement", quantity: "50", unit: "bori" },
+        { name: "TMT 12mm", quantity: "2", unit: "tonnes" },
+      ],
+      purpose: "First floor slab",
+    };
+    const request = await supervisor.jp.ai.fillRequest({
+      siteId: sites[0].id,
+      text: "50 bori cement aur 2 ton 12mm saria chahiye",
+    });
+    expect(request).toMatchObject({
+      itemName: "OPC 53 cement",
+      quantity: "50",
+      unitCode: "bag",
+      otherItems: ["2 ton TMT 12mm"],
+    });
+
+    const owner = await signIn("owner");
+    modelReply = {
+      amount: "₹450",
+      payee: "Mahavir Petrol Pump",
+      paymentMode: "cash",
+      category: "Fuel",
+      date: "2099-01-01",
+    };
+    const expense = await owner.jp.ai.fillExpense({
+      siteId: sites[0].id,
+      text: "450 diesel generator ke liye",
+    });
+    expect(expense).toMatchObject({
+      amountRupees: "450",
+      paymentMode: "Cash",
+      category: "Fuel",
+      date: "",
+    });
+  });
 });

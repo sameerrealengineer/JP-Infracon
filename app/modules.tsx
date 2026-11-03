@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
@@ -29,6 +30,7 @@ type Suggestion = {
 };
 
 export default function ModulesScreen() {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const settings = trpc.jp.modules.settings.useQuery();
@@ -103,7 +105,7 @@ export default function ModulesScreen() {
         >
           <AppHeader
             eyebrow="Settings"
-            title="Modules"
+            title={t("Modules")}
             subtitle="Use only what your company needs. A module turned off is hidden for everyone; its records stay safe and come back when you turn it on."
           />
           {settings.error ? (
@@ -124,7 +126,7 @@ export default function ModulesScreen() {
                   <View style={styles.aiHead}>
                     <MaterialIcons name="auto-awesome" size={20} color={colors.accent} />
                     <Text style={[styles.aiTitle, { color: colors.foreground }]}>
-                      Ask AI which modules you need
+                      {t("Ask AI which modules you need")}
                     </Text>
                   </View>
                   <Field
@@ -137,7 +139,7 @@ export default function ModulesScreen() {
                   />
                   <SecondaryButton
                     icon="psychology"
-                    label={suggest.isPending ? "Thinking…" : "Suggest modules"}
+                    label={suggest.isPending ? "Thinking…" : t("Suggest modules")}
                     disabled={suggest.isPending}
                     onPress={() => void ask()}
                   />
@@ -175,7 +177,7 @@ export default function ModulesScreen() {
                       {suggestion.turnOn.length + suggestion.turnOff.length > 0 ? (
                         <SecondaryButton
                           icon="done-all"
-                          label="Use this suggestion"
+                          label={t("Use this suggestion")}
                           onPress={applySuggestion}
                         />
                       ) : null}
@@ -237,7 +239,7 @@ export default function ModulesScreen() {
               {data.canManage ? (
                 <PrimaryButton
                   icon="save"
-                  label={update.isPending ? "Saving…" : "Save modules"}
+                  label={update.isPending ? "Saving…" : t("Save modules")}
                   disabled={!changed || update.isPending}
                   onPress={() => void save()}
                 />

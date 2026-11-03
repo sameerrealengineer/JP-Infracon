@@ -19,6 +19,7 @@ import {
   Screen,
   SectionHeader,
 } from "@/components/jp/ui";
+import { Avatar } from "@/components/jp/avatar";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { CompanySetupNeeded, useNeedsCompanySetup } from "@/components/jp/company-setup-needed";
 import { useColors } from "@/hooks/use-colors";
@@ -89,6 +90,9 @@ const labels = Object.fromEntries(roleOptions.map((role) => [role.value, role.la
 >;
 
 export default function UserAccountsScreen() {
+  const teamPhotos = trpc.jp.profile.team.useQuery(undefined, { staleTime: 5 * 60_000 });
+  const photoOf = (userId: number) =>
+    teamPhotos.data?.find((row) => row.userId === userId)?.photoUrl ?? null;
   const colors = useColors();
   const utils = trpc.useUtils();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
@@ -612,6 +616,7 @@ export default function UserAccountsScreen() {
                             index > 0 && { borderTopColor: colors.border, borderTopWidth: 1 },
                           ]}
                         >
+                          <Avatar uri={photoOf(account.id)} name={account.name} size={40} />
                           <View style={styles.accountCopy}>
                             <Text style={[styles.accountName, { color: colors.foreground }]}>
                               {account.name || "Unnamed account"}

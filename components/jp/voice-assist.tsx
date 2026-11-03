@@ -9,10 +9,14 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ChipGroup, InlineError, SecondaryButton } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { readBase64 } from "@/lib/device-files";
+import { compressPhoto, readBase64 } from "@/lib/device-files";
 import type { IssueDraftFields } from "@/lib/jp/ai-extraction";
 import type { ReportDraftFields } from "@/lib/jp/ai-report-extraction";
+import type { RequestDraftFields } from "@/lib/jp/ai-request-extraction";
+import type { ExpenseDraftFields } from "@/lib/jp/ai-expense-extraction";
+import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 const languages = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
 type Lang = keyof typeof languages;
@@ -66,6 +70,71 @@ export function VoiceReportAssist({
       initialText={initialText}
       filling={fill.isPending}
       onFill={async (text) => onFields(await fill.mutateAsync({ siteId, reportKind, text }))}
+    />
+  );
+}
+
+/** Voice, typed note or receipt photo → petty cash expense fields. */
+export function ExpenseAssist({
+  siteId,
+  onFields,
+}: {
+  siteId: string;
+  onFields: (fields: ExpenseDraftFields) => void;
+}) {
+  const { t } = useT();
+  const fill = trpc.jp.ai.fillExpense.useMutation();
+  const [scanError, setScanError] = useState<string | null>(null);
+  const scan = async () => {
+    setScanError(null);
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      const result = permission.granted
+        ? await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.9 });
+      if (result.canceled || !result.assets[0]) return;
+      const imageBase64 = await compressPhoto(result.assets[0].uri, 1400);
+      onFields(await fill.mutateAsync({ siteId, imageBase64 }));
+    } catch (cause) {
+      setScanError(cause instanceof Error ? cause.message : "The receipt could not be read.");
+    }
+  };
+  return (
+    <View style={{ gap: 8 }}>
+      <SecondaryButton
+        icon="receipt-long"
+        label={fill.isPending ? "Reading receipt…" : t("Scan receipt with AI")}
+        disabled={fill.isPending}
+        onPress={() => void scan()}
+      />
+      {scanError ? <InlineError message={scanError} /> : null}
+      <VoiceAssist
+        siteId={siteId}
+        prompt="Or tap the mic and say what was paid, to whom and for what"
+        textLabel="e.g. 450 rupees diesel generator ke liye, Mahavir petrol pump, cash"
+        filling={fill.isPending}
+        onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
+      />
+    </View>
+  );
+}
+
+/** Voice or typed material need → material request fields. */
+export function VoiceRequestAssist({
+  siteId,
+  onFields,
+}: {
+  siteId: string;
+  onFields: (fields: RequestDraftFields) => void;
+}) {
+  const fill = trpc.jp.ai.fillRequest.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt="Tap the mic and say what material you need, how much, and for what"
+      textLabel="e.g. 50 bori cement aur 2 ton 12mm saria, first floor slab ke liye"
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
     />
   );
 }

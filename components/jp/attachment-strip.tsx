@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
@@ -49,6 +50,7 @@ export function AttachmentStrip({
   /** Lets a manager pick one of the photos as the cover. */
   cover?: { currentId: string | null; onSet: (attachmentId: string) => Promise<void> };
 }) {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const files = trpc.jp.attachments.list.useQuery({ entityType, entityId });
@@ -177,7 +179,7 @@ export function AttachmentStrip({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <MaterialIcons name="photo-library" size={18} color={colors.accent} />
-        <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t(title)}</Text>
         <Text style={[styles.count, { color: colors.muted }]}>
           {files.data ? `${all.length}` : ""}
         </Text>
@@ -213,7 +215,7 @@ export function AttachmentStrip({
                   onPress={() => void run(`cover-${file.id}`, () => cover.onSet(file.id))}
                   style={[styles.coverLink, { color: colors.primary }]}
                 >
-                  {busy === `cover-${file.id}` ? "Saving…" : "Set as cover"}
+                  {busy === `cover-${file.id}` ? "Saving…" : t("Set as cover")}
                 </Text>
               ) : null}
             </View>
@@ -221,7 +223,7 @@ export function AttachmentStrip({
         </View>
       ) : null}
       {all.length === 0 && files.isSuccess ? (
-        <Text style={[styles.empty, { color: colors.muted }]}>No files attached yet.</Text>
+        <Text style={[styles.empty, { color: colors.muted }]}>{t("No files attached yet.")}</Text>
       ) : null}
       {rows.map((file) => (
         <Pressable
@@ -294,7 +296,7 @@ export function AttachmentStrip({
             <View style={{ flex: 1 }}>
               <SecondaryButton
                 icon="photo-camera"
-                label={busy === "camera" ? "Uploading…" : "Camera"}
+                label={busy === "camera" ? "Uploading…" : t("Camera")}
                 disabled={Boolean(busy)}
                 onPress={() => void takePhoto()}
               />
@@ -303,7 +305,7 @@ export function AttachmentStrip({
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="collections"
-              label={busy === "gallery" ? "Uploading…" : "Photo"}
+              label={busy === "gallery" ? "Uploading…" : t("Photo")}
               disabled={Boolean(busy)}
               onPress={() => void pickPhoto()}
             />
@@ -311,7 +313,7 @@ export function AttachmentStrip({
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="picture-as-pdf"
-              label={busy === "pdf" ? "Uploading…" : "PDF"}
+              label={busy === "pdf" ? "Uploading…" : t("PDF")}
               disabled={Boolean(busy)}
               onPress={() => void pickPdf()}
             />
@@ -324,7 +326,7 @@ export function AttachmentStrip({
             <View style={{ flex: 1 }}>
               <SecondaryButton
                 icon="videocam"
-                label={busy === "video" ? "Uploading…" : "Record video"}
+                label={busy === "video" ? "Uploading…" : t("Record video")}
                 disabled={Boolean(busy)}
                 onPress={() => void pickVideo(true)}
               />
@@ -333,7 +335,7 @@ export function AttachmentStrip({
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="video-library"
-              label={busy === "video" ? "Uploading…" : "Video"}
+              label={busy === "video" ? "Uploading…" : t("Video")}
               disabled={Boolean(busy)}
               onPress={() => void pickVideo(false)}
             />

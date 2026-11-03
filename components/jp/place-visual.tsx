@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
@@ -101,13 +102,14 @@ export function ProgressCard({
   summary: ProgressSummary;
   title?: string;
 }) {
+  const { t } = useT();
   const colors = useColors();
   if (summary.total === 0)
     return (
       <Card>
-        <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t(title)}</Text>
         <Text style={[styles.meta, { color: colors.muted }]}>
-          Add tasks in Schedule to see progress here.
+          {t("Add tasks in Schedule to see progress here.")}
         </Text>
       </Card>
     );
@@ -115,8 +117,8 @@ export function ProgressCard({
   return (
     <Card>
       <View style={styles.row}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
-        {health ? <StatusPill label={health.label} tone={health.tone} compact /> : null}
+        <Text style={[styles.title, { color: colors.foreground }]}>{t(title)}</Text>
+        {health ? <StatusPill label={t(health.label)} tone={health.tone} compact /> : null}
       </View>
       <View style={styles.bigRow}>
         <Text style={[styles.big, { color: colors.foreground }]}>
@@ -133,11 +135,11 @@ export function ProgressCard({
         height={10}
       />
       <View style={styles.stats}>
-        <Stat value={summary.completed} label="Done" />
-        <Stat value={summary.inProgress} label="Running" />
-        <Stat value={summary.overdue} label="Overdue" alert={summary.overdue > 0} />
-        <Stat value={summary.blocked} label="Blocked" alert={summary.blocked > 0} />
-        <Stat value={summary.total} label="Tasks" />
+        <Stat value={summary.completed} label={t("Done")} />
+        <Stat value={summary.inProgress} label={t("Running")} />
+        <Stat value={summary.overdue} label={t("Overdue")} alert={summary.overdue > 0} />
+        <Stat value={summary.blocked} label={t("Blocked")} alert={summary.blocked > 0} />
+        <Stat value={summary.total} label={t("Tasks")} />
       </View>
       <Text style={[styles.note, { color: colors.muted }]}>
         Estimated from task status and the latest DPR quantities. Not a basis for payment.
@@ -147,6 +149,7 @@ export function ProgressCard({
 }
 
 function Stat({ value, label, alert }: { value: number; label: string; alert?: boolean }) {
+  const { t } = useT();
   const colors = useColors();
   return (
     <View style={styles.stat}>

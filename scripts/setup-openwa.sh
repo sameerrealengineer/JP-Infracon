@@ -17,17 +17,17 @@ if ! printf '%s' "$digits" | grep -Eq '^[0-9]{11,15}$'; then
   exit 1
 fi
 
-ssh -t "$HOST" "PHONE=$digits bash -s" <<'REMOTE'
+ssh "$HOST" "PHONE=$digits bash -s" <<'REMOTE'
 set -euo pipefail
 cd ~/jp-infracon/deploy
 echo "== Starting OpenWA =="
-docker compose --env-file .env --profile openwa up -d openwa >/dev/null
+docker compose --env-file .env --profile openwa up -d openwa </dev/null >/dev/null
 for i in $(seq 1 60); do
   curl -fsS http://127.0.0.1:2785/api/health >/dev/null 2>&1 && break
   sleep 3
 done
 curl -fsS http://127.0.0.1:2785/api/health >/dev/null || { echo "OpenWA did not start"; exit 1; }
-KEY="$(docker compose exec -T openwa cat /app/data/.api-key)"
+KEY="$(docker compose exec -T openwa cat /app/data/.api-key </dev/null)"
 api() { curl -fsS -H "X-API-Key: $KEY" -H "Content-Type: application/json" "$@"; }
 json() { python3 -c "import json,sys; d=json.load(sys.stdin); print(d$1)"; }
 base=http://127.0.0.1:2785/api/sessions
@@ -66,7 +66,7 @@ set_env OPENWA_URL http://openwa:2785
 set_env OPENWA_API_KEY "$KEY"
 set_env OPENWA_SESSION "$SID"
 chmod 600 .env
-docker compose --env-file .env up -d api >/dev/null
+docker compose --env-file .env up -d api </dev/null >/dev/null
 echo "== Done: the app now sends WhatsApp alerts (key saved in .env, not shown) =="
 echo "Each person turns on WhatsApp in the app: More → Alert settings → mobile + WhatsApp Yes."
 REMOTE

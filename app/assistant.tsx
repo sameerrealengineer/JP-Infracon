@@ -1,3 +1,4 @@
+import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {
   RecordingPresets,
@@ -47,6 +48,7 @@ const EXAMPLES = [
  * a draft; you always check and save the draft yourself.
  */
 export default function AssistantScreen() {
+  const { t } = useT();
   const colors = useColors();
   const router = useRouter();
   const status = trpc.jp.assistant.status.useQuery();
@@ -161,8 +163,10 @@ export default function AssistantScreen() {
           >
             <AppHeader
               eyebrow="AI assistant"
-              title="Ask JP"
-              subtitle="Speak or type in Odia, Hindi or English. I can find things, explain, open the right screen or start a draft. You check and save."
+              title={t("Ask JP")}
+              subtitle={t(
+                "Speak or type in Odia, Hindi or English. I can find things, explain, open the right screen or start a draft. You check and save.",
+              )}
             />
             {unavailable ? (
               <EmptyState
@@ -182,7 +186,7 @@ export default function AssistantScreen() {
               <View style={styles.toggle}>
                 <MaterialIcons name="volume-up" size={18} color={colors.muted} />
                 <Text style={[styles.toggleText, { color: colors.foreground }]}>
-                  Speak replies aloud
+                  {t("Speak replies aloud")}
                 </Text>
                 <Switch value={speakReplies} onValueChange={setSpeakReplies} />
               </View>
@@ -190,7 +194,7 @@ export default function AssistantScreen() {
 
             {messages.length === 0 && !unavailable ? (
               <View style={styles.examples}>
-                <Text style={[styles.hint, { color: colors.muted }]}>Try saying:</Text>
+                <Text style={[styles.hint, { color: colors.muted }]}>{t("Try saying:")}</Text>
                 {EXAMPLES.map((example) => (
                   <Pressable
                     key={example}
@@ -258,7 +262,7 @@ export default function AssistantScreen() {
                 {message.action?.type === "draft_report" ||
                 message.action?.type === "draft_issue" ? (
                   <Text style={[styles.hint, { color: colors.muted }]}>
-                    Nothing is saved yet. The form opens with your words; check it and save.
+                    {t("Nothing is saved yet. The form opens with your words; check it and save.")}
                   </Text>
                 ) : null}
                 {message.role === "assistant" && status.data?.speech ? (
@@ -290,7 +294,7 @@ export default function AssistantScreen() {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder={recording ? "Listening…" : "Type your question"}
+                placeholder={recording ? t("Listening…") : t("Type your question")}
                 placeholderTextColor={colors.muted}
                 accessibilityLabel="Message to assistant"
                 multiline

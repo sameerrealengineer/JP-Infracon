@@ -26,7 +26,6 @@ import {
   SectionHeader,
   StatusPill,
   formatDateTime,
-  initialsOf,
   type IconName,
   type Tone,
 } from "@/components/jp/ui";
@@ -39,7 +38,9 @@ import {
   type StatusTarget,
 } from "@/components/jp/site-admin-forms";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { useT } from "@/lib/i18n";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { Avatar } from "@/components/jp/avatar";
 import { CoverPhoto, ProgressCard } from "@/components/jp/place-visual";
 import { useColors } from "@/hooks/use-colors";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -51,6 +52,7 @@ import { currentPosition } from "@/lib/geofence-task";
 import { mapsLink } from "@/lib/jp/geo";
 
 export default function SiteDetailScreen() {
+  const { t } = useT();
   const { id } = useLocalSearchParams<{ id: string }>();
   const siteId = typeof id === "string" ? id : "";
   const colors = useColors();
@@ -61,6 +63,9 @@ export default function SiteDetailScreen() {
   const setCover = trpc.jp.places.setCover.useMutation();
   const utils = trpc.useUtils();
   const card = cards.data?.sites.find((row) => row.siteId === siteId);
+  const team = trpc.jp.profile.team.useQuery(undefined, { staleTime: 5 * 60_000 });
+  const photoOf = (userId: number) =>
+    team.data?.find((row) => row.userId === userId)?.photoUrl ?? null;
   const [editDraft, setEditDraft] = useState<SiteDraft | null>(null);
   const [statusTarget, setStatusTarget] = useState<StatusTarget | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -290,7 +295,7 @@ export default function SiteDetailScreen() {
               ) : null}
 
               <SectionHeader
-                title="Site photos & videos"
+                title={t("Site photos & videos")}
                 caption="Progress photos, walk-through videos and drawings for this site"
               />
               <Card style={{ marginBottom: 18 }}>
@@ -349,6 +354,9 @@ export default function SiteDetailScreen() {
                       {index > 0 ? <Divider /> : null}
                       <ListRow
                         icon="person"
+                        leading={
+                          <Avatar uri={photoOf(member.userId)} name={member.name} size={38} />
+                        }
                         title={member.name ?? "Unnamed account"}
                         detail={`${prettyRole(member.role)} · since ${formatDateTime(member.since)}`}
                         trailing={
@@ -389,11 +397,7 @@ export default function SiteDetailScreen() {
                           { backgroundColor: colors.surface, borderColor: colors.border },
                         ]}
                       >
-                        <View style={[styles.leaderAvatar, { backgroundColor: colors.primary }]}>
-                          <Text style={[styles.leaderInitials, { color: colors.background }]}>
-                            {initialsOf(leader.name)}
-                          </Text>
-                        </View>
+                        <Avatar uri={photoOf(leader.userId)} name={leader.name} size={36} />
                         <View>
                           <Text style={[styles.leaderName, { color: colors.foreground }]}>
                             {leader.name ?? "Unnamed"}
@@ -455,14 +459,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 10,
   },
-  leaderAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  leaderInitials: { fontSize: 12, fontWeight: "800" },
   leaderName: { fontSize: 13, fontWeight: "800" },
   leaderRole: { fontSize: 11, marginTop: 2 },
   footnote: { fontSize: 11, marginBottom: 8 },

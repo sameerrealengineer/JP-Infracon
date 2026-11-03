@@ -2,7 +2,17 @@ import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { and, asc, eq, ne } from "drizzle-orm";
-import { auditEvents, workTasks } from "../../drizzle/schema";
+import { auditEvents, materialItems, workTasks } from "../../drizzle/schema";
+import {
+  normalizeRequestFields,
+  requestJsonSchema,
+  requestPrompt,
+} from "../../lib/jp/ai-request-extraction";
+import {
+  expenseJsonSchema,
+  expensePrompt,
+  normalizeExpenseFields,
+} from "../../lib/jp/ai-expense-extraction";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getSiteScope } from "./access";
@@ -355,5 +365,93 @@ export const aiRouter = router({
           );
       await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.report_drafted");
       return normalizeReportFields(raw, input.reportKind, tasks);
+    }),
+
+  /** Spoken or typed material need → material request draft fields. Nothing is saved here. */
+  fillRequest: protectedProcedure
+    .input(z.object({ siteId: z.string().uuid(), text: z.string().trim().min(3).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const scope = await getSiteScope(ctx.user, input.siteId, "material.request");
+      rateLimit(ctx.user.id);
+      const db = await getDb();
+      const catalogue = db
+        ? (
+            await db
+              .select({ name: materialItems.name })
+              .from(materialItems)
+              .where(eq(materialItems.organizationId, scope.organizationId))
+              .orderBy(asc(materialItems.name))
+              .limit(120)
+          ).map((row) => row.name)
+        : [];
+      const prompt = requestPrompt(catalogue);
+      const raw = geminiKey()
+        ? await geminiJson(
+            [{ text: `${prompt}\n\nThe person said:\n"""${input.text}"""` }],
+            requestJsonSchema,
+          )
+        : await sarvamJson(
+            `${prompt} Reply as JSON with keys items (array of {name, quantity, unit}) and purpose.`,
+            input.text,
+          );
+      await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.request_drafted");
+      return normalizeRequestFields(raw, catalogue);
+    }),
+
+  /** Spoken note or receipt photo → petty cash expense draft fields. Nothing is saved here. */
+  fillExpense: protectedProcedure
+    .input(
+      z
+        .object({
+          siteId: z.string().uuid(),
+          text: z.string().trim().min(3).max(2000).optional(),
+          imageBase64: z
+            .string()
+            .min(16)
+            .max(Math.ceil((MAX_IMAGE_BYTES * 4) / 3) + 16)
+            .optional(),
+        })
+        .refine((input) => input.text || input.imageBase64, "Say, type or photograph the expense."),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = await getSiteScope(ctx.user, input.siteId, "finance.cash.movement.create");
+      rateLimit(ctx.user.id);
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+        new Date(),
+      );
+      let raw: unknown;
+      if (input.imageBase64) {
+        const mimeType = sniffContentType(Buffer.from(input.imageBase64, "base64"));
+        if (!mimeType?.startsWith("image/"))
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Send a clear JPEG, PNG or WebP photo.",
+          });
+        if (!geminiKey())
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Reading receipt photos needs GEMINI_API_KEY on the server.",
+          });
+        raw = await geminiJson(
+          [
+            { text: `${expensePrompt} Today is ${today}.` },
+            { image: { data: input.imageBase64, mimeType } },
+          ],
+          expenseJsonSchema,
+        );
+      } else {
+        const prompt = `${expensePrompt} Today is ${today}.`;
+        raw = geminiKey()
+          ? await geminiJson(
+              [{ text: `${prompt}\n\nThe person said:\n"""${input.text}"""` }],
+              expenseJsonSchema,
+            )
+          : await sarvamJson(
+              `${prompt} Reply as JSON with keys amount, date, payee, paymentMode, category, purpose, receiptNumber.`,
+              input.text!,
+            );
+      }
+      await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.expense_drafted");
+      return normalizeExpenseFields(raw, today);
     }),
 });

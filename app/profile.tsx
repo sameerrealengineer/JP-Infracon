@@ -1,7 +1,17 @@
+import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { AuthGate } from "@/components/jp/auth-gate";
 import { Avatar, useMyProfile } from "@/components/jp/avatar";
@@ -14,7 +24,6 @@ import {
   LoadingBlock,
   PrimaryButton,
   Screen,
-  SecondaryButton,
   SectionHeader,
   Sheet,
   formatDateTime,
@@ -29,6 +38,7 @@ import { trpc } from "@/lib/trpc";
 type Profile = NonNullable<ReturnType<typeof useMyProfile>["data"]>;
 
 export default function ProfileScreen() {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const profile = useMyProfile();
@@ -36,6 +46,7 @@ export default function ProfileScreen() {
   const removePhoto = trpc.jp.profile.removePhoto.useMutation();
   const [editing, setEditing] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoMenu, setPhotoMenu] = useState(false);
   const data = profile.data;
 
   const choosePhoto = async (source: "camera" | "gallery") => {
@@ -81,7 +92,7 @@ export default function ProfileScreen() {
             />
           }
         >
-          <AppHeader eyebrow="Account" title="My profile" />
+          <AppHeader eyebrow="Account" title={t("My profile")} />
           {profile.error ? (
             <InlineError message={profile.error.message} onRetry={() => void profile.refetch()} />
           ) : null}
@@ -90,7 +101,22 @@ export default function ProfileScreen() {
             <>
               <HeroCard>
                 <View style={styles.hero}>
-                  <Avatar uri={data.photoUrl} name={data.name} size={96} tone="gold" />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Change profile photo"
+                    onPress={() => setPhotoMenu(true)}
+                    disabled={setPhoto.isPending || removePhoto.isPending}
+                    style={({ pressed }) => [pressed && { opacity: 0.8 }]}
+                  >
+                    <Avatar uri={data.photoUrl} name={data.name} size={96} tone="gold" />
+                    <View style={styles.cameraBadge}>
+                      {setPhoto.isPending || removePhoto.isPending ? (
+                        <ActivityIndicator size="small" color="#0E1A26" />
+                      ) : (
+                        <MaterialIcons name="photo-camera" size={18} color="#0E1A26" />
+                      )}
+                    </View>
+                  </Pressable>
                   <Text style={styles.name}>{data.name || "Your name"}</Text>
                   <Text style={styles.role}>
                     {[data.designation, data.role ? prettyRole(data.role) : null]
@@ -103,51 +129,23 @@ export default function ProfileScreen() {
                   <View style={styles.completeTrack}>
                     <View style={[styles.completeFill, { width: `${data.completeness}%` }]} />
                   </View>
-                  <Text style={styles.org}>Profile {data.completeness}% complete</Text>
+                  <Text style={styles.org}>
+                    {t("Profile {percent}% complete", { percent: String(data.completeness) })}
+                  </Text>
                 </View>
               </HeroCard>
-              <View style={styles.row}>
-                {Platform.OS !== "web" ? (
-                  <View style={styles.flex}>
-                    <SecondaryButton
-                      icon="photo-camera"
-                      label="Take photo"
-                      disabled={setPhoto.isPending}
-                      onPress={() => void choosePhoto("camera")}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.flex}>
-                  <SecondaryButton
-                    icon="collections"
-                    label={setPhoto.isPending ? "Saving…" : "Choose photo"}
-                    disabled={setPhoto.isPending}
-                    onPress={() => void choosePhoto("gallery")}
-                  />
-                </View>
-              </View>
-              {data.photoUrl ? (
-                <SecondaryButton
-                  icon="hide-image"
-                  label="Remove photo"
-                  disabled={removePhoto.isPending}
-                  onPress={() =>
-                    void removePhoto.mutateAsync().then(() => utils.jp.profile.me.invalidate())
-                  }
-                />
-              ) : null}
               {photoError ? <InlineError message={photoError} title="Photo not saved" /> : null}
 
-              <SectionHeader title="Details" />
+              <SectionHeader title={t("Details")} />
               <Card>
-                <DetailRow icon="phone-iphone" label="Mobile" value={data.phone} />
-                <DetailRow icon="mail-outline" label="Email" value={data.email} />
-                <DetailRow icon="badge" label="Designation" value={data.designation} />
-                <DetailRow icon="apartment" label="Department" value={data.department} />
-                <DetailRow icon="home" label="Address" value={data.address} />
+                <DetailRow icon="phone-iphone" label={t("Mobile")} value={data.phone} />
+                <DetailRow icon="mail-outline" label={t("Email")} value={data.email} />
+                <DetailRow icon="badge" label={t("Designation")} value={data.designation} />
+                <DetailRow icon="apartment" label={t("Department")} value={data.department} />
+                <DetailRow icon="home" label={t("Address")} value={data.address} />
                 <DetailRow
                   icon="contact-emergency"
-                  label="Emergency contact"
+                  label={t("Emergency contact")}
                   value={data.emergencyContact}
                 />
                 <DetailRow
@@ -157,14 +155,56 @@ export default function ProfileScreen() {
                 />
                 <DetailRow
                   icon="event"
-                  label="Member since"
+                  label={t("Member since")}
                   value={data.memberSince ? formatDateTime(data.memberSince) : null}
                 />
               </Card>
-              <PrimaryButton icon="edit" label="Edit details" onPress={() => setEditing(true)} />
+              <PrimaryButton
+                icon="edit"
+                label={t("Edit details")}
+                onPress={() => setEditing(true)}
+              />
             </>
           ) : null}
         </ScrollView>
+        {photoMenu && data ? (
+          <Sheet visible title={t("Profile photo")} onClose={() => setPhotoMenu(false)}>
+            {Platform.OS !== "web" ? (
+              <MenuRow
+                icon="photo-camera"
+                label={t("Take photo")}
+                onPress={() => {
+                  setPhotoMenu(false);
+                  void choosePhoto("camera");
+                }}
+              />
+            ) : null}
+            <MenuRow
+              icon="collections"
+              label={t("Choose from gallery")}
+              onPress={() => {
+                setPhotoMenu(false);
+                void choosePhoto("gallery");
+              }}
+            />
+            {data.photoUrl ? (
+              <MenuRow
+                icon="delete-outline"
+                label={t("Remove photo")}
+                danger
+                onPress={() => {
+                  setPhotoMenu(false);
+                  void removePhoto
+                    .mutateAsync()
+                    .then(() => utils.jp.profile.me.invalidate())
+                    .catch((cause: unknown) =>
+                      setPhotoError(cause instanceof Error ? cause.message : "Not removed."),
+                    );
+                }}
+              />
+            ) : null}
+          </Sheet>
+        ) : null}
         {editing && data ? (
           <EditSheet
             profile={data}
@@ -181,6 +221,32 @@ export default function ProfileScreen() {
   );
 }
 
+function MenuRow({
+  icon,
+  label,
+  danger,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  danger?: boolean;
+  onPress: () => void;
+}) {
+  const { t } = useT();
+  const colors = useColors();
+  const color = danger ? colors.error : colors.foreground;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
+    >
+      <MaterialIcons name={icon} size={24} color={danger ? colors.error : colors.accent} />
+      <Text style={[styles.menuText, { color }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function DetailRow({
   icon,
   label,
@@ -190,6 +256,7 @@ function DetailRow({
   label: string;
   value: string | null | undefined;
 }) {
+  const { t } = useT();
   const colors = useColors();
   return (
     <View style={styles.detail}>
@@ -200,7 +267,7 @@ function DetailRow({
           style={[styles.detailValue, { color: value ? colors.foreground : colors.muted }]}
           selectable
         >
-          {value || "Not added"}
+          {value || t("Not added")}
         </Text>
       </View>
     </View>
@@ -216,6 +283,7 @@ function EditSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const { t } = useT();
   const update = trpc.jp.profile.update.useMutation();
   const [form, setForm] = useState<ProfileInput>({
     name: profile.name ?? "",
@@ -248,7 +316,7 @@ function EditSheet({
   };
 
   return (
-    <Sheet visible title="Edit profile" onClose={onClose}>
+    <Sheet visible title={t("Edit profile")} onClose={onClose}>
       <Field
         label="Full name"
         value={form.name}
@@ -257,7 +325,7 @@ function EditSheet({
         autoCapitalize="words"
       />
       <Field
-        label="Mobile"
+        label={t("Mobile")}
         value={form.phone}
         onChangeText={set("phone")}
         keyboardType="phone-pad"
@@ -265,19 +333,19 @@ function EditSheet({
         error={fieldError("phone")}
       />
       <Field
-        label="Designation"
+        label={t("Designation")}
         value={form.designation}
         onChangeText={set("designation")}
         placeholder="e.g. Site Engineer"
       />
       <Field
-        label="Department"
+        label={t("Department")}
         value={form.department}
         onChangeText={set("department")}
         placeholder="e.g. Civil, Accounts"
       />
       <Field
-        label="Address"
+        label={t("Address")}
         value={form.addressLine}
         onChangeText={set("addressLine")}
         placeholder="House, street, area"
@@ -295,7 +363,7 @@ function EditSheet({
         error={fieldError("pincode")}
       />
       <Field
-        label="Emergency contact"
+        label={t("Emergency contact")}
         value={form.emergencyContact}
         onChangeText={set("emergencyContact")}
         placeholder="Name and mobile"
@@ -303,7 +371,7 @@ function EditSheet({
       {error && !error.field ? <InlineError message={error.message} /> : null}
       <PrimaryButton
         icon="save"
-        label={update.isPending ? "Saving…" : "Save profile"}
+        label={update.isPending ? "Saving…" : t("Save profile")}
         disabled={update.isPending}
         onPress={() => void save()}
       />
@@ -326,7 +394,21 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   completeFill: { height: 6, borderRadius: 3, backgroundColor: "#D9B76A" },
-  row: { flexDirection: "row", gap: 10 },
+  cameraBadge: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#D9B76A",
+    borderWidth: 3,
+    borderColor: "#0E1A26",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  menuRow: { flexDirection: "row", alignItems: "center", gap: 16, paddingVertical: 14 },
+  menuText: { fontSize: 16, fontWeight: "700" },
   flex: { flex: 1 },
   detail: { flexDirection: "row", gap: 12, alignItems: "flex-start", paddingVertical: 8 },
   detailLabel: { fontSize: 11, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.6 },

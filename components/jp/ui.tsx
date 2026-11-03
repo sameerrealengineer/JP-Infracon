@@ -206,7 +206,7 @@ export function AppHeader({
           {assistant.data?.available && segments[0] !== "assistant" ? (
             <IconButton
               icon="auto-awesome"
-              label="Ask the AI assistant"
+              label={t("Ask the AI assistant")}
               onPress={() => router.push("/assistant" as never)}
             />
           ) : null}
@@ -218,7 +218,7 @@ export function AppHeader({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open my profile"
+            accessibilityLabel={t("Open my profile")}
             onPress={() => router.push("/profile" as never)}
             style={({ pressed }) => [
               styles.avatar,
@@ -585,6 +585,7 @@ export function ListRow({
   onPress,
   trailing,
   tone = "info",
+  leading,
 }: {
   icon: IconName;
   title: string;
@@ -592,6 +593,8 @@ export function ListRow({
   onPress?: () => void;
   trailing?: ReactNode;
   tone?: Tone;
+  /** Replaces the icon, for example with a person's photo. */
+  leading?: ReactNode;
 }) {
   const colors = useColors();
   const accent = useToneColor(tone);
@@ -602,9 +605,11 @@ export function ListRow({
       onPress={onPress}
       style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.7 }]}
     >
-      <View style={[styles.listIcon, { backgroundColor: `${accent}12` }]}>
-        <MaterialIcons name={icon} size={19} color={accent} />
-      </View>
+      {leading ?? (
+        <View style={[styles.listIcon, { backgroundColor: `${accent}12` }]}>
+          <MaterialIcons name={icon} size={19} color={accent} />
+        </View>
+      )}
       <View style={{ flex: 1 }}>
         <Text style={[styles.listTitle, { color: colors.foreground }]}>{title}</Text>
         {detail ? <Text style={[styles.listDetail, { color: colors.muted }]}>{detail}</Text> : null}
