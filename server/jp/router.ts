@@ -34,7 +34,7 @@ import { attachmentsRouter } from "./attachments";
 import { exportsRouter } from "./exports";
 import { attendanceRouter } from "./attendance";
 import { delegationRouter } from "./delegation";
-import { notificationsRouter } from "./notify";
+import { notificationsRouter, dispatchAlert, siteLeadIds } from "./notify";
 import { aiRouter } from "./ai";
 import { documentsRouter } from "./documents";
 import { budgetsRouter } from "./budgets";
@@ -664,6 +664,18 @@ export const jpRouter = router({
             afterSummary: JSON.stringify({ status: "Submitted" }),
           });
         });
+        void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+          dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: "report.submitted",
+            title: `${report.reportKind} submitted for review`,
+            detail: `Report date ${report.reportDate}`,
+            route: "/reports",
+            recipientUserIds,
+          }),
+        );
         return { id: report.id, status: "Submitted" as const, submittedAt: now };
       }),
 
@@ -744,6 +756,21 @@ export const jpRouter = router({
             reason: input.reason,
           });
         });
+        if (report.createdBy !== ctx.user.id)
+          void dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: input.decision === "Approved" ? "report.approved" : "report.returned",
+            title:
+              input.decision === "Approved"
+                ? `Your ${report.reportKind} was approved`
+                : `Your ${report.reportKind} was returned for correction`,
+            detail:
+              input.decision === "Approved" ? `Report date ${report.reportDate}` : input.reason,
+            route: "/reports",
+            recipientUserIds: [report.createdBy],
+          });
         return { id: report.id, status: input.decision };
       }),
   }),
@@ -894,6 +921,22 @@ export const jpRouter = router({
           .select()
           .from(materialRequestItems)
           .where(eq(materialRequestItems.requestId, id));
+        void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+          dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: "material_request.submitted",
+            title: "New material request needs review",
+            detail: items
+              .slice(0, 3)
+              .map((item) => item.itemNameSnapshot)
+              .filter(Boolean)
+              .join(", "),
+            route: "/requests",
+            recipientUserIds,
+          }),
+        );
         return { ...created, items };
       }),
 
@@ -974,6 +1017,17 @@ export const jpRouter = router({
             reason: input.reason,
           });
         });
+        if (request.requestedBy !== ctx.user.id)
+          void dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: `material_request.${input.decision.toLowerCase()}`,
+            title: `Your material request was ${input.decision.toLowerCase()}`,
+            detail: input.reason,
+            route: "/requests",
+            recipientUserIds: [request.requestedBy],
+          });
         return { id: request.id, status: input.decision };
       }),
   }),

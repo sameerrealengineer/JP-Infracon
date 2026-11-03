@@ -17,8 +17,10 @@ import {
   isExpoPushToken,
   normalizeIndianMobile,
   smsRequest,
+  whatsappMediaRequest,
   whatsappRequest,
   type HttpRequest,
+  type WhatsAppMedia,
   type SmsConfig,
   type WhatsAppConfig,
 } from "../../lib/jp/notify-policy";
@@ -26,6 +28,13 @@ import {
 /** Gateway settings come only from server environment variables; nothing is configured in the app. */
 export function whatsappConfig(env = process.env): WhatsAppConfig | null {
   const provider = env.WHATSAPP_PROVIDER?.trim().toLowerCase();
+  if (provider === "openwa" && env.OPENWA_URL && env.OPENWA_API_KEY && env.OPENWA_SESSION)
+    return {
+      provider,
+      baseUrl: env.OPENWA_URL,
+      apiKey: env.OPENWA_API_KEY,
+      session: env.OPENWA_SESSION.trim(),
+    };
   if (provider === "waha" && env.WAHA_URL)
     return {
       provider,
@@ -99,6 +108,8 @@ export type AlertEvent = {
   route?: string;
   recipientUserIds: number[];
   urgent?: boolean;
+  /** Optional photo, video or document sent on WhatsApp after the text. */
+  media?: WhatsAppMedia | null;
 };
 
 /**
@@ -167,6 +178,10 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
       if (pref.whatsappOptIn === "Yes" && wa) {
         const result = await send(whatsappRequest(wa, phone, text));
         await log(pref.userId, "whatsapp", result.ok ? "Sent" : "Failed", result.detail);
+        if (result.ok && event.media) {
+          const media = await send(whatsappMediaRequest(wa, phone, event.media));
+          await log(pref.userId, "whatsapp", media.ok ? "Sent" : "Failed", `media ${media.detail}`);
+        }
       }
       // SMS costs money per message, so it is kept for urgent alerts.
       if (pref.smsOptIn === "Yes" && sms && event.urgent) {

@@ -106,7 +106,9 @@ Nayi migrations start par apne aap lagti hain — update se pehle backup le lein
 docker compose --env-file .env --profile whatsapp up -d
 ```
 
-`.env` me `WHATSAPP_PROVIDER=waha`, `WAHA_URL=http://waha:3000`, `WAHA_API_KEY=...` rakhein. WAHA dashboard me ek alag business number se QR scan karke session start karein. Dhyan dein: WAHA WhatsApp ka official tool nahi hai — number block hone ka risk hai.
+**OpenWA (sujhaav):** server pe `docker compose --env-file .env --profile openwa up -d` chalayein. Pehli baar ki admin key: `docker compose exec openwa cat /app/data/.api-key`. Apne computer se `ssh -L 2785:127.0.0.1:2785 jpadmin@<server>` karke `http://localhost:2785` dashboard kholein, us key se login karein, ek session `jp-alerts` banayein aur **alag business number** se QR scan karein. Phir `.env` me `WHATSAPP_PROVIDER=openwa`, `OPENWA_URL=http://openwa:2785`, `OPENWA_API_KEY=<key>`, `OPENWA_SESSION=<dashboard me dikhne wala session ID (UUID)>` rakhkar `docker compose --env-file .env up -d api` chalayein. Har user app me Alert settings me apna mobile aur "WhatsApp: Yes" chune. OpenWA bhi WhatsApp ka official tool nahi hai — number block hone ka risk hai, isliye alag number aur kam messages.
+
+**WAHA:** `.env` me `WHATSAPP_PROVIDER=waha`, `WAHA_URL=http://waha:3000`, `WAHA_API_KEY=...` rakhein. WAHA dashboard me ek alag business number se QR scan karke session start karein. Dhyan dein: WAHA WhatsApp ka official tool nahi hai — number block hone ka risk hai.
 
 ## Bina VM ke (zyada aasaan, par dheema)
 

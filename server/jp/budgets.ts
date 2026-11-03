@@ -19,6 +19,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites, getSiteScope, selfApprovalAllowed } from "./access";
 import { siteCapabilities } from "./capabilities";
+import { dispatchAlert, siteLeadIds } from "./notify";
 import { estimateEarning, parseHours, type RateType } from "../../lib/jp/attendance-domain";
 import {
   COST_HEADS,
@@ -434,6 +435,18 @@ export const budgetsRouter = router({
         });
         return next;
       });
+      void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+        dispatchAlert({
+          organizationId: scope.organizationId,
+          siteId: scope.siteId,
+          siteName: scope.siteName,
+          kind: "budget.proposed",
+          title: `Budget revision ${revisionNumber} waiting for approval`,
+          detail: input.reason?.trim() || null,
+          route: "/project-budget",
+          recipientUserIds,
+        }),
+      );
       return { id, revisionNumber };
     }),
 
@@ -550,6 +563,17 @@ export const budgetsRouter = router({
           reason: withdraw ? (reason ?? "Withdrawn by the proposer") : reason,
         });
       });
+      if (!withdraw && budget.proposedBy !== ctx.user.id)
+        void dispatchAlert({
+          organizationId: scope.organizationId,
+          siteId: scope.siteId,
+          siteName: scope.siteName,
+          kind: `budget.${status.toLowerCase()}`,
+          title: `Budget revision ${budget.revisionNumber} was ${status.toLowerCase()}`,
+          detail: reason,
+          route: "/project-budget",
+          recipientUserIds: [budget.proposedBy],
+        });
       return { id: budget.id, status };
     }),
 });

@@ -57,8 +57,21 @@ services:
     volumes:
       - waha-sessions:/app/.sessions
 
+  # Optional WhatsApp alerts with OpenWA (github.com/rmyndharis/OpenWA, MIT). Start with:
+  #   docker compose --env-file .env --profile openwa up -d
+  # Dashboard only on the server itself (open it through an SSH tunnel on port 2785).
+  openwa:
+    image: ghcr.io/rmyndharis/openwa:latest
+    profiles: ["openwa"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2785:2785"
+    volumes:
+      - openwa-data:/app/data
+
 volumes:
   mysql-data:
   files:
   caddy-data:
   waha-sessions:
+  openwa-data:
