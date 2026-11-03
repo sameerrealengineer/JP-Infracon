@@ -30,6 +30,11 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `daily-reports.ts` | DPR work lines, report detail, `updateDraft` (writer corrects a draft or returned report), `progressContext` (last cumulative per task/work), `labourSnapshot`, linking attendance to a DLR on submit |
 | `documents.ts` | Project documents: upload with versions (files are `attachments` rows with entityType `project_document`), list, detail, open, archive, hybrid smart search |
 | `budgets.ts` | Project budgets: revisions per cost head, maker-checker approve/reject/withdraw, overview vs spend (approved bills by supplier type, approved attendance, posted petty cash; submitted items shown as waiting) |
+| `profile.ts` | Own profile (designation, address, photo; mobile stays in contact preferences), `team` |
+| `places.ts` | `placeCards` (cover photo + progress per site/project), schedule dashboard, `setCover` (`site.manage`) |
+| `module-settings.ts` | Disabled modules per company (30 s cache); `getSiteScope` and `siteCapabilities` refuse/hide their permissions |
+| `modules-router.ts` | Module list with 30-day usage, on/off by owner/director/admin, AI suggestion (never applied by itself) |
+| `assistant.ts` | In-app assistant: answers from the person's data, one safe action (open screen / start draft), Sarvam TTS replies |
 | `document-index.ts` | After upload: text from Office/CSV (no AI) or Gemini reader (PDF/photo), passages, Gemini Embedding 2 vectors (768) when `GEMINI_API_KEY` is set; sets `indexStatus` |
 
 ## Conventions

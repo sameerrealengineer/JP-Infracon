@@ -636,6 +636,7 @@ export const sitesAdminRouter = router({
           status: site.status,
           createdAt: site.createdAt,
           updatedAt: site.updatedAt,
+          coverAttachmentId: site.coverAttachmentId ?? null,
         },
         project: {
           id: project.id,

@@ -52,13 +52,13 @@ const SITE_KEYTERMS = [
 export function geminiKey() {
   return process.env.GEMINI_API_KEY?.trim() || "";
 }
-function sarvamKey() {
+export function sarvamKey() {
   return process.env.SARVAM_API_KEY?.trim() || "";
 }
 
 /** Simple per-person limit so one phone cannot run up the AI bill. */
 const usage = new Map<number, number[]>();
-function rateLimit(userId: number, perHour = 40) {
+export function rateLimit(userId: number, perHour = 40) {
   const now = Date.now();
   const recent = (usage.get(userId) ?? []).filter((time) => now - time < 3_600_000);
   if (recent.length >= perHour)
@@ -153,7 +153,7 @@ export async function geminiJson(parts: Part[], schema: object): Promise<unknown
 }
 
 /** Sarvam chat as a fallback structurer when Gemini is not configured. */
-async function sarvamJson(system: string, text: string): Promise<unknown> {
+export async function sarvamJson(system: string, text: string): Promise<unknown> {
   const key = sarvamKey();
   if (!key)
     throw new TRPCError({
@@ -222,7 +222,7 @@ export const aiRouter = router({
       rateLimit(ctx.user.id);
       const bytes = Buffer.from(input.imageBase64, "base64");
       const mimeType = sniffContentType(bytes);
-      if (!mimeType || mimeType === "application/pdf" || bytes.length > MAX_IMAGE_BYTES)
+      if (!mimeType?.startsWith("image/") || bytes.length > MAX_IMAGE_BYTES)
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Send a clear JPEG, PNG or WebP photo under 6 MB.",

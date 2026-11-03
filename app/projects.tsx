@@ -12,8 +12,11 @@ import {
   LoadingBlock,
   Screen,
   SectionHeader,
+  Sheet,
   StatusPill,
 } from "@/components/jp/ui";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { CoverPhoto, ProgressBar, percentText } from "@/components/jp/place-visual";
 import {
   ProjectFormSheet,
   SiteFormSheet,
@@ -38,6 +41,11 @@ export default function ProjectsScreen() {
   const [projectDraft, setProjectDraft] = useState<ProjectDraft | null>(null);
   const [siteDraft, setSiteDraft] = useState<SiteDraft | null>(null);
   const [statusTarget, setStatusTarget] = useState<StatusTarget | null>(null);
+  const [gallery, setGallery] = useState<{ id: string; name: string } | null>(null);
+  const cards = trpc.jp.places.cards.useQuery(undefined, { staleTime: 60_000 });
+  const setCover = trpc.jp.places.setCover.useMutation();
+  const utils = trpc.useUtils();
+  const projectCard = (id: string) => cards.data?.projects.find((row) => row.projectId === id);
   const orgs = overview.data ?? [];
   const orgId = resolveSelectedId(orgs, chosenOrg);
   const org = orgs.find((row) => row.id === orgId);
@@ -105,6 +113,15 @@ export default function ProjectsScreen() {
               <View style={{ gap: 12 }}>
                 {org?.projects.map((project) => (
                   <Card key={project.id} accent={getSiteStatusTone(project.status as SiteStatus)}>
+                    {projectCard(project.id)?.coverUrl ? (
+                      <View style={{ marginBottom: 12 }}>
+                        <CoverPhoto
+                          uri={projectCard(project.id)?.coverUrl}
+                          height={140}
+                          label={project.name}
+                        />
+                      </View>
+                    ) : null}
                     <View style={styles.projectTop}>
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.code, { color: colors.accent }]}>{project.code}</Text>
@@ -128,6 +145,20 @@ export default function ProjectsScreen() {
                         compact
                       />
                     </View>
+                    {projectCard(project.id)?.progress.total ? (
+                      <View style={{ marginTop: 10 }}>
+                        <Text style={[styles.meta, { color: colors.foreground }]}>
+                          {percentText(projectCard(project.id)?.progress.actualTenths)} done ·{" "}
+                          {projectCard(project.id)?.progress.completed}/
+                          {projectCard(project.id)?.progress.total} tasks
+                        </Text>
+                        <ProgressBar
+                          actualTenths={projectCard(project.id)?.progress.actualTenths ?? null}
+                          expectedTenths={projectCard(project.id)?.progress.expectedTenths}
+                          height={6}
+                        />
+                      </View>
+                    ) : null}
                     <View style={[styles.siteList, { borderTopColor: colors.border }]}>
                       {project.sites.length === 0 ? (
                         <Text style={[styles.meta, { color: colors.muted }]}>
@@ -185,6 +216,11 @@ export default function ProjectsScreen() {
                         }
                       />
                       <ActionLink
+                        icon="photo-library"
+                        label="Photos"
+                        onPress={() => setGallery({ id: project.id, name: project.name })}
+                      />
+                      <ActionLink
                         icon="published-with-changes"
                         label="Status"
                         onPress={() =>
@@ -209,6 +245,28 @@ export default function ProjectsScreen() {
         <ProjectFormSheet draft={projectDraft} onClose={() => setProjectDraft(null)} />
         <SiteFormSheet draft={siteDraft} onClose={() => setSiteDraft(null)} />
         <StatusSheet target={statusTarget} onClose={() => setStatusTarget(null)} />
+        {gallery ? (
+          <Sheet visible title={`${gallery.name}: photos`} onClose={() => setGallery(null)}>
+            <AttachmentStrip
+              entityType="project"
+              entityId={gallery.id}
+              title="Project photos, renders and videos"
+              allowVideo
+              canUpload
+              cover={{
+                currentId: projectCard(gallery.id)?.coverAttachmentId ?? null,
+                onSet: async (attachmentId) => {
+                  await setCover.mutateAsync({
+                    entityType: "project",
+                    entityId: gallery.id,
+                    attachmentId,
+                  });
+                  await utils.jp.places.cards.invalidate();
+                },
+              }}
+            />
+          </Sheet>
+        ) : null}
       </Screen>
     </AuthGate>
   );

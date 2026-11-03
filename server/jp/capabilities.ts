@@ -1,4 +1,6 @@
 import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { disabledModulesFor } from "./module-settings";
+import { isPermissionDisabled } from "../../lib/jp/modules";
 import { TRPCError } from "@trpc/server";
 import { permissionGrants } from "../../drizzle/schema";
 import { getAccessibleSites, getSiteScope } from "./access";
@@ -106,10 +108,18 @@ export async function siteCapabilities(
         or(isNull(permissionGrants.effectiveTo), gte(permissionGrants.effectiveTo, now)),
       ),
     );
+  const disabledByOrg = new Map(
+    await Promise.all(
+      organizationIds.map(async (id) => [id, await disabledModulesFor(id)] as const),
+    ),
+  );
   return scopedSites.map((site) => {
     const capabilities = {} as Record<PermissionKey, boolean>;
+    const disabled = disabledByOrg.get(site.organizationId) ?? [];
     for (const permissionKey of permissionKeys) {
-      const siteIsAvailable = site.status === "Active" || permissionKey.endsWith(".view");
+      const siteIsAvailable =
+        (site.status === "Active" || permissionKey.endsWith(".view")) &&
+        !isPermissionDisabled(permissionKey, disabled);
       capabilities[permissionKey] = siteIsAvailable
         ? [
             "inventory.catalog.manage",

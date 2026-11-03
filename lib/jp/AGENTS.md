@@ -35,6 +35,10 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `document-policy.ts` | Document categories, file type sniffing (incl. DOCX/XLSX/CSV), chunking, cosine and keyword scores, hybrid ranking |
 | `document-text.ts` | Text from Word, Excel and CSV files with `fflate` (no AI) |
 | `budget-domain.ts` | Budget cost heads, supplier type to head, line validation, budget vs approved spend per head (ok / near / over), margins |
+| `progress-domain.ts` | Task and site progress (tenths of a percent), expected-by-today, health (ahead / on track / behind) |
+| `profile-policy.ts` | Profile field cleaning (mobile, PIN code), address text, completeness |
+| `modules.ts` | Company modules that can be turned off, permission → module, audit action → module |
+| `assistant-catalog.ts` | Screens the assistant may open and `resolveAssistantAction` (only allowed screens, own sites, drafts where the person may create) |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions

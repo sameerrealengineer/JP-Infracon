@@ -39,6 +39,8 @@ import {
   type StatusTarget,
 } from "@/components/jp/site-admin-forms";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { CoverPhoto, ProgressCard } from "@/components/jp/place-visual";
 import { useColors } from "@/hooks/use-colors";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
@@ -55,6 +57,10 @@ export default function SiteDetailScreen() {
   const router = useRouter();
   const { sitesWith } = useWorkspace();
   const detail = trpc.jp.sitesAdmin.siteDetail.useQuery({ siteId }, { enabled: Boolean(siteId) });
+  const cards = trpc.jp.places.cards.useQuery();
+  const setCover = trpc.jp.places.setCover.useMutation();
+  const utils = trpc.useUtils();
+  const card = cards.data?.sites.find((row) => row.siteId === siteId);
   const [editDraft, setEditDraft] = useState<SiteDraft | null>(null);
   const [statusTarget, setStatusTarget] = useState<StatusTarget | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -171,6 +177,11 @@ export default function SiteDetailScreen() {
           {detail.isLoading ? <LoadingBlock label="Loading site…" /> : null}
           {data && site ? (
             <>
+              {card?.coverUrl ? (
+                <View style={{ marginBottom: 14 }}>
+                  <CoverPhoto uri={card.coverUrl} height={180} label={site.name} />
+                </View>
+              ) : null}
               <HeroCard>
                 <View style={styles.heroTop}>
                   <View style={{ flex: 1 }}>
@@ -235,6 +246,12 @@ export default function SiteDetailScreen() {
                 </View>
               ) : null}
 
+              {card ? (
+                <View style={{ marginBottom: 18 }}>
+                  <ProgressCard summary={card.progress} title="Site progress" />
+                </View>
+              ) : null}
+
               <GeofenceCard siteId={site.id} geofence={data.geofence} canManage={data.canManage} />
               {site.status !== "Active" ? (
                 <Card
@@ -271,6 +288,41 @@ export default function SiteDetailScreen() {
                   </View>
                 </>
               ) : null}
+
+              <SectionHeader
+                title="Site photos & videos"
+                caption="Progress photos, walk-through videos and drawings for this site"
+              />
+              <Card style={{ marginBottom: 18 }}>
+                <AttachmentStrip
+                  entityType="site"
+                  entityId={site.id}
+                  title="Gallery"
+                  allowVideo
+                  canUpload={
+                    site.status === "Active" &&
+                    (data.canManage || has("dpr.create") || has("issue.create"))
+                  }
+                  cover={
+                    data.canManage
+                      ? {
+                          currentId: data.site.coverAttachmentId ?? null,
+                          onSet: async (attachmentId) => {
+                            await setCover.mutateAsync({
+                              entityType: "site",
+                              entityId: site.id,
+                              attachmentId,
+                            });
+                            await Promise.all([
+                              utils.jp.places.cards.invalidate(),
+                              utils.jp.sitesAdmin.siteDetail.invalidate({ siteId }),
+                            ]);
+                          },
+                        }
+                      : undefined
+                  }
+                />
+              </Card>
 
               <SectionHeader
                 title="Site team"

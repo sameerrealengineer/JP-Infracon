@@ -22,9 +22,11 @@ const MAX_SECONDS = 28;
 export function VoiceIssueAssist({
   siteId,
   onFields,
+  initialText,
 }: {
   siteId: string;
   onFields: (fields: IssueDraftFields) => void;
+  initialText?: string;
 }) {
   const fill = trpc.jp.ai.fillIssue.useMutation();
   return (
@@ -32,6 +34,7 @@ export function VoiceIssueAssist({
       siteId={siteId}
       prompt="Tap the mic and describe the problem"
       textLabel="Describe the issue in your own words"
+      initialText={initialText}
       filling={fill.isPending}
       onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
     />
@@ -43,10 +46,12 @@ export function VoiceReportAssist({
   siteId,
   reportKind,
   onFields,
+  initialText,
 }: {
   siteId: string;
   reportKind: "DPR" | "DLR";
   onFields: (fields: ReportDraftFields) => void;
+  initialText?: string;
 }) {
   const fill = trpc.jp.ai.fillReport.useMutation();
   return (
@@ -58,6 +63,7 @@ export function VoiceReportAssist({
           : "Tap the mic and say who worked today, by trade"
       }
       textLabel="Describe today's work in your own words"
+      initialText={initialText}
       filling={fill.isPending}
       onFill={async (text) => onFields(await fill.mutateAsync({ siteId, reportKind, text }))}
     />
@@ -74,10 +80,13 @@ function VoiceAssist({
   textLabel,
   filling,
   onFill,
+  initialText = "",
 }: {
   siteId: string;
   prompt: string;
   textLabel: string;
+  /** Words passed on from the assistant, ready to fill the form with one tap. */
+  initialText?: string;
   filling: boolean;
   onFill: (text: string) => Promise<void>;
 }) {
@@ -87,7 +96,7 @@ function VoiceAssist({
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [language, setLanguage] = useState<Lang>("od-IN");
   const [recording, setRecording] = useState(false);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 

@@ -19,6 +19,8 @@ import {
   SecondaryButton,
   StatusPill,
 } from "@/components/jp/ui";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { ScheduleDashboard } from "@/components/jp/schedule-dashboard";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
@@ -64,6 +66,7 @@ function errorMessage(error: unknown) {
 export default function ScheduleScreen() {
   const colors = useColors();
   const utils = trpc.useUtils();
+  const [filesTaskId, setFilesTaskId] = useState<string | null>(null);
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
   const siteParam = useSiteParam();
@@ -179,7 +182,7 @@ export default function ScheduleScreen() {
       setMessage(
         "Task saved to the server schedule. Its initial planned dates are retained in revision history.",
       );
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Task was not saved: ${errorMessage(error)}`);
     }
@@ -218,7 +221,7 @@ export default function ScheduleScreen() {
         "Reschedule applied after impact review. Original and revised dates remain in schedule history.",
       );
       clearReschedule();
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Reschedule was not applied: ${errorMessage(error)}`);
     }
@@ -246,7 +249,7 @@ export default function ScheduleScreen() {
       setStatusTarget(null);
       setStatusReason("");
       setStatusMutationId(null);
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Status was not changed: ${errorMessage(error)}`);
     }
@@ -330,6 +333,7 @@ export default function ScheduleScreen() {
                   reschedule keeps the original plan in history.
                 </Text>
               </View>
+              <ScheduleDashboard siteId={siteId} />
               {message ? (
                 <View
                   style={[
@@ -614,6 +618,11 @@ export default function ScheduleScreen() {
                             label={isHistoryOpen ? "Close history" : "History"}
                             onPress={() => setHistoryTaskId(isHistoryOpen ? null : task.id)}
                           />
+                          <SecondaryButton
+                            icon={filesTaskId === task.id ? "expand-less" : "photo-library"}
+                            label={filesTaskId === task.id ? "Hide photos" : "Photos"}
+                            onPress={() => setFilesTaskId(filesTaskId === task.id ? null : task.id)}
+                          />
                           {canUpdateStatus &&
                           task.status !== "Completed" &&
                           task.status !== "Cancelled" ? (
@@ -629,6 +638,23 @@ export default function ScheduleScreen() {
                             />
                           ) : null}
                         </View>
+
+                        {filesTaskId === task.id ? (
+                          <View
+                            style={[
+                              styles.inlinePanel,
+                              { backgroundColor: colors.background, borderColor: colors.border },
+                            ]}
+                          >
+                            <AttachmentStrip
+                              entityType="work_task"
+                              entityId={task.id}
+                              title="Work photos and videos"
+                              allowVideo
+                              canUpload={canUpdateStatus || canManage}
+                            />
+                          </View>
+                        ) : null}
 
                         {isRescheduling ? (
                           <View

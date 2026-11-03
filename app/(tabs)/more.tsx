@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { Avatar, useMyProfile } from "@/components/jp/avatar";
 import {
   AppHeader,
   Card,
@@ -19,7 +20,6 @@ import {
   SectionHeader,
   StatusPill,
   formatDateTime,
-  initialsOf,
   type IconName,
   type Tone,
 } from "@/components/jp/ui";
@@ -45,6 +45,7 @@ export default function MoreScreen() {
   const sites = trpc.jp.workspace.mySites.useQuery();
   const [signingOut, setSigningOut] = useState(false);
   const { can, me } = workspace;
+  const profile = useMyProfile();
 
   const modules: {
     icon: IconName;
@@ -117,6 +118,14 @@ export default function MoreScreen() {
       tone: "accent",
       route: "/project-budget",
       show: can("budget.view"),
+    },
+    {
+      icon: "tune",
+      title: "Modules",
+      detail: "Turn modules on or off, AI advice",
+      tone: "info",
+      route: "/modules",
+      show: workspace.canManageSites || workspace.canManageAccounts,
     },
     {
       icon: "add-business",
@@ -230,13 +239,20 @@ export default function MoreScreen() {
           />
 
           <HeroCard>
-            <View style={styles.profile}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initialsOf(me.data?.name)}</Text>
-              </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open my profile"
+              onPress={() => router.push("/profile" as never)}
+              style={styles.profile}
+            >
+              <Avatar uri={profile.data?.photoUrl} name={me.data?.name} size={58} tone="gold" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{me.data?.name ?? "Signed-in user"}</Text>
-                <Text style={styles.role}>{prettyRole(workspace.role)}</Text>
+                <Text style={styles.role}>
+                  {[profile.data?.designation, prettyRole(workspace.role)]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
                 <Text style={styles.scope}>
                   {sites.data
                     ? `${sites.data.length} site${sites.data.length === 1 ? "" : "s"} in your access`
@@ -245,8 +261,14 @@ export default function MoreScreen() {
                     ? ` · signed in ${formatDateTime(me.data.lastSignedIn)}`
                     : ""}
                 </Text>
+                {profile.data && profile.data.completeness < 100 ? (
+                  <Text style={[styles.link, { color: "#E6C987" }]}>
+                    Profile {profile.data.completeness}% complete · tap to finish
+                  </Text>
+                ) : null}
               </View>
-            </View>
+              <MaterialIcons name="chevron-right" size={24} color="#E6C987" />
+            </Pressable>
           </HeroCard>
 
           <SectionHeader title={t("Modules")} caption={t("Only what your role allows")} />

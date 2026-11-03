@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -43,7 +43,8 @@ export default function IssuesScreen() {
   const [status, setStatus] = useState<StatusView>("Active");
   const [search, setSearch] = useState("");
   const [limit, setLimit] = useState(PAGE);
-  const [formOpen, setFormOpen] = useState(false);
+  const params = useLocalSearchParams<{ siteId?: string; aiText?: string; new?: string }>();
+  const [formOpen, setFormOpen] = useState(params.new === "1");
   const [notice, setNotice] = useState<string | null>(null);
   const issues = trpc.jp.issues.list.useQuery({
     status,
@@ -261,6 +262,8 @@ export default function IssuesScreen() {
         <IssueFormSheet
           visible={formOpen}
           sites={createSites}
+          defaultSiteId={typeof params.siteId === "string" ? params.siteId : undefined}
+          aiText={typeof params.aiText === "string" ? params.aiText : undefined}
           online={online}
           onClose={() => setFormOpen(false)}
           onSaved={({ id, offline }) => {

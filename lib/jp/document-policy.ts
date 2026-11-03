@@ -1,4 +1,4 @@
-import { sniffContentType } from "./attachment-policy";
+import { isVideoType, sniffContentType } from "./attachment-policy";
 
 /**
  * Project document rules: categories, accepted file types, and the pieces of search
@@ -63,7 +63,7 @@ function looksLikeText(bytes: Uint8Array): boolean {
  */
 export function sniffDocumentType(bytes: Uint8Array, fileName: string): DocumentContentType | null {
   const known = sniffContentType(bytes);
-  if (known) return known;
+  if (known && !isVideoType(known)) return known as Exclude<typeof known, `video/${string}`>;
   const isZip = bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03;
   if (isZip) {
     if (containsAscii(bytes, "word/document.xml"))

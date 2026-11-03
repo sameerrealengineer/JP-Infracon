@@ -38,6 +38,10 @@ import { notificationsRouter, dispatchAlert, siteLeadIds } from "./notify";
 import { aiRouter } from "./ai";
 import { documentsRouter } from "./documents";
 import { budgetsRouter } from "./budgets";
+import { profileRouter } from "./profile";
+import { placesRouter } from "./places";
+import { modulesRouter } from "./modules-router";
+import { assistantRouter } from "./assistant";
 import { presenceRouter } from "./presence";
 import { buildInbox } from "./inbox";
 import {
@@ -172,6 +176,10 @@ export const jpRouter = router({
   ai: aiRouter,
   documents: documentsRouter,
   budgets: budgetsRouter,
+  profile: profileRouter,
+  places: placesRouter,
+  modules: modulesRouter,
+  assistant: assistantRouter,
   presence: presenceRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {

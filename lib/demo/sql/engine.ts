@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/mysql-proxy";
-import { createSchemaStatements, onUpdateNowColumns } from "./ddl";
+import { addMissingColumnStatements, createSchemaStatements, onUpdateNowColumns } from "./ddl";
 import { normalizeResultValue, translateMysql, type SqlParam } from "./translate";
 
 /** The few calls the demo needs from a SQLite connection (expo-sqlite on the phone, node:sqlite in tests). */
@@ -88,5 +88,19 @@ export function createDemoDb(driver: SqlDriver): DemoDb {
 
 /** Creates every table and index the schema declares (safe to run on each start). */
 export async function ensureSchema(driver: SqlDriver): Promise<void> {
-  for (const statement of createSchemaStatements()) await driver.exec(statement);
+  const statements = createSchemaStatements();
+  const tables = statements.filter((statement) => statement.startsWith("CREATE TABLE"));
+  for (const statement of tables) await driver.exec(statement);
+  // Tables created by an older app version may lack newer columns; add them before indexes.
+  const existing: Record<string, Set<string>> = {};
+  for (const [name] of (await driver.all(
+    "SELECT name FROM sqlite_master WHERE type = 'table'",
+    [],
+  )) as [string][]) {
+    const columns = (await driver.all(`PRAGMA table_info(\`${name}\`)`, [])) as unknown[][];
+    existing[name] = new Set(columns.map((row) => String(row[1])));
+  }
+  for (const statement of addMissingColumnStatements(existing)) await driver.exec(statement);
+  for (const statement of statements)
+    if (!statement.startsWith("CREATE TABLE")) await driver.exec(statement);
 }

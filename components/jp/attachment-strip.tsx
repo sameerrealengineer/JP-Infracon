@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as DocumentPicker from "expo-document-picker";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
@@ -17,6 +18,7 @@ import { InlineError, SecondaryButton, formatDateTime } from "@/components/jp/ui
 import { useColors } from "@/hooks/use-colors";
 import {
   MAX_ATTACHMENT_BYTES,
+  MAX_VIDEO_BYTES,
   formatBytes,
   type AttachmentEntityType,
 } from "@/lib/jp/attachment-policy";
@@ -35,11 +37,17 @@ export function AttachmentStrip({
   entityId,
   canUpload,
   title = "Photos & documents",
+  allowVideo = false,
+  cover,
 }: {
   entityType: AttachmentEntityType;
   entityId: string;
   canUpload: boolean;
   title?: string;
+  /** Show a Video button (site walk-throughs, work in progress). */
+  allowVideo?: boolean;
+  /** Lets a manager pick one of the photos as the cover. */
+  cover?: { currentId: string | null; onSet: (attachmentId: string) => Promise<void> };
 }) {
   const colors = useColors();
   const utils = trpc.useUtils();
@@ -54,9 +62,14 @@ export function AttachmentStrip({
     fileName: string,
     sourceType: "Captured in app" | "Selected from device",
     location?: { latitude: number; longitude: number; accuracyM?: number } | null,
+    maxBytes = MAX_ATTACHMENT_BYTES,
   ) => {
-    if ((base64.length * 3) / 4 > MAX_ATTACHMENT_BYTES)
-      throw new Error("This file is larger than 8 MB.");
+    if ((base64.length * 3) / 4 > maxBytes)
+      throw new Error(
+        maxBytes === MAX_VIDEO_BYTES
+          ? "This video is larger than 30 MB. Record a shorter clip."
+          : "This file is larger than 8 MB.",
+      );
     await upload.mutateAsync({
       entityType,
       entityId,
@@ -108,6 +121,34 @@ export function AttachmentStrip({
       await send(base64, asset.fileName ?? `photo-${Date.now()}.jpg`, "Selected from device");
     });
 
+  const pickVideo = (fromCamera: boolean) =>
+    run("video", async () => {
+      if (fromCamera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) throw new Error("Camera permission was not given.");
+      }
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ["videos"],
+        videoMaxDuration: 60,
+        videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+      };
+      const result = fromCamera
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > MAX_VIDEO_BYTES)
+        throw new Error("This video is larger than 30 MB. Record a shorter clip.");
+      const location = fromCamera ? await currentPosition() : null;
+      await send(
+        await readBase64(asset.uri),
+        asset.fileName ?? `video-${Date.now()}.mp4`,
+        fromCamera ? "Captured in app" : "Selected from device",
+        location,
+        MAX_VIDEO_BYTES,
+      );
+    });
+
   const pickPdf = () =>
     run("pdf", async () => {
       const result = await DocumentPicker.getDocumentAsync({
@@ -129,19 +170,57 @@ export function AttachmentStrip({
       else await WebBrowser.openBrowserAsync(url);
     });
 
-  const rows = files.data ?? [];
+  const all = files.data ?? [];
+  const photos = all.filter((file) => file.previewUrl);
+  const rows = all.filter((file) => !file.previewUrl);
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
         <MaterialIcons name="photo-library" size={18} color={colors.accent} />
         <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
         <Text style={[styles.count, { color: colors.muted }]}>
-          {files.data ? `${rows.length}` : ""}
+          {files.data ? `${all.length}` : ""}
         </Text>
       </View>
       {error ? <InlineError message={error} title="Not attached" /> : null}
       {files.error ? <InlineError message={files.error.message} /> : null}
-      {rows.length === 0 && files.isSuccess ? (
+      {photos.length ? (
+        <View style={styles.grid}>
+          {photos.map((file) => (
+            <View key={file.id} style={styles.thumbWrap}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${file.originalFilename}`}
+                onPress={() => void view(file.id)}
+                style={({ pressed }) => [pressed && { opacity: 0.75 }]}
+              >
+                <Image
+                  source={{ uri: file.previewUrl! }}
+                  style={[styles.thumb, { backgroundColor: colors.border }]}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={120}
+                />
+                {cover?.currentId === file.id ? (
+                  <View style={[styles.coverBadge, { backgroundColor: colors.accent }]}>
+                    <Text style={styles.coverBadgeText}>COVER</Text>
+                  </View>
+                ) : null}
+              </Pressable>
+              {cover && cover.currentId !== file.id ? (
+                <Text
+                  accessibilityRole="button"
+                  onPress={() => void run(`cover-${file.id}`, () => cover.onSet(file.id))}
+                  style={[styles.coverLink, { color: colors.primary }]}
+                >
+                  {busy === `cover-${file.id}` ? "Saving…" : "Set as cover"}
+                </Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ) : null}
+      {all.length === 0 && files.isSuccess ? (
         <Text style={[styles.empty, { color: colors.muted }]}>No files attached yet.</Text>
       ) : null}
       {rows.map((file) => (
@@ -157,9 +236,21 @@ export function AttachmentStrip({
           ]}
         >
           <MaterialIcons
-            name={file.contentType === "application/pdf" ? "picture-as-pdf" : "image"}
+            name={
+              file.contentType === "application/pdf"
+                ? "picture-as-pdf"
+                : file.contentType.startsWith("video/")
+                  ? "movie"
+                  : "image"
+            }
             size={22}
-            color={file.contentType === "application/pdf" ? colors.error : colors.primary}
+            color={
+              file.contentType === "application/pdf"
+                ? colors.error
+                : file.contentType.startsWith("video/")
+                  ? colors.accent
+                  : colors.primary
+            }
           />
           <View style={{ flex: 1 }}>
             <Text style={[styles.fileName, { color: colors.foreground }]} numberOfLines={1}>
@@ -227,6 +318,28 @@ export function AttachmentStrip({
           </View>
         </View>
       ) : null}
+      {canUpload && allowVideo ? (
+        <View style={styles.actions}>
+          {Platform.OS !== "web" ? (
+            <View style={{ flex: 1 }}>
+              <SecondaryButton
+                icon="videocam"
+                label={busy === "video" ? "Uploading…" : "Record video"}
+                disabled={Boolean(busy)}
+                onPress={() => void pickVideo(true)}
+              />
+            </View>
+          ) : null}
+          <View style={{ flex: 1 }}>
+            <SecondaryButton
+              icon="video-library"
+              label={busy === "video" ? "Uploading…" : "Video"}
+              disabled={Boolean(busy)}
+              onPress={() => void pickVideo(false)}
+            />
+          </View>
+        </View>
+      ) : null}
       <Text style={[styles.note, { color: colors.muted }]}>
         Private to people with access to this record. Files cannot be replaced once added.
       </Text>
@@ -251,5 +364,18 @@ const styles = StyleSheet.create({
   fileName: { fontSize: 13, fontWeight: "700" },
   fileMeta: { fontSize: 11, marginTop: 2 },
   actions: { flexDirection: "row", gap: 8, marginTop: 4 },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  thumbWrap: { width: "31%", gap: 4 },
+  thumb: { width: "100%", aspectRatio: 1, borderRadius: 12 },
+  coverBadge: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  coverBadgeText: { color: "#0E1A26", fontSize: 9, fontWeight: "900", letterSpacing: 0.6 },
+  coverLink: { fontSize: 11, fontWeight: "800", textAlign: "center" },
   note: { fontSize: 10, lineHeight: 14 },
 });

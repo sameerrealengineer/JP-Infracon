@@ -120,6 +120,13 @@
       "when": 1793667610323,
       "tag": "0016_pale_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1793676330853,
+      "tag": "0017_chubby_talon",
+      "breakpoints": true
     }
   ]
 }

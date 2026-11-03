@@ -1,4 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -531,6 +533,11 @@ function RequestCard({
   onSync: () => void;
 }) {
   const colors = useColors();
+  const { sitesWith } = useWorkspace();
+  const [showFiles, setShowFiles] = useState(false);
+  const canUpload =
+    sitesWith("material.request").includes(request.siteId) ||
+    sitesWith("material.review").includes(request.siteId);
   return (
     <View
       style={[styles.requestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -569,7 +576,25 @@ function RequestCard({
         <View style={styles.cardAction}>
           <SecondaryButton icon="sync" label="Sync request" onPress={onSync} />
         </View>
-      ) : null}
+      ) : (
+        <View style={styles.cardAction}>
+          <SecondaryButton
+            icon={showFiles ? "expand-less" : "photo-library"}
+            label={showFiles ? "Hide photos" : "Photos & quotes"}
+            onPress={() => setShowFiles((open) => !open)}
+          />
+          {showFiles ? (
+            <View style={{ marginTop: 10 }}>
+              <AttachmentStrip
+                entityType="material_request"
+                entityId={request.id}
+                title="Photos, quotations and challans"
+                canUpload={canUpload}
+              />
+            </View>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }

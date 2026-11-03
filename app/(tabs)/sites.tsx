@@ -17,6 +17,8 @@ import {
   StatusPill,
   formatDateTime,
 } from "@/components/jp/ui";
+import { Image } from "expo-image";
+import { ProgressBar, percentText } from "@/components/jp/place-visual";
 import { useColors } from "@/hooks/use-colors";
 import { useConnectivity, useSyncQueue } from "@/hooks/use-connectivity";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -36,6 +38,8 @@ export default function SitesScreen() {
   const { online } = useConnectivity();
   const { pending } = useSyncQueue();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
+  const cards = trpc.jp.places.cards.useQuery(undefined, { staleTime: 60_000 });
+  const cardFor = (siteId: string) => cards.data?.sites.find((row) => row.siteId === siteId);
   const [filter, setFilter] = useState<Filter>("All");
   const [search, setSearch] = useState("");
 
@@ -143,6 +147,8 @@ export default function SitesScreen() {
           <View style={{ gap: 10 }}>
             {sites.map((site) => {
               const tone = getSiteStatusTone(site.status as SiteStatus);
+              const card = cardFor(site.id);
+              const progress = card?.progress;
               return (
                 <Card
                   key={site.id}
@@ -151,9 +157,18 @@ export default function SitesScreen() {
                   accessibilityLabel={`Open ${site.name}`}
                 >
                   <View style={styles.row}>
-                    <View style={[styles.icon, { backgroundColor: `${colors.primary}10` }]}>
-                      <MaterialIcons name="apartment" size={20} color={colors.primary} />
-                    </View>
+                    {card?.coverUrl ? (
+                      <Image
+                        source={{ uri: card.coverUrl }}
+                        style={styles.thumb}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                      />
+                    ) : (
+                      <View style={[styles.icon, { backgroundColor: `${colors.primary}10` }]}>
+                        <MaterialIcons name="apartment" size={20} color={colors.primary} />
+                      </View>
+                    )}
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.name, { color: colors.foreground }]}>{site.name}</Text>
                       <Text style={[styles.meta, { color: colors.muted }]}>
@@ -162,6 +177,39 @@ export default function SitesScreen() {
                     </View>
                     <StatusPill label={site.status} tone={tone} compact />
                   </View>
+                  {progress && progress.total > 0 ? (
+                    <View style={styles.progress}>
+                      <View style={styles.progressText}>
+                        <Text style={[styles.meta, { color: colors.foreground, marginTop: 0 }]}>
+                          {percentText(progress.actualTenths)} done
+                        </Text>
+                        <Text
+                          style={[
+                            styles.meta,
+                            {
+                              marginTop: 0,
+                              color:
+                                progress.health === "behind" || progress.overdue > 0
+                                  ? colors.error
+                                  : colors.muted,
+                            },
+                          ]}
+                        >
+                          {progress.overdue > 0
+                            ? `${progress.overdue} overdue`
+                            : progress.health === "behind"
+                              ? "Behind plan"
+                              : `${progress.completed}/${progress.total} tasks`}
+                        </Text>
+                      </View>
+                      <ProgressBar
+                        actualTenths={progress.actualTenths}
+                        expectedTenths={progress.expectedTenths}
+                        tone={progress.health === "behind" ? "warning" : "success"}
+                        height={6}
+                      />
+                    </View>
+                  ) : null}
                   <View style={styles.bottom}>
                     <MaterialIcons name="place" size={14} color={colors.muted} />
                     <Text
@@ -213,6 +261,9 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   icon: { width: 42, height: 42, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  thumb: { width: 56, height: 56, borderRadius: 14 },
+  progress: { marginTop: 12 },
+  progressText: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
   name: { fontSize: 16, fontWeight: "800" },
   meta: { fontSize: 12, marginTop: 3 },
   bottom: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 12 },

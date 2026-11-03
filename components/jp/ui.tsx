@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Image as PhotoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useSegments } from "expo-router";
 import { useEffect, type ComponentProps, type ReactNode } from "react";
@@ -173,7 +174,13 @@ export function AppHeader({
   const inTabs = segments[0] === "(tabs)";
   const inboxCount = useInboxCount();
   const me = trpc.auth.me.useQuery(undefined, { retry: false, staleTime: 5 * 60_000 });
+  const profile = trpc.jp.profile.me.useQuery(undefined, { retry: false, staleTime: 4 * 60_000 });
   const initials = userInitials && userInitials !== "?" ? userInitials : initialsOf(me.data?.name);
+  const photo = profile.data?.photoUrl ?? null;
+  const assistant = trpc.jp.assistant.status.useQuery(undefined, {
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
   return (
     <View style={styles.header}>
       <View style={styles.headerTopRow}>
@@ -196,6 +203,13 @@ export function AppHeader({
         )}
         <View style={styles.headerActions}>
           {right}
+          {assistant.data?.available && segments[0] !== "assistant" ? (
+            <IconButton
+              icon="auto-awesome"
+              label="Ask the AI assistant"
+              onPress={() => router.push("/assistant" as never)}
+            />
+          ) : null}
           <IconButton
             icon="notifications-none"
             label={t("Open notifications")}
@@ -204,15 +218,24 @@ export function AppHeader({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open account and settings"
-            onPress={() => router.push("/(tabs)/more" as never)}
+            accessibilityLabel="Open my profile"
+            onPress={() => router.push("/profile" as never)}
             style={({ pressed }) => [
               styles.avatar,
               { backgroundColor: colors.primary },
               pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.avatarText, { color: colors.background }]}>{initials}</Text>
+            {photo ? (
+              <PhotoImage
+                source={{ uri: photo }}
+                style={styles.avatarPhoto}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            ) : (
+              <Text style={[styles.avatarText, { color: colors.background }]}>{initials}</Text>
+            )}
           </Pressable>
         </View>
       </View>
@@ -1010,6 +1033,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontSize: 14, fontWeight: "800", letterSpacing: 0.4 },
+  avatarPhoto: { width: 42, height: 42, borderRadius: 21 },
   heroShell: { borderRadius: 24, marginBottom: 20 },
   hero: { borderRadius: 24, padding: 20, overflow: "hidden" },
   heroGlow: {

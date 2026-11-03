@@ -107,7 +107,12 @@ function errorText(error: unknown) {
 const text = displayQuantity;
 
 export default function ReportEditorScreen() {
-  const params = useLocalSearchParams<{ reportId?: string; siteId?: string; kind?: string }>();
+  const params = useLocalSearchParams<{
+    reportId?: string;
+    siteId?: string;
+    kind?: string;
+    aiText?: string;
+  }>();
   const reportId = typeof params.reportId === "string" ? params.reportId : "";
   return (
     <AuthGate>
@@ -118,7 +123,8 @@ export default function ReportEditorScreen() {
           <ReportForm
             mode="create"
             initialSiteId={typeof params.siteId === "string" ? params.siteId : ""}
-            initialKind={params.kind === "DLR" ? "DLR" : null}
+            initialKind={params.kind === "DLR" ? "DLR" : params.kind === "DPR" ? "DPR" : null}
+            aiText={typeof params.aiText === "string" ? params.aiText : undefined}
           />
         )}
       </Screen>
@@ -256,12 +262,15 @@ function ReportForm({
   reportId,
   initialSiteId,
   initialKind,
+  aiText,
   initial,
 }: {
   mode: "create" | "edit";
   reportId?: string;
   initialSiteId: string;
   initialKind: Kind | null;
+  /** Words from the assistant, shown in the AI box ready to fill the form. */
+  aiText?: string;
   initial?: Initial;
 }) {
   const colors = useColors();
@@ -531,7 +540,14 @@ function ReportForm({
           </Card>
         ) : null}
 
-        {siteId ? <VoiceReportAssist siteId={siteId} reportKind={kind} onFields={applyAi} /> : null}
+        {siteId ? (
+          <VoiceReportAssist
+            siteId={siteId}
+            reportKind={kind}
+            onFields={applyAi}
+            initialText={aiText}
+          />
+        ) : null}
         {aiNotice ? (
           <Card accent={aiNotice.includes("Check these") ? "warning" : "info"}>
             <Text style={[styles.muted, { color: colors.foreground }]}>{aiNotice}</Text>

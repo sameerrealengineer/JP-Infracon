@@ -1,4 +1,6 @@
 import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { disabledModulesFor } from "./module-settings";
+import { MODULES, isPermissionDisabled, moduleForPermission } from "../../lib/jp/modules";
 import { TRPCError } from "@trpc/server";
 import type { User } from "../../drizzle/schema";
 import {
@@ -168,6 +170,13 @@ export async function getSiteScope(
         code: "FORBIDDEN",
         message: `Your current role does not include ${permissionKey} for this site.`,
       });
+    if (isPermissionDisabled(permissionKey, await disabledModulesFor(siteRow.organizationId))) {
+      const module = MODULES.find((row) => row.key === moduleForPermission(permissionKey));
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `${module?.title ?? "This module"} is turned off for your company. An admin can turn it on in Settings → Modules.`,
+      });
+    }
   }
 
   return { ...siteRow, businessRole };

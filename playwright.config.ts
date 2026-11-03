@@ -6,6 +6,9 @@ export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
   reporter: "line",
+  // The web bundle can take several seconds to start on a busy machine; allow for it.
+  expect: { timeout: 15_000 },
+  timeout: 60_000,
   use: {
     baseURL: `http://localhost:${port}`,
     trace: "retain-on-failure",

@@ -149,6 +149,8 @@ export const projects = mysqlTable(
     projectManagerUserId: int("projectManagerUserId").references(() => users.id, {
       onDelete: "restrict",
     }),
+    /** Cover photo: one of the project's own attachments (entityType "project"). */
+    coverAttachmentId: varchar("coverAttachmentId", { length: 36 }),
     createdBy: int("createdBy")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -182,6 +184,8 @@ export const sites = mysqlTable(
     district: varchar("district", { length: 120 }),
     state: varchar("state", { length: 120 }),
     timeZone: varchar("timeZone", { length: 64 }).default("Asia/Kolkata").notNull(),
+    /** Cover photo: one of the site's own attachments (entityType "site"). */
+    coverAttachmentId: varchar("coverAttachmentId", { length: 36 }),
     status: mysqlEnum("status", ["Active", "On Hold", "Completed", "Inactive"])
       .default("Active")
       .notNull(),
@@ -1874,3 +1878,35 @@ export const projectBudgetLines = mysqlTable(
     ),
   }),
 );
+
+/**
+ * A person's own profile: work details and a photo. The mobile number for alerts stays in
+ * user_contact_preferences so there is one place for it.
+ */
+export const userProfiles = mysqlTable("user_profiles", {
+  userId: int("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "restrict" }),
+  designation: varchar("designation", { length: 120 }),
+  department: varchar("department", { length: 120 }),
+  addressLine: varchar("addressLine", { length: 300 }),
+  city: varchar("city", { length: 120 }),
+  district: varchar("district", { length: 120 }),
+  state: varchar("state", { length: 120 }),
+  pincode: varchar("pincode", { length: 10 }),
+  emergencyContact: varchar("emergencyContact", { length: 160 }),
+  photoStorageKey: varchar("photoStorageKey", { length: 240 }),
+  photoContentType: varchar("photoContentType", { length: 64 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Company-wide settings, such as which optional modules are turned off. */
+export const organizationSettings = mysqlTable("organization_settings", {
+  organizationId: varchar("organizationId", { length: 36 })
+    .primaryKey()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  /** JSON array of module keys that are turned off (see lib/jp/modules.ts). */
+  disabledModules: text("disabledModules"),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
