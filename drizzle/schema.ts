@@ -1808,3 +1808,69 @@ export const documentChunks = mysqlTable(
     chunkDocumentIndex: index("document_chunk_document_idx").on(table.documentId, table.chunkIndex),
   }),
 );
+
+/**
+ * A project budget revision. Each change is a new revision: proposed by one person, approved
+ * or rejected by another. The approved revision is the current budget; older approved ones
+ * become Superseded. Totals are set by the server from the lines.
+ */
+export const projectBudgets = mysqlTable(
+  "project_budgets",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    revisionNumber: int("revisionNumber").notNull(),
+    status: mysqlEnum("status", ["Proposed", "Approved", "Rejected", "Superseded"])
+      .default("Proposed")
+      .notNull(),
+    /** Agreement value with the client, when recorded. */
+    contractValueMinor: decimal("contractValueMinor", { precision: 18, scale: 0, mode: "string" }),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("INR").notNull(),
+    reason: text("reason"),
+    proposedBy: int("proposedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    budgetRevisionUnique: uniqueIndex("project_budget_revision_uq").on(
+      table.projectId,
+      table.revisionNumber,
+    ),
+    budgetProjectStatusIndex: index("project_budget_project_status_idx").on(
+      table.projectId,
+      table.status,
+    ),
+  }),
+);
+
+/** Amount per cost head in one budget revision. */
+export const projectBudgetLines = mysqlTable(
+  "project_budget_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    budgetId: varchar("budgetId", { length: 36 })
+      .notNull()
+      .references(() => projectBudgets.id, { onDelete: "restrict" }),
+    costHead: varchar("costHead", { length: 64 }).notNull(),
+    amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    note: varchar("note", { length: 300 }),
+  },
+  (table) => ({
+    budgetLineHeadUnique: uniqueIndex("project_budget_line_head_uq").on(
+      table.budgetId,
+      table.costHead,
+    ),
+  }),
+);

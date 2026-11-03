@@ -29,6 +29,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `finance.ts` | Suppliers and invoices; mounts `supplier-payments.ts` and `petty-cash.ts` |
 | `daily-reports.ts` | DPR work lines, report detail, `updateDraft` (writer corrects a draft or returned report), `progressContext` (last cumulative per task/work), `labourSnapshot`, linking attendance to a DLR on submit |
 | `documents.ts` | Project documents: upload with versions (files are `attachments` rows with entityType `project_document`), list, detail, open, archive, hybrid smart search |
+| `budgets.ts` | Project budgets: revisions per cost head, maker-checker approve/reject/withdraw, overview vs spend (approved bills by supplier type, approved attendance, posted petty cash; submitted items shown as waiting) |
 | `document-index.ts` | After upload: text from Office/CSV (no AI) or Gemini reader (PDF/photo), passages, Gemini Embedding 2 vectors (768) when `GEMINI_API_KEY` is set; sets `indexStatus` |
 
 ## Conventions

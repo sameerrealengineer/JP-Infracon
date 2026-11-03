@@ -37,6 +37,7 @@ import { delegationRouter } from "./delegation";
 import { notificationsRouter } from "./notify";
 import { aiRouter } from "./ai";
 import { documentsRouter } from "./documents";
+import { budgetsRouter } from "./budgets";
 import { presenceRouter } from "./presence";
 import { buildInbox } from "./inbox";
 import {
@@ -170,6 +171,7 @@ export const jpRouter = router({
   notifications: notificationsRouter,
   ai: aiRouter,
   documents: documentsRouter,
+  budgets: budgetsRouter,
   presence: presenceRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {

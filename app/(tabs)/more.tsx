@@ -111,6 +111,14 @@ export default function MoreScreen() {
       show: can("document.view"),
     },
     {
+      icon: "account-balance-wallet",
+      title: "Project budget",
+      detail: "Budget vs spent, revisions, approval",
+      tone: "accent",
+      route: "/project-budget",
+      show: can("budget.view"),
+    },
+    {
       icon: "add-business",
       title: "Projects & sites",
       detail: "Create, edit, status, team",

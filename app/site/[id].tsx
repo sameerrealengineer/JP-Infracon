@@ -128,6 +128,13 @@ export default function SiteDetailScreen() {
       show: has("document.view"),
     },
     {
+      icon: "account-balance-wallet",
+      title: "Budget",
+      tone: "accent",
+      route: "/project-budget",
+      show: has("budget.view"),
+    },
+    {
       icon: "history",
       title: "Audit trail",
       tone: "info",

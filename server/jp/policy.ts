@@ -323,9 +323,21 @@ const documentRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["document.view"],
 };
 
+const budgetRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: ["budget.view", "budget.manage", "budget.approve"],
+  director: ["budget.view", "budget.manage", "budget.approve"],
+  admin: ["budget.view", "budget.manage"],
+  project_manager: ["budget.view", "budget.manage"],
+  supervisor: [],
+  accounts: ["budget.view"],
+  storekeeper: [],
+  auditor: ["budget.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
     documentRoleDefaults[role].includes(permissionKey) ||
+    budgetRoleDefaults[role].includes(permissionKey) ||
     issueRoleDefaults[role].includes(permissionKey) ||
     roleDefaults[role].includes(permissionKey) ||
     inventoryRoleDefaults[role].includes(permissionKey) ||

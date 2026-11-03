@@ -34,6 +34,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `ai-report-extraction.ts` | Prompt, schema and re-validation of AI-filled daily reports |
 | `document-policy.ts` | Document categories, file type sniffing (incl. DOCX/XLSX/CSV), chunking, cosine and keyword scores, hybrid ranking |
 | `document-text.ts` | Text from Word, Excel and CSV files with `fflate` (no AI) |
+| `budget-domain.ts` | Budget cost heads, supplier type to head, line validation, budget vs approved spend per head (ok / near / over), margins |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 
 ## Conventions
