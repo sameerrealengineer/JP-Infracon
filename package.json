@@ -26,7 +26,8 @@
     "build:server": "esbuild server/_core/index.ts --platform=node --target=node22 --bundle --format=esm --outfile=dist-server/index.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\"",
     "build:demo-server": "node scripts/build-demo-server.mjs",
     "demo:server": "node scripts/build-demo-server.mjs && node dist-demo/demo-server.mjs",
-    "audit:app": "node scripts/audit-app.mjs"
+    "audit:app": "node scripts/audit-app.mjs",
+    "test:live": "playwright test -c playwright.live.config.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1161.0",

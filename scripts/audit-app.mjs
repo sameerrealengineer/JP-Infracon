@@ -41,6 +41,8 @@ const ROUTES = [
   "/site-reports",
   "/site-requests",
   "/report-editor",
+  "/crm",
+  "/billing",
 ];
 const ERROR_TEXT =
   /(something went wrong|failed to|not found|unavailable|error|could not|cannot read|undefined|NaN|\[object Object\])/i;

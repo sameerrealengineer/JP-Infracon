@@ -26,6 +26,28 @@ export type HomeGroup = { key: string; title: string; modules: readonly HomeModu
 
 export const HOME_GROUPS: readonly HomeGroup[] = [
   {
+    key: "business",
+    title: "Business",
+    modules: [
+      {
+        key: "crm",
+        title: "Clients & leads",
+        icon: "handshake",
+        tone: "accent",
+        route: "/crm",
+        anyOf: ["crm.view"],
+      },
+      {
+        key: "billing",
+        title: "Client billing",
+        icon: "request-quote",
+        tone: "success",
+        route: "/billing",
+        anyOf: ["billing.view"],
+      },
+    ],
+  },
+  {
     key: "site",
     title: "Site work",
     modules: [

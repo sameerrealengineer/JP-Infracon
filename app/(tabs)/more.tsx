@@ -56,6 +56,22 @@ export default function MoreScreen() {
     show: boolean;
   }[] = [
     {
+      icon: "handshake",
+      title: "Clients & leads",
+      detail: "Enquiries, follow-ups, quotations",
+      tone: "accent",
+      route: "/crm",
+      show: can("crm.view"),
+    },
+    {
+      icon: "request-quote",
+      title: "Client billing",
+      detail: "RA bills, GST, receipts, receivables",
+      tone: "success",
+      route: "/billing",
+      show: can("billing.view"),
+    },
+    {
       icon: "health-and-safety",
       title: "Safety & quality",
       detail: "Hazards, defects, blockers",

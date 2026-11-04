@@ -46,6 +46,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `alert-rules.ts` | Alert categories, per-role channel rules, `decideChannels` (rules, mutes, opt-ins, module off, SMS urgent only) |
 | `whatsapp-bot.ts` | Parsing OpenWA `message.received` (private chats only, phone from `@c.us` or `senderPhone`), fixed bot replies, one stranger note a day |
 | `voice-turn.ts` | Live talk: speech start/end from microphone level (dBFS), idle and max turn, reply language from the detected one |
+| `billing-domain.ts` | Lead stages, quantity/percent parsing, quotation and RA bill totals (GST on work value; retention and TDS on work value), contract balance check, payment state from receipts, ageing, numbering |
 
 ## Conventions
 

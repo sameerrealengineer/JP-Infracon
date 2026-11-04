@@ -38,6 +38,9 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `document-index.ts` | After upload: text from Office/CSV (no AI) or Gemini reader (PDF/photo), passages, Gemini Embedding 2 vectors (768) when `GEMINI_API_KEY` is set; sets `indexStatus` |
 | `people.ts` | People directory: `search`, `history` (sites, attendance and estimated earnings, rates, feedback, linked subcontractor firm bills/payments; each part limited by permission per site), `saveDetails`, append-only `addFeedback` (`workforce.manage`) |
 | `whatsapp-bot.ts` | 24-hour WhatsApp bot: `POST /api/whatsapp/webhook` (mounted before the JSON parser; HMAC `X-OpenWA-Signature` with `OPENWA_WEBHOOK_SECRET`; on only with `WHATSAPP_BOT=on`). Staff matched by saved mobile get `answerQuestion` with their own permissions; strangers get one note a day and no data. Logs to `whatsapp_bot_messages` (dedupe by WhatsApp id). Setup: `scripts/setup-whatsapp-bot.sh` |
+| `commercial-access.ts` | Company-level access for CRM and billing: leader-first membership role, organisation grants, module switch, projects visible through the caller's sites |
+| `crm.ts` | `jp.crm`: clients, enquiries (leads) with stages and follow-ups, quotations (server-numbered QT-YYYY-NNNN, exact GST totals); accepting a quotation wins its enquiry |
+| `billing.ts` | `jp.billing`: project contract (client, GST/retention/TDS), contract items (client BOQ, also from an accepted quotation), RA bills (cumulative quantity checked, maker-checker), receipts and reversals, receivables with ageing |
 
 ## Conventions
 
@@ -52,6 +55,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 ## Gotchas
 
 - Maker-checker checks call `selfApprovalAllowed` (from `access.ts`): the same person may approve their own record only while a delegation grants `approval.self` for that site.
+- CRM and billing events are company level (`siteId` null); `workspace.auditEvents` shows them to owner, director, admin and auditor.
 - Alerts are best effort and never throw; they run after the transaction commits.
 - A procedure that checks the site with a core key (`site.view`) and resolves the real permission itself must call `assertModuleOn(organizationId, key)`, or a turned-off module still works (this was the workforce and petty-cash acknowledge bug).
 

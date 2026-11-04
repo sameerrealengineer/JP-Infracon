@@ -23,6 +23,8 @@ pnpm lint                    # expo lint (errors fail CI; warnings do not)
 pnpm format:check            # Prettier check (pnpm format writes)
 pnpm test                    # Vitest, database free tests only
 pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
+pnpm demo:server             # Online demo: real API over SQLite sample data + web app on :3100
+pnpm test:live               # Playwright against the running demo server (real rules, real data flow)
 pnpm build                   # Bundle the API to dist/ with esbuild
 pnpm build:server            # Bundle the API into one file (dist-server/index.mjs) for the Docker image
 pnpm build:demo-apk          # Offline demo APK on EAS (profile demo); pnpm android:demo builds it locally

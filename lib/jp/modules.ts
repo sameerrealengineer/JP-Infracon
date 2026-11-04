@@ -65,6 +65,18 @@ export const MODULES = [
     detail: "Budget vs spend with approval",
     prefixes: ["budget."],
   },
+  {
+    key: "crm",
+    title: "Clients & leads (CRM)",
+    detail: "Clients, enquiries, follow-ups, quotations",
+    prefixes: ["crm."],
+  },
+  {
+    key: "billing",
+    title: "Client billing",
+    detail: "Contracts, RA bills with GST, receipts, receivables",
+    prefixes: ["billing."],
+  },
 ] as const;
 
 export type ModuleKey = (typeof MODULES)[number]["key"];
@@ -110,6 +122,8 @@ const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
   finance: ["petty_cash.", "supplier_payment.", "supplier_invoice.", "vendor."],
   documents: ["document."],
   budget: ["budget."],
+  crm: ["crm."],
+  billing: ["billing."],
 };
 
 /** Which module an audit action belongs to, for usage counts. */

@@ -13,6 +13,9 @@ describe("home layout", () => {
     const keys = groups.flatMap((group) => group.modules.map((module) => module.key));
     expect(keys).toEqual(["reports", "issues"]);
     expect(groups.map((group) => group.key)).toEqual(["site"]);
+    expect(visibleGroups(access(["crm.view", "billing.view"])).map((group) => group.key)).toEqual([
+      "business",
+    ]);
   });
 
   it("hides everything when no permission is held (e.g. all modules turned off)", () => {

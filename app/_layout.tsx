@@ -1,6 +1,6 @@
 import "@/global.css";
 import "@/lib/geofence-task";
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, focusManager } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,7 +10,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import {
@@ -32,6 +32,15 @@ import { useConnectivity } from "@/hooks/use-connectivity";
 import { loadServerAddress } from "@/lib/server-address";
 import { useIssueDraftSync } from "@/hooks/use-issue-draft-sync";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+
+// On phones there is no window focus: tell React Query when the app comes to the foreground.
+if (Platform.OS !== "web")
+  focusManager.setEventListener((handleFocus) => {
+    const subscription = AppState.addEventListener("change", (state) =>
+      handleFocus(state === "active"),
+    );
+    return () => subscription.remove();
+  });
 
 function ConnectivitySync() {
   const { online } = useConnectivity();
@@ -78,13 +87,15 @@ export default function RootLayout() {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Disable automatic refetching on window focus for mobile
-            refetchOnWindowFocus: false,
+            // Refresh when the app comes back to the foreground (wired to AppState below), so a
+            // change made by someone else (an approval, a payment) shows up.
+            refetchOnWindowFocus: true,
             // Retry failed requests once
             retry: 1,
             // Keep previously loaded records for offline viewing (restored from device storage).
             gcTime: 7 * 24 * 60 * 60 * 1000,
-            staleTime: 30_000,
+            // Short: screens refetch when opened, so they show what others just changed.
+            staleTime: 5_000,
           },
         },
       }),

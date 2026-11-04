@@ -83,6 +83,12 @@ export const permissionKeys = [
   "budget.view",
   "budget.manage",
   "budget.approve",
+  "crm.view",
+  "crm.manage",
+  "billing.view",
+  "billing.create",
+  "billing.approve",
+  "billing.receipt",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];

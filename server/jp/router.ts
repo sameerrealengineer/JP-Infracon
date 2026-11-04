@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, count, desc, eq, inArray, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -44,6 +44,8 @@ import { modulesRouter } from "./modules-router";
 import { assistantRouter } from "./assistant";
 import { presenceRouter } from "./presence";
 import { peopleRouter } from "./people";
+import { crmRouter } from "./crm";
+import { billingRouter } from "./billing";
 import { buildInbox } from "./inbox";
 import {
   checkReportItems,
@@ -183,6 +185,8 @@ export const jpRouter = router({
   assistant: assistantRouter,
   presence: presenceRouter,
   people: peopleRouter,
+  crm: crmRouter,
+  billing: billingRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);
@@ -455,11 +459,24 @@ export const jpRouter = router({
 
     auditEvents: protectedProcedure.query(async ({ ctx }) => {
       const db = requireDb(await (await import("../db")).getDb());
-      const capabilities = await siteCapabilities(ctx.user, await getAccessibleSites(ctx.user));
+      const accessible = await getAccessibleSites(ctx.user);
+      const capabilities = await siteCapabilities(ctx.user, accessible);
       const siteIds = capabilities.map((capability) => capability.siteId);
       if (siteIds.length === 0) return [];
       const auditSiteIds = sitesWithPermission(capabilities, siteIds, "audit.view");
       if (auditSiteIds.length === 0) return [];
+      // Company-level events (CRM, billing, settings) carry no site: shown to leaders and auditors.
+      const companyAuditOrgIds = [
+        ...new Set(
+          accessible
+            .filter(
+              (site) =>
+                auditSiteIds.includes(site.id) &&
+                ["owner", "director", "admin", "auditor"].includes(site.businessRole),
+            )
+            .map((site) => site.organizationId),
+        ),
+      ];
       const compensationSiteIds = sitesWithPermission(capabilities, siteIds, "compensation.view");
       const kycVisibleSiteIds = sitesWithPermission(capabilities, siteIds, "workforce.kyc.view");
       const financeVisibleSiteIds = sitesWithPermission(
@@ -515,7 +532,15 @@ export const jpRouter = router({
         .innerJoin(users, eq(auditEvents.actorUserId, users.id))
         .where(
           and(
-            inArray(auditEvents.siteId, auditSiteIds),
+            companyAuditOrgIds.length
+              ? or(
+                  inArray(auditEvents.siteId, auditSiteIds),
+                  and(
+                    isNull(auditEvents.siteId),
+                    inArray(auditEvents.organizationId, companyAuditOrgIds),
+                  ),
+                )
+              : inArray(auditEvents.siteId, auditSiteIds),
             compensationAuditVisibility,
             kycAuditVisibility,
             financeAuditVisibility,

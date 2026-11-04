@@ -334,8 +334,35 @@ const budgetRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["budget.view"],
 };
 
+/** CRM (clients, leads, quotations) and client billing (contracts, RA bills, receipts). */
+const commercialRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: [
+    "crm.view",
+    "crm.manage",
+    "billing.view",
+    "billing.create",
+    "billing.approve",
+    "billing.receipt",
+  ],
+  director: [
+    "crm.view",
+    "crm.manage",
+    "billing.view",
+    "billing.create",
+    "billing.approve",
+    "billing.receipt",
+  ],
+  admin: ["crm.view", "crm.manage", "billing.view", "billing.create", "billing.receipt"],
+  project_manager: ["crm.view", "crm.manage", "billing.view", "billing.create"],
+  supervisor: [],
+  accounts: ["crm.view", "billing.view", "billing.create", "billing.receipt"],
+  storekeeper: [],
+  auditor: ["crm.view", "billing.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    commercialRoleDefaults[role].includes(permissionKey) ||
     documentRoleDefaults[role].includes(permissionKey) ||
     budgetRoleDefaults[role].includes(permissionKey) ||
     issueRoleDefaults[role].includes(permissionKey) ||

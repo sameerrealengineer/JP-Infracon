@@ -2035,3 +2035,322 @@ export const whatsappBotMessages = mysqlTable(
     whatsappBotPhoneIndex: index("whatsapp_bot_phone_idx").on(table.phone, table.createdAt),
   }),
 );
+
+// ---------------------------------------------------------------------------------------------
+// CRM and client billing (lib/jp/billing-domain.ts). Money is exact paise in DECIMAL(18,0);
+// quantities are thousandths; tax and deduction rates are basis points. Totals are set by the
+// server. These are internal records, not GST returns or e-invoices.
+
+export const crmClients = mysqlTable(
+  "crm_clients",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 180 }).notNull(),
+    clientType: varchar("clientType", { length: 40 }).notNull(),
+    contactPerson: varchar("contactPerson", { length: 120 }),
+    phone: varchar("phone", { length: 20 }),
+    email: varchar("email", { length: 254 }),
+    gstin: varchar("gstin", { length: 15 }),
+    address: text("address"),
+    status: mysqlEnum("status", ["Active", "Inactive"]).default("Active").notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crmClientOrgIndex: index("crm_client_org_idx").on(table.organizationId, table.name),
+  }),
+);
+
+export const crmLeads = mysqlTable(
+  "crm_leads",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 }).references(() => crmClients.id, {
+      onDelete: "restrict",
+    }),
+    title: varchar("title", { length: 180 }).notNull(),
+    contactName: varchar("contactName", { length: 120 }),
+    phone: varchar("phone", { length: 20 }),
+    location: varchar("location", { length: 180 }),
+    source: varchar("source", { length: 40 }).notNull(),
+    stage: varchar("stage", { length: 32 }).notNull(),
+    estimatedValueMinor: decimal("estimatedValueMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }),
+    ownerUserId: int("ownerUserId").references(() => users.id, { onDelete: "restrict" }),
+    nextFollowUpOn: date("nextFollowUpOn", { mode: "string" }),
+    lostReason: text("lostReason"),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crmLeadOrgStageIndex: index("crm_lead_org_stage_idx").on(table.organizationId, table.stage),
+  }),
+);
+
+export const crmActivities = mysqlTable(
+  "crm_activities",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    leadId: varchar("leadId", { length: 36 })
+      .notNull()
+      .references(() => crmLeads.id, { onDelete: "restrict" }),
+    kind: varchar("kind", { length: 32 }).notNull(),
+    note: text("note").notNull(),
+    stageFrom: varchar("stageFrom", { length: 32 }),
+    stageTo: varchar("stageTo", { length: 32 }),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crmActivityLeadIndex: index("crm_activity_lead_idx").on(table.leadId, table.createdAt),
+  }),
+);
+
+export const quotations = mysqlTable(
+  "quotations",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 })
+      .notNull()
+      .references(() => crmClients.id, { onDelete: "restrict" }),
+    leadId: varchar("leadId", { length: 36 }).references(() => crmLeads.id, {
+      onDelete: "restrict",
+    }),
+    quotationNumber: varchar("quotationNumber", { length: 40 }).notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Sent", "Accepted", "Rejected", "Expired"])
+      .default("Draft")
+      .notNull(),
+    quotationDate: date("quotationDate", { mode: "string" }).notNull(),
+    validUntil: date("validUntil", { mode: "string" }),
+    gstBps: int("gstBps").notNull(),
+    subtotalMinor: decimal("subtotalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    terms: text("terms"),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    quotationNumberUnique: uniqueIndex("quotation_org_number_uq").on(
+      table.organizationId,
+      table.quotationNumber,
+    ),
+  }),
+);
+
+export const quotationLines = mysqlTable("quotation_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  quotationId: varchar("quotationId", { length: 36 })
+    .notNull()
+    .references(() => quotations.id, { onDelete: "restrict" }),
+  lineNumber: int("lineNumber").notNull(),
+  itemCode: varchar("itemCode", { length: 40 }),
+  description: varchar("description", { length: 500 }).notNull(),
+  unit: varchar("unit", { length: 20 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** The client contract on a project: who pays, and the default GST and deductions. */
+export const projectContracts = mysqlTable("project_contracts", {
+  projectId: varchar("projectId", { length: 36 })
+    .primaryKey()
+    .references(() => projects.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  clientId: varchar("clientId", { length: 36 })
+    .notNull()
+    .references(() => crmClients.id, { onDelete: "restrict" }),
+  contractNumber: varchar("contractNumber", { length: 80 }),
+  quotationId: varchar("quotationId", { length: 36 }).references(() => quotations.id, {
+    onDelete: "restrict",
+  }),
+  gstBps: int("gstBps").notNull(),
+  retentionBps: int("retentionBps").notNull(),
+  tdsBps: int("tdsBps").notNull(),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Contract items (client BOQ) a project is billed against. */
+export const contractItems = mysqlTable(
+  "contract_items",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    itemCode: varchar("itemCode", { length: 40 }).notNull(),
+    description: varchar("description", { length: 500 }).notNull(),
+    unit: varchar("unit", { length: 20 }).notNull(),
+    contractQuantityThousandths: decimal("contractQuantityThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Active", "Removed"]).default("Active").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    contractItemCodeUnique: uniqueIndex("contract_item_project_code_uq").on(
+      table.projectId,
+      table.itemCode,
+    ),
+  }),
+);
+
+export const clientBills = mysqlTable(
+  "client_bills",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 })
+      .notNull()
+      .references(() => crmClients.id, { onDelete: "restrict" }),
+    billNumber: varchar("billNumber", { length: 40 }).notNull(),
+    billDate: date("billDate", { mode: "string" }).notNull(),
+    periodFrom: date("periodFrom", { mode: "string" }),
+    periodTo: date("periodTo", { mode: "string" }),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Rejected", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    gstBps: int("gstBps").notNull(),
+    retentionBps: int("retentionBps").notNull(),
+    tdsBps: int("tdsBps").notNull(),
+    workValueMinor: decimal("workValueMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    retentionMinor: decimal("retentionMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    tdsMinor: decimal("tdsMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    otherDeductionMinor: decimal("otherDeductionMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 300 }),
+    netReceivableMinor: decimal("netReceivableMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    reviewReason: text("reviewReason"),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    clientBillNumberUnique: uniqueIndex("client_bill_org_number_uq").on(
+      table.organizationId,
+      table.billNumber,
+    ),
+    clientBillProjectIndex: index("client_bill_project_idx").on(table.projectId, table.status),
+  }),
+);
+
+export const clientBillLines = mysqlTable("client_bill_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => clientBills.id, { onDelete: "restrict" }),
+  contractItemId: varchar("contractItemId", { length: 36 }).references(() => contractItems.id, {
+    onDelete: "restrict",
+  }),
+  lineNumber: int("lineNumber").notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  unit: varchar("unit", { length: 20 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** Money received from a client against an approved bill. A ledger record, not a bank check. */
+export const clientReceipts = mysqlTable("client_receipts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => clientBills.id, { onDelete: "restrict" }),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  receivedOn: date("receivedOn", { mode: "string" }).notNull(),
+  mode: varchar("mode", { length: 32 }).notNull(),
+  reference: varchar("reference", { length: 120 }),
+  status: mysqlEnum("status", ["Recorded", "Reversed"]).default("Recorded").notNull(),
+  reversalReason: text("reversalReason"),
+  clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+  createdBy: int("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});

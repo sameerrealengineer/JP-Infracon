@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
@@ -33,6 +34,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     staleTime: 0,
   });
   const loginMutation = trpc.auth.login.useMutation();
+  const queryClient = useQueryClient();
   const bootstrapMutation = trpc.auth.bootstrapFirstSuperAdmin.useMutation();
   const changePasswordMutation = trpc.auth.changePassword.useMutation();
   const [username, setUsername] = useState("");
@@ -59,6 +61,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     };
     sessionToken: string | null;
   }) => {
+    // A new sign-in never shows records cached for whoever used this phone before.
+    queryClient.clear();
     if (result.sessionToken) await Auth.setSessionToken(result.sessionToken);
     await Auth.setUserInfo({
       id: result.user.id,

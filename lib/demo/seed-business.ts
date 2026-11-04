@@ -437,4 +437,198 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     movementId: expense.id,
     clientMutationId: id(),
   });
+
+  // Clients, enquiries at different stages, quotations, the project contract and RA bills.
+  const director = await signIn("director");
+  const projectId = workspace.projectId;
+  const board = await manager.jp.crm.clients.create({
+    name: "Bhubaneswar Development Authority",
+    clientType: "Government",
+    contactPerson: "Er. S. Mohapatra",
+    phone: "9437000101",
+    gstin: "21AAAGB1234C1Z2",
+    address: "Akash Shova Building, Sachivalaya Marg, Bhubaneswar",
+    clientMutationId: id(),
+  });
+  const builder = await manager.jp.crm.clients.create({
+    name: "Kalinga Homes Pvt Ltd",
+    clientType: "Builder",
+    contactPerson: "Rakesh Panda",
+    phone: "9437000202",
+    clientMutationId: id(),
+  });
+  const won = await manager.jp.crm.leads.create({
+    title: "Patia Tower A civil works",
+    clientId: board.id,
+    source: "Tender",
+    estimatedValueRupees: "3500000",
+    location: "Patia, Bhubaneswar",
+    nextFollowUpOn: day(5),
+    note: "Tender floated by BDA; site visit done with their engineer",
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.leads.addActivity({
+    leadId: won.id,
+    kind: "Meeting",
+    note: "Rates negotiated; BDA asked for revised brickwork rate",
+    clientMutationId: id(),
+  });
+  const quote = await manager.jp.crm.quotations.create({
+    clientId: board.id,
+    leadId: won.id,
+    title: "Civil works, Patia Tower A",
+    quotationDate: day(-40),
+    validUntil: day(-10),
+    gstPercent: "18",
+    terms: "Running bills monthly; payment within 30 days; 5% retention till handover.",
+    lines: [
+      {
+        itemCode: "1.1",
+        description: "Earthwork excavation in foundation",
+        unit: "cum",
+        quantity: "850",
+        rateRupees: "285",
+      },
+      {
+        itemCode: "2.1",
+        description: "PCC M15 in foundation",
+        unit: "cum",
+        quantity: "120",
+        rateRupees: "5400",
+      },
+      {
+        itemCode: "3.1",
+        description: "RCC M25 columns and beams",
+        unit: "cum",
+        quantity: "310",
+        rateRupees: "7850",
+      },
+      {
+        itemCode: "4.1",
+        description: "Brickwork in CM 1:6",
+        unit: "cum",
+        quantity: "420",
+        rateRupees: "6200",
+      },
+    ],
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.quotations.setStatus({
+    quotationId: quote.id,
+    status: "Sent",
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.quotations.setStatus({
+    quotationId: quote.id,
+    status: "Accepted",
+    clientMutationId: id(),
+  });
+  const followUp = await manager.jp.crm.leads.create({
+    title: "G+4 apartment block, Raghunathpur",
+    clientId: builder.id,
+    source: "Referral",
+    estimatedValueRupees: "18000000",
+    location: "Raghunathpur",
+    nextFollowUpOn: day(-1),
+    note: "Referred by our structural consultant",
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.leads.move({
+    leadId: followUp.id,
+    stage: "Site visit",
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.quotations.create({
+    clientId: builder.id,
+    leadId: followUp.id,
+    title: "Structure only, G+4 block",
+    quotationDate: day(-3),
+    validUntil: day(27),
+    gstPercent: "18",
+    lines: [
+      {
+        itemCode: "S1",
+        description: "RCC frame structure (per sqft built-up)",
+        unit: "sqft",
+        quantity: "24000",
+        rateRupees: "720",
+      },
+    ],
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.leads.create({
+    title: "Boundary wall, school campus",
+    contactName: "Headmaster, Govt High School",
+    phone: "9437000303",
+    source: "Walk-in",
+    estimatedValueRupees: "650000",
+    nextFollowUpOn: day(2),
+    clientMutationId: id(),
+  });
+  const lost = await manager.jp.crm.leads.create({
+    title: "Warehouse flooring, Cuttack",
+    source: "Phone",
+    estimatedValueRupees: "1200000",
+    clientMutationId: id(),
+  });
+  await manager.jp.crm.leads.move({
+    leadId: lost.id,
+    stage: "Lost",
+    reason: "Client chose a lower rate from a local contractor",
+    clientMutationId: id(),
+  });
+
+  await accounts.jp.billing.contract.fromQuotation({
+    projectId,
+    quotationId: quote.id,
+    retentionPercent: "5",
+    tdsPercent: "2",
+    clientMutationId: id(),
+  });
+  const contract = await accounts.jp.billing.contract.get({ projectId });
+  const item = (code: string) => contract.items.find((row) => row.itemCode === code)!.id;
+  const ra1 = await accounts.jp.billing.bills.create({
+    projectId,
+    billDate: day(-20),
+    periodFrom: day(-50),
+    periodTo: day(-21),
+    lines: [
+      { contractItemId: item("1.1"), quantity: "850" },
+      { contractItemId: item("2.1"), quantity: "120" },
+    ],
+    clientMutationId: id(),
+  });
+  await accounts.jp.billing.bills.transition({
+    billId: ra1.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
+  await director.jp.billing.bills.transition({
+    billId: ra1.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
+  await accounts.jp.billing.receipts.record({
+    billId: ra1.id,
+    amountRupees: "500000",
+    receivedOn: day(-5),
+    mode: "Bank transfer",
+    reference: "NEFT BDA 22871",
+    clientMutationId: id(),
+  });
+  const ra2 = await accounts.jp.billing.bills.create({
+    projectId,
+    billDate: day(-1),
+    periodFrom: day(-20),
+    periodTo: day(-2),
+    lines: [{ contractItemId: item("3.1"), quantity: "95.5" }],
+    otherDeductionRupees: "2500",
+    otherDeductionNote: "Water and electricity from client supply",
+    clientMutationId: id(),
+  });
+  await accounts.jp.billing.bills.transition({
+    billId: ra2.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
 }
