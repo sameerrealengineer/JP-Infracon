@@ -191,4 +191,10 @@ describe("commercial exact-amount domain", () => {
       /exceed/,
     );
   });
+
+  it("formats negative paise text (a difference) without crashing", () => {
+    expect(formatMinorAsRupees("-3043840")).toBe("−₹30,438.40");
+    expect(formatMinorAsRupees("0")).toBe("₹0.00");
+    expect(() => formatMinorAsRupees("12.5")).toThrow();
+  });
 });

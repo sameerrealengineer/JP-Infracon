@@ -33,6 +33,22 @@ export const BILL_TONE: Record<string, Tone> = {
   Paid: "success",
 };
 
+export const PO_TONE: Record<string, Tone> = {
+  Draft: "info",
+  Submitted: "accent",
+  Approved: "success",
+  Rejected: "error",
+  Cancelled: "warning",
+  Closed: "info",
+  "Not received": "warning",
+  "Part received": "accent",
+  Received: "success",
+  Matches: "success",
+  "Billed more than received": "error",
+  "Billed less": "warning",
+  "No bill yet": "info",
+};
+
 export const commercialStyles = StyleSheet.create({
   content: { paddingBottom: 32, gap: 10 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },

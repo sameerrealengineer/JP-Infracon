@@ -6,6 +6,7 @@ import {
   materialRequests,
   pettyCashFunds,
   pettyCashMovements,
+  purchaseOrders,
   siteIssues,
   sites,
   supplierInvoices,
@@ -132,6 +133,44 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         occurredAt: iso(row.at),
         route: "/(tabs)/reports",
         severity: "high",
+      });
+  });
+  await guard("purchase", async () => {
+    const approveSites = sitesWith(capabilities, "purchase.approve");
+    if (!approveSites.length) return;
+    const rows = await db
+      .select({
+        id: purchaseOrders.id,
+        poNumber: purchaseOrders.poNumber,
+        total: purchaseOrders.totalMinor,
+        vendorName: vendors.legalName,
+        siteId: purchaseOrders.siteId,
+        siteName: sites.name,
+        at: purchaseOrders.updatedAt,
+      })
+      .from(purchaseOrders)
+      .innerJoin(sites, eq(purchaseOrders.siteId, sites.id))
+      .innerJoin(vendors, eq(purchaseOrders.vendorId, vendors.id))
+      .where(
+        and(
+          inArray(purchaseOrders.siteId, approveSites),
+          eq(purchaseOrders.status, "Submitted"),
+          ne(purchaseOrders.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(purchaseOrders.updatedAt))
+      .limit(LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `purchase-${row.id}`,
+        kind: "purchase.review",
+        title: "Purchase order awaiting approval",
+        detail: `${row.poNumber} · ${row.vendorName} · ${formatMinorAsRupees(row.total)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/po?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
       });
   });
   await guard("material", async () => {

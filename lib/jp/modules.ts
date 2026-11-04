@@ -66,6 +66,12 @@ export const MODULES = [
     prefixes: ["budget."],
   },
   {
+    key: "purchase",
+    title: "Purchase",
+    detail: "Purchase orders, quotes, goods receipts, bill matching",
+    prefixes: ["purchase."],
+  },
+  {
     key: "crm",
     title: "Clients & leads (CRM)",
     detail: "Clients, enquiries, follow-ups, quotations",
@@ -122,6 +128,7 @@ const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
   finance: ["petty_cash.", "supplier_payment.", "supplier_invoice.", "vendor."],
   documents: ["document."],
   budget: ["budget."],
+  purchase: ["purchase."],
   crm: ["crm."],
   billing: ["billing."],
 };

@@ -42,6 +42,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `crm.ts` | `jp.crm`: clients, enquiries (leads) with stages and follow-ups, quotations (server-numbered QT-YYYY-NNNN, exact GST totals); accepting a quotation wins its enquiry |
 | `billing.ts` | `jp.billing`: project contract (client, GST/retention/TDS), contract items (client BOQ, also from an accepted quotation), RA bills (cumulative quantity checked, maker-checker), receipts and reversals, receivables with ageing |
 | `system-check.ts` | `jp.systemCheck.run` (leaders): real calls to Gemini text, Gemini picture reading, Sarvam TTS → STT, storage, embeddings, WhatsApp config, with the provider's reason on failure; `voice` tests the phone's microphone |
+| `purchase.ts` | `jp.purchase` (site scoped, `purchase.*`): POs with competing quotes (server-numbered PO-SITE-NNN, GST per line), maker-checker approve/reject/close, goods receipts (GRN-SITE-NNN) with rejection reasons that send accepted catalogue material to the inventory ledger as Submitted Receipt/Inward, supplier bill matching (received value at PO rates vs linked bills); POs awaiting approval appear in the inbox |
 
 ## Conventions
 

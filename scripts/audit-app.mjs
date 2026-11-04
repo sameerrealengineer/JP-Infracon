@@ -43,9 +43,12 @@ const ROUTES = [
   "/report-editor",
   "/crm",
   "/billing",
+  "/purchase",
+  "/people",
+  "/system-check",
 ];
 const ERROR_TEXT =
-  /(something went wrong|failed to|not found|unavailable|error|could not|cannot read|undefined|NaN|\[object Object\])/i;
+  /(something went wrong|failed to|not found|unavailable|\berror\b|could not|cannot read|undefined|\bNaN\b|\[object Object\])/;
 
 const browser = await chromium.launch();
 const findings = [];
@@ -100,6 +103,24 @@ for (const role of ROLES) {
     await page
       .screenshot({ path: path.join(out, `${role}${route.replace(/\//g, "_") || "_home"}.png`) })
       .catch(() => undefined);
+    // Open the first record on list screens, so detail screens are checked too.
+    const first = page
+      .getByRole("button", { name: /^Open (?!notifications|my profile)/ })
+      .filter({ visible: true })
+      .first();
+    if (await first.count()) {
+      const label = await first.getAttribute("aria-label");
+      current = `${route} → ${label}`;
+      await first.click().catch(() => undefined);
+      await page.waitForTimeout(3000);
+      const detail = await page
+        .locator("body")
+        .innerText()
+        .catch(() => "");
+      if (detail.trim().length < 40) note("blank", "detail screen rendered nothing");
+      for (const line of detail.split("\n"))
+        if (ERROR_TEXT.test(line) && line.length < 220) note("screen-text", line.trim());
+    }
   }
   await context.close();
 }

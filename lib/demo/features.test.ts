@@ -112,8 +112,16 @@ describe("offline demo: every screen and workflow runs on the phone database", (
     const stock = await manager.jp.inventory.list({ siteId: siteA });
     const cement = stock.catalogue.find((item) => item.itemCode === "CEM-OPC53")!;
     expect(Number(cement.onHand)).toBe(200); // the 40 bag issue is still waiting for review
-    expect(stock.pendingReviewCount).toBe(1);
-    const pending = stock.movements.find((row) => row.status === "Submitted")!;
+    // The 40 bag issue, plus two goods-receipt inwards from the sample purchase order.
+    expect(stock.pendingReviewCount).toBe(3);
+    expect(
+      stock.movements.filter(
+        (row) => row.status === "Submitted" && row.movementType === "Receipt/Inward",
+      ),
+    ).toHaveLength(2);
+    const pending = stock.movements.find(
+      (row) => row.status === "Submitted" && row.movementType === "Issue/Consumption",
+    )!;
     await manager.jp.inventory.reviewMovement({
       movementId: pending.id,
       decision: "Post",

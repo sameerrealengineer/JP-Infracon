@@ -106,6 +106,15 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         quick: true,
       },
       {
+        key: "purchase",
+        title: "Purchase orders",
+        icon: "shopping-cart",
+        tone: "accent",
+        route: "/purchase",
+        anyOf: ["purchase.view"],
+        inboxKinds: ["purchase.review"],
+      },
+      {
         key: "inventory",
         title: "Stock",
         icon: "inventory",

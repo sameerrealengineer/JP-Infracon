@@ -89,6 +89,10 @@ export const permissionKeys = [
   "billing.create",
   "billing.approve",
   "billing.receipt",
+  "purchase.view",
+  "purchase.create",
+  "purchase.approve",
+  "purchase.receive",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];

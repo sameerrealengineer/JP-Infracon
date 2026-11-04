@@ -47,6 +47,7 @@ import { peopleRouter } from "./people";
 import { crmRouter } from "./crm";
 import { billingRouter } from "./billing";
 import { systemCheckRouter } from "./system-check";
+import { purchaseRouter } from "./purchase";
 import { buildInbox } from "./inbox";
 import {
   checkReportItems,
@@ -189,6 +190,7 @@ export const jpRouter = router({
   crm: crmRouter,
   billing: billingRouter,
   systemCheck: systemCheckRouter,
+  purchase: purchaseRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

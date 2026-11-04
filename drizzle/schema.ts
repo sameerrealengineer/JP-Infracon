@@ -2354,3 +2354,162 @@ export const clientReceipts = mysqlTable("client_receipts", {
     .references(() => users.id, { onDelete: "restrict" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+// ---------------------------------------------------------------------------------------------
+// Purchase (lib/jp/purchase-domain.ts): purchase orders with competing quotes, goods receipts
+// (GRN) that put accepted material into the inventory ledger, and supplier bills matched to
+// the order. Money in paise, quantities in thousandths, GST in basis points.
+
+export const purchaseOrders = mysqlTable(
+  "purchase_orders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    vendorId: varchar("vendorId", { length: 36 })
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    materialRequestId: varchar("materialRequestId", { length: 36 }).references(
+      () => materialRequests.id,
+      { onDelete: "restrict" },
+    ),
+    poNumber: varchar("poNumber", { length: 40 }).notNull(),
+    status: mysqlEnum("status", [
+      "Draft",
+      "Submitted",
+      "Approved",
+      "Rejected",
+      "Cancelled",
+      "Closed",
+    ])
+      .default("Draft")
+      .notNull(),
+    orderDate: date("orderDate", { mode: "string" }).notNull(),
+    expectedDate: date("expectedDate", { mode: "string" }),
+    deliveryAddress: text("deliveryAddress"),
+    terms: text("terms"),
+    subtotalMinor: decimal("subtotalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    poNumberUnique: uniqueIndex("po_org_number_uq").on(table.organizationId, table.poNumber),
+    poSiteStatusIndex: index("po_site_status_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const purchaseOrderLines = mysqlTable("purchase_order_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  lineNumber: int("lineNumber").notNull(),
+  materialItemId: varchar("materialItemId", { length: 36 }).references(() => materialItems.id, {
+    onDelete: "restrict",
+  }),
+  description: varchar("description", { length: 300 }).notNull(),
+  unitCode: varchar("unitCode", { length: 32 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  gstBps: int("gstBps").notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** Competing quotes recorded with a PO so the approver can compare. */
+export const purchaseOrderQuotes = mysqlTable("purchase_order_quotes", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  vendorId: varchar("vendorId", { length: 36 }).references(() => vendors.id, {
+    onDelete: "restrict",
+  }),
+  vendorName: varchar("vendorName", { length: 180 }).notNull(),
+  totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  deliveryDays: int("deliveryDays"),
+  note: varchar("note", { length: 300 }),
+  chosen: mysqlEnum("chosen", ["Yes", "No"]).default("No").notNull(),
+});
+
+export const goodsReceipts = mysqlTable(
+  "goods_receipts",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+    grnNumber: varchar("grnNumber", { length: 40 }).notNull(),
+    receivedOn: date("receivedOn", { mode: "string" }).notNull(),
+    challanNumber: varchar("challanNumber", { length: 80 }),
+    vehicleNumber: varchar("vehicleNumber", { length: 40 }),
+    note: text("note"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    grnNumberUnique: uniqueIndex("grn_org_number_uq").on(table.organizationId, table.grnNumber),
+    grnPoIndex: index("grn_po_idx").on(table.purchaseOrderId),
+  }),
+);
+
+export const goodsReceiptLines = mysqlTable("goods_receipt_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  goodsReceiptId: varchar("goodsReceiptId", { length: 36 })
+    .notNull()
+    .references(() => goodsReceipts.id, { onDelete: "restrict" }),
+  purchaseOrderLineId: varchar("purchaseOrderLineId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrderLines.id, { onDelete: "restrict" }),
+  acceptedThousandths: decimal("acceptedThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rejectedThousandths: decimal("rejectedThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rejectReason: varchar("rejectReason", { length: 300 }),
+  inventoryMovementId: varchar("inventoryMovementId", { length: 36 }),
+});
+
+/** A supplier bill (supplier_invoices) matched to the purchase order it is for. */
+export const purchaseInvoiceLinks = mysqlTable("purchase_invoice_links", {
+  invoiceId: varchar("invoiceId", { length: 36 })
+    .primaryKey()
+    .references(() => supplierInvoices.id, { onDelete: "restrict" }),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  linkedBy: int("linkedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  linkedAt: timestamp("linkedAt").defaultNow().notNull(),
+});

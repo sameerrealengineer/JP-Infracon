@@ -360,8 +360,22 @@ const commercialRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["crm.view", "billing.view"],
 };
 
+/** Purchase orders, goods receipts and bill matching (site scoped). */
+const allPurchase = ["purchase.view", "purchase.create", "purchase.approve", "purchase.receive"];
+const purchaseRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: allPurchase,
+  director: allPurchase,
+  admin: allPurchase,
+  project_manager: allPurchase,
+  supervisor: ["purchase.view", "purchase.receive"],
+  accounts: ["purchase.view", "purchase.create"],
+  storekeeper: ["purchase.view", "purchase.receive"],
+  auditor: ["purchase.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    purchaseRoleDefaults[role].includes(permissionKey) ||
     commercialRoleDefaults[role].includes(permissionKey) ||
     documentRoleDefaults[role].includes(permissionKey) ||
     budgetRoleDefaults[role].includes(permissionKey) ||

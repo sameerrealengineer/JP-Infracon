@@ -112,6 +112,14 @@ export default function MoreScreen() {
       show: can("workforce.view"),
     },
     {
+      icon: "shopping-cart",
+      title: "Purchase orders",
+      detail: "PO, vendor quotes, goods receipt, bill match",
+      tone: "accent",
+      route: "/purchase",
+      show: can("purchase.view"),
+    },
+    {
       icon: "inventory",
       title: "Inventory",
       detail: "Catalogue & stock ledger",

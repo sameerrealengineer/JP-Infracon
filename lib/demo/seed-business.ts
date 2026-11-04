@@ -631,4 +631,94 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     action: "submit",
     clientMutationId: id(),
   });
+
+  // Purchase: an approved order partly delivered, and one waiting for approval.
+  const po = await manager.jp.purchase.create({
+    siteId: siteA,
+    vendorId: supplier.id,
+    orderDate: day(-8),
+    expectedDate: day(-2),
+    terms: "Delivery at site. Payment 30 days after bill and goods receipt.",
+    lines: [
+      {
+        materialItemId: cement.id,
+        description: "OPC 53 grade cement",
+        unitCode: "bag",
+        quantity: "300",
+        rateRupees: "410",
+        gstPercent: "28",
+      },
+      {
+        materialItemId: steel.id,
+        description: "TMT bar 12 mm",
+        unitCode: "kg",
+        quantity: "2000",
+        rateRupees: "62",
+        gstPercent: "18",
+      },
+    ],
+    quotes: [
+      {
+        vendorId: supplier.id,
+        vendorName: "Kalinga Building Materials Pvt Ltd",
+        totalRupees: "303760",
+      },
+      { vendorName: "Utkal Cement & Steel", totalRupees: "318400", deliveryDays: 5 },
+      { vendorName: "Jagannath Traders", totalRupees: "311900", deliveryDays: 7 },
+    ],
+    clientMutationId: id(),
+  });
+  await manager.jp.purchase.transition({
+    siteId: siteA,
+    poId: po.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
+  await owner.jp.purchase.transition({
+    siteId: siteA,
+    poId: po.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
+  const poDetail = await supervisor.jp.purchase.detail({ siteId: siteA, poId: po.id });
+  await supervisor.jp.purchase.receive({
+    siteId: siteA,
+    poId: po.id,
+    receivedOn: day(-3),
+    challanNumber: "KBM/DC/2231",
+    vehicleNumber: "OD02AK4471",
+    lines: [
+      {
+        poLineId: poDetail.lines[0].id,
+        accepted: "196",
+        rejected: "4",
+        rejectReason: "Bags torn in transit",
+      },
+      { poLineId: poDetail.lines[1].id, accepted: "2000" },
+    ],
+    clientMutationId: id(),
+  });
+  const waiting = await accounts.jp.purchase.create({
+    siteId: siteA,
+    vendorId: supplier.id,
+    orderDate: day(0),
+    expectedDate: day(4),
+    lines: [
+      {
+        materialItemId: cement.id,
+        description: "OPC 53 grade cement",
+        unitCode: "bag",
+        quantity: "150",
+        rateRupees: "405",
+        gstPercent: "28",
+      },
+    ],
+    clientMutationId: id(),
+  });
+  await accounts.jp.purchase.transition({
+    siteId: siteA,
+    poId: waiting.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
 }
