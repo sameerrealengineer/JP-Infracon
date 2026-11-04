@@ -170,16 +170,23 @@ export async function getSiteScope(
         code: "FORBIDDEN",
         message: `Your current role does not include ${permissionKey} for this site.`,
       });
-    if (isPermissionDisabled(permissionKey, await disabledModulesFor(siteRow.organizationId))) {
-      const module = MODULES.find((row) => row.key === moduleForPermission(permissionKey));
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: `${module?.title ?? "This module"} is turned off for your company. An admin can turn it on in Settings → Modules.`,
-      });
-    }
+    await assertModuleOn(siteRow.organizationId, permissionKey);
   }
 
   return { ...siteRow, businessRole };
+}
+
+/**
+ * Refuses a permission whose module the company turned off. getSiteScope calls it; code that
+ * checks a site with a core key (site.view) and resolves the real permission itself must call it too.
+ */
+export async function assertModuleOn(organizationId: string, permissionKey: string) {
+  if (!isPermissionDisabled(permissionKey, await disabledModulesFor(organizationId))) return;
+  const module = MODULES.find((row) => row.key === moduleForPermission(permissionKey));
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: `${module?.title ?? "This module"} is turned off for your company. An admin can turn it on in Settings → Modules.`,
+  });
 }
 
 export async function getAccessibleSites(user: User) {

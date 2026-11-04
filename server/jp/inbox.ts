@@ -96,6 +96,10 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
     }
   });
   await guard("returned", async () => {
+    const reportSites = [
+      ...new Set([...sitesWith(capabilities, "dpr.view"), ...sitesWith(capabilities, "dlr.view")]),
+    ];
+    if (!reportSites.length) return;
     const returned = await db
       .select({
         id: dailyReports.id,
@@ -112,7 +116,8 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         and(
           eq(dailyReports.createdBy, userId),
           eq(dailyReports.status, "Returned for Correction"),
-          inArray(dailyReports.siteId, allSiteIds),
+          // Only sites where reports are visible, so a turned-off module stays out of the inbox.
+          inArray(dailyReports.siteId, reportSites),
         ),
       )
       .limit(LIMIT);

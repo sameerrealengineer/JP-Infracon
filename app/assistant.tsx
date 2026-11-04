@@ -8,6 +8,8 @@ import {
   useAudioRecorder,
   type AudioPlayer,
 } from "expo-audio";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
@@ -24,9 +26,17 @@ import {
 } from "react-native";
 
 import { AuthGate } from "@/components/jp/auth-gate";
+import { LiveTalk } from "@/components/jp/live-talk";
 import { AppHeader, ChipGroup, EmptyState, InlineError, Screen } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { audioFileFromBase64, readBase64 } from "@/lib/device-files";
+import { audioFileFromBase64, compressPhoto, readBase64 } from "@/lib/device-files";
+import {
+  ASSISTANT_PICKER_TYPES,
+  MAX_ASSISTANT_FILES,
+  MAX_ASSISTANT_FILE_BYTES,
+  base64Bytes,
+} from "@/lib/jp/assistant-files";
+import { formatBytes } from "@/lib/jp/attachment-policy";
 import type { AssistantAction } from "@/lib/jp/assistant-catalog";
 import { trpc } from "@/lib/trpc";
 
@@ -34,7 +44,14 @@ const LANGUAGES = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "
 type Lang = keyof typeof LANGUAGES;
 const MAX_SECONDS = 28;
 
-type Message = { id: string; role: "user" | "assistant"; text: string; action?: AssistantAction };
+type Attached = { id: string; name: string; base64: string; photo: boolean };
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  action?: AssistantAction;
+  files?: string[];
+};
 
 const EXAMPLES = [
   "Aaj ka kaam kya baaki hai?",
@@ -58,9 +75,12 @@ export default function AssistantScreen() {
   const transcribe = trpc.jp.ai.transcribe.useMutation();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [language, setLanguage] = useState<Lang>("hi-IN");
+  const [liveOpen, setLiveOpen] = useState(false);
   const [speakReplies, setSpeakReplies] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [attached, setAttached] = useState<Attached[]>([]);
+  const [attachOpen, setAttachOpen] = useState(false);
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,7 +96,7 @@ export default function AssistantScreen() {
 
   const play = async (text: string) => {
     try {
-      const audio = await speak.mutateAsync({ text, language });
+      const audio = await speak.mutateAsync({ text: text.slice(0, 1200), language });
       player.current?.remove();
       await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
       player.current = createAudioPlayer({
@@ -88,16 +108,83 @@ export default function AssistantScreen() {
     }
   };
 
+  const addFile = (file: Omit<Attached, "id">) => {
+    if (base64Bytes(file.base64) > MAX_ASSISTANT_FILE_BYTES)
+      throw new Error(`${file.name} is larger than 10 MB.`);
+    setAttached((prev) => [...prev, { ...file, id: newId("f") }].slice(0, MAX_ASSISTANT_FILES));
+  };
+
+  const attach = async (source: "camera" | "gallery" | "file") => {
+    setError(null);
+    setAttachOpen(false);
+    try {
+      if (attached.length >= MAX_ASSISTANT_FILES)
+        throw new Error(`Attach at most ${MAX_ASSISTANT_FILES} files at a time.`);
+      if (source === "file") {
+        const result = await DocumentPicker.getDocumentAsync({
+          type: ASSISTANT_PICKER_TYPES,
+          copyToCacheDirectory: true,
+          multiple: true,
+        });
+        if (result.canceled) return;
+        for (const asset of result.assets.slice(0, MAX_ASSISTANT_FILES - attached.length)) {
+          if (asset.size && asset.size > MAX_ASSISTANT_FILE_BYTES)
+            throw new Error(`${asset.name} is larger than 10 MB.`);
+          const photo = (asset.mimeType ?? "").startsWith("image/");
+          addFile({
+            name: asset.name,
+            base64:
+              photo && Platform.OS !== "web"
+                ? await compressPhoto(asset.uri)
+                : await readBase64(asset.uri),
+            photo,
+          });
+        }
+        return;
+      }
+      if (source === "camera") {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) throw new Error("Camera permission was not given.");
+      }
+      const result =
+        source === "camera"
+          ? await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 })
+          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.9 });
+      if (result.canceled || !result.assets[0]) return;
+      const asset = result.assets[0];
+      addFile({
+        name: asset.fileName ?? `photo-${new Date().toISOString().slice(0, 10)}.jpg`,
+        base64:
+          Platform.OS === "web" ? await readBase64(asset.uri) : await compressPhoto(asset.uri),
+        photo: true,
+      });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The file could not be read.");
+    }
+  };
+
   const send = async (raw: string) => {
-    const text = raw.trim();
+    const text = raw.trim() || (attached.length ? t("Explain these files") : "");
     if (!text || busy) return;
     setError(null);
     setInput("");
+    const files = attached;
+    setAttached([]);
     const history = messages.slice(-8).map(({ role, text: t }) => ({ role, text: t }));
-    const mine: Message = { id: newId("u"), role: "user", text };
+    const mine: Message = {
+      id: newId("u"),
+      role: "user",
+      text,
+      files: files.map((file) => file.name),
+    };
     setMessages((prev) => [...prev, mine]);
     try {
-      const answer = await ask.mutateAsync({ text, history, siteId });
+      const answer = await ask.mutateAsync({
+        text,
+        history,
+        siteId,
+        files: files.map(({ name, base64 }) => ({ name, base64 })),
+      });
       setMessages((prev) => [
         ...prev,
         { id: newId("a"), role: "assistant", text: answer.reply, action: answer.action },
@@ -182,6 +269,28 @@ export default function AssistantScreen() {
               onChange={setLanguage}
               format={(key) => LANGUAGES[key]}
             />
+            {status.data?.voice && status.data.speech && Platform.OS !== "web" && siteId ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("Live talk")}
+                onPress={() => setLiveOpen(true)}
+                style={({ pressed }) => [
+                  styles.live,
+                  { backgroundColor: colors.primary },
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <MaterialIcons name="record-voice-over" size={22} color={colors.background} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.liveTitle, { color: colors.background }]}>
+                    {t("Live talk")}
+                  </Text>
+                  <Text style={[styles.liveDetail, { color: colors.background }]}>
+                    {t("Hands-free conversation in Odia, Hindi or English")}
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
             {status.data?.speech ? (
               <View style={styles.toggle}>
                 <MaterialIcons name="volume-up" size={18} color={colors.muted} />
@@ -237,6 +346,21 @@ export default function AssistantScreen() {
                 >
                   {message.text}
                 </Text>
+                {message.files?.length ? (
+                  <View style={styles.fileList}>
+                    {message.files.map((name) => (
+                      <View key={name} style={styles.fileTag}>
+                        <MaterialIcons name="attach-file" size={14} color={colors.background} />
+                        <Text
+                          style={[styles.fileTagText, { color: colors.background }]}
+                          numberOfLines={1}
+                        >
+                          {name}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
                 {message.action && message.action.type !== "none" ? (
                   <Pressable
                     accessibilityRole="button"
@@ -284,6 +408,66 @@ export default function AssistantScreen() {
             {error ? <InlineError message={error} /> : null}
           </ScrollView>
 
+          {!unavailable && (attached.length > 0 || attachOpen) ? (
+            <View style={styles.tray}>
+              {attached.map((file) => (
+                <View
+                  key={file.id}
+                  style={[
+                    styles.chip,
+                    { borderColor: colors.border, backgroundColor: colors.surface },
+                  ]}
+                >
+                  <MaterialIcons
+                    name={file.photo ? "image" : "description"}
+                    size={16}
+                    color={colors.primary}
+                  />
+                  <Text style={[styles.chipText, { color: colors.foreground }]} numberOfLines={1}>
+                    {file.name} · {formatBytes(base64Bytes(file.base64))}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${file.name}`}
+                    hitSlop={8}
+                    onPress={() => setAttached((prev) => prev.filter((row) => row.id !== file.id))}
+                  >
+                    <MaterialIcons name="close" size={16} color={colors.muted} />
+                  </Pressable>
+                </View>
+              ))}
+              {attachOpen ? (
+                <View style={styles.menu}>
+                  {(
+                    [
+                      ...(Platform.OS !== "web"
+                        ? ([["camera", "photo-camera", "Camera"]] as const)
+                        : []),
+                      ["gallery", "photo-library", "Gallery"],
+                      ["file", "upload-file", "PDF, drawing, Word, Excel"],
+                    ] as const
+                  ).map(([source, icon, label]) => (
+                    <Pressable
+                      key={source}
+                      accessibilityRole="button"
+                      onPress={() => void attach(source)}
+                      style={({ pressed }) => [
+                        styles.menuItem,
+                        { borderColor: colors.border, backgroundColor: colors.surface },
+                        pressed && { opacity: 0.7 },
+                      ]}
+                    >
+                      <MaterialIcons name={icon} size={20} color={colors.accent} />
+                      <Text style={[styles.chipText, { color: colors.foreground }]}>
+                        {t(label)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
           {!unavailable ? (
             <View
               style={[
@@ -291,6 +475,22 @@ export default function AssistantScreen() {
                 { borderColor: colors.border, backgroundColor: colors.background },
               ]}
             >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("Attach a file")}
+                disabled={busy || attached.length >= MAX_ASSISTANT_FILES}
+                onPress={() => setAttachOpen((open) => !open)}
+                style={[
+                  styles.attach,
+                  { borderColor: colors.border, backgroundColor: colors.surface },
+                ]}
+              >
+                <MaterialIcons
+                  name={attachOpen ? "close" : "attach-file"}
+                  size={22}
+                  color={colors.primary}
+                />
+              </Pressable>
               <TextInput
                 value={input}
                 onChangeText={setInput}
@@ -308,7 +508,7 @@ export default function AssistantScreen() {
                   },
                 ]}
               />
-              {input.trim() ? (
+              {input.trim() || attached.length ? (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Send"
@@ -335,6 +535,20 @@ export default function AssistantScreen() {
             </View>
           ) : null}
         </KeyboardAvoidingView>
+        <LiveTalk
+          visible={liveOpen}
+          onClose={() => setLiveOpen(false)}
+          siteId={siteId}
+          language={language}
+          history={messages.slice(-8).map(({ role, text }) => ({ role, text }))}
+          onTurn={(question, reply, action) =>
+            setMessages((prev) => [
+              ...prev,
+              { id: newId("u"), role: "user", text: question },
+              { id: newId("a"), role: "assistant", text: reply, action },
+            ])
+          }
+        />
       </Screen>
     </AuthGate>
   );
@@ -343,6 +557,15 @@ export default function AssistantScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingBottom: 24, gap: 10 },
+  live: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 16,
+    padding: 14,
+  },
+  liveTitle: { fontSize: 15, fontWeight: "800" },
+  liveDetail: { fontSize: 12, opacity: 0.85, marginTop: 2 },
   toggle: { flexDirection: "row", alignItems: "center", gap: 8 },
   toggleText: { flex: 1, fontSize: 13, fontWeight: "700" },
   examples: { gap: 8, marginTop: 6 },
@@ -389,6 +612,38 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 15,
   },
+  attach: {
+    width: 44,
+    height: 48,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tray: { gap: 8, paddingTop: 8 },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  chipText: { flex: 1, fontSize: 13, fontWeight: "600" },
+  menu: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  fileList: { gap: 4 },
+  fileTag: { flexDirection: "row", alignItems: "center", gap: 4 },
+  fileTagText: { fontSize: 12, fontWeight: "600", flexShrink: 1 },
   round: {
     width: 50,
     height: 50,

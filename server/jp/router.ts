@@ -43,6 +43,7 @@ import { placesRouter } from "./places";
 import { modulesRouter } from "./modules-router";
 import { assistantRouter } from "./assistant";
 import { presenceRouter } from "./presence";
+import { peopleRouter } from "./people";
 import { buildInbox } from "./inbox";
 import {
   checkReportItems,
@@ -181,6 +182,7 @@ export const jpRouter = router({
   modules: modulesRouter,
   assistant: assistantRouter,
   presence: presenceRouter,
+  people: peopleRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

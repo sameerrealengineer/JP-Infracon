@@ -23,7 +23,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `exports.ts` | Permission-scoped CSV exports with metadata and an audit row per export |
 | `attendance.ts` | Daily roster, marking, maker-checker approval, labour cost estimate |
 | `delegation.ts` | Time-limited delegation of authority (bundles of grants, `approval.self`), revoke, `mine` banner |
-| `notify.ts` | `dispatchAlert` over Expo push, WhatsApp (WAHA / Evolution API / Cloud API) and SMS (android-sms-gateway / textbee) from env; device and preference procedures |
+| `notify.ts` | `dispatchAlert` over Expo push, WhatsApp (WAHA / Evolution API / Cloud API) and SMS (android-sms-gateway / textbee) from env; device and preference procedures; `dispatchAlert` applies company `alert_rules` per category and role, personal `user_alert_mutes`, opt-ins and module switches (skips are logged); `alertRules`/`saveAlertRules` (leaders, audited), `myMutes`/`setMutes`, `recentDeliveries` (leaders) |
 | `ai.ts` | Gemini bill scan and issue filling, Sarvam speech-to-text; keys from env only, per-user hourly limit |
 | `presence.ts` | Site geofences for phones, arrival/departure records with plausibility check, presence log |
 | `finance.ts` | Suppliers and invoices; mounts `supplier-payments.ts` and `petty-cash.ts` |
@@ -34,8 +34,10 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `places.ts` | `placeCards` (cover photo + progress per site/project), schedule dashboard, `setCover` (`site.manage`) |
 | `module-settings.ts` | Disabled modules per company (30 s cache); `getSiteScope` and `siteCapabilities` refuse/hide their permissions |
 | `modules-router.ts` | Module list with 30-day usage, on/off by owner/director/admin, AI suggestion (never applied by itself) |
-| `assistant.ts` | In-app assistant: answers from the person's data, one safe action (open screen / start draft), Sarvam TTS replies |
+| `assistant.ts` | In-app assistant: answers from the person's data, one safe action (open screen / start draft), Sarvam TTS replies; up to 3 attached files per question (photos/PDF to Gemini, Word/Excel/CSV as text; not stored). `answerQuestion(user, …)` is shared with the WhatsApp bot |
 | `document-index.ts` | After upload: text from Office/CSV (no AI) or Gemini reader (PDF/photo), passages, Gemini Embedding 2 vectors (768) when `GEMINI_API_KEY` is set; sets `indexStatus` |
+| `people.ts` | People directory: `search`, `history` (sites, attendance and estimated earnings, rates, feedback, linked subcontractor firm bills/payments; each part limited by permission per site), `saveDetails`, append-only `addFeedback` (`workforce.manage`) |
+| `whatsapp-bot.ts` | 24-hour WhatsApp bot: `POST /api/whatsapp/webhook` (mounted before the JSON parser; HMAC `X-OpenWA-Signature` with `OPENWA_WEBHOOK_SECRET`; on only with `WHATSAPP_BOT=on`). Staff matched by saved mobile get `answerQuestion` with their own permissions; strangers get one note a day and no data. Logs to `whatsapp_bot_messages` (dedupe by WhatsApp id). Setup: `scripts/setup-whatsapp-bot.sh` |
 
 ## Conventions
 
@@ -51,6 +53,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 
 - Maker-checker checks call `selfApprovalAllowed` (from `access.ts`): the same person may approve their own record only while a delegation grants `approval.self` for that site.
 - Alerts are best effort and never throw; they run after the transaction commits.
+- A procedure that checks the site with a core key (`site.view`) and resolves the real permission itself must call `assertModuleOn(organizationId, key)`, or a turned-off module still works (this was the workforce and petty-cash acknowledge bug).
 
 - The database has no CHECK constraints. Positive amounts, date ordering, and non negative balances are enforced only here; do not claim the database enforces them.
 - Supplier payment posting and petty cash entries are app ledger events, not bank transfers.

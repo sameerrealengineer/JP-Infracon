@@ -51,6 +51,45 @@ describe("company modules", () => {
     );
   });
 
+  it("workforce turned off is refused, not only hidden", async () => {
+    const sites = await owner.jp.workspace.mySites();
+    expect(Array.isArray(await owner.jp.workforce.list({ siteId: sites[0].id }))).toBe(true);
+    await owner.jp.modules.update({ disabled: ["workforce"] });
+    try {
+      await expect(owner.jp.workforce.list({ siteId: sites[0].id })).rejects.toThrow(/turned off/);
+      await expect(owner.jp.workforce.rates({ siteId: sites[0].id })).rejects.toThrow(/turned off/);
+    } finally {
+      await owner.jp.modules.update({ disabled: [] });
+    }
+  });
+
+  it("finance turned off also refuses the custodian's fund acknowledgement", async () => {
+    const sites = await owner.jp.workspace.mySites();
+    await owner.jp.modules.update({ disabled: ["finance"] });
+    try {
+      await expect(
+        owner.jp.finance.pettyCash.acknowledgeFund({
+          siteId: sites[0].id,
+          fundId: "00000000-0000-4000-8000-000000000000",
+          clientMutationId: `probe-${Date.now()}-ack-fund`,
+        }),
+      ).rejects.toThrow(/turned off/);
+    } finally {
+      await owner.jp.modules.update({ disabled: [] });
+    }
+  });
+
+  it("reports turned off hides returned reports from the inbox", async () => {
+    await owner.jp.modules.update({ disabled: ["reports", "schedule"] });
+    try {
+      const inbox = await owner.jp.workspace.inbox();
+      expect(inbox.items.filter((item) => item.kind.startsWith("report."))).toHaveLength(0);
+      expect(inbox.items.filter((item) => item.kind.startsWith("task."))).toHaveLength(0);
+    } finally {
+      await owner.jp.modules.update({ disabled: [] });
+    }
+  });
+
   it("suggests modules from usage when AI is not set up", async () => {
     const suggestion = await owner.jp.modules.suggest({ about: "Small building contractor" });
     expect(suggestion.source).toBe("rules");

@@ -40,6 +40,12 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `modules.ts` | Company modules that can be turned off, permission → module, audit action → module |
 | `assistant-catalog.ts` | Screens the assistant may open and `resolveAssistantAction` (only allowed screens, own sites, drafts where the person may create) |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
+| `home-layout.ts` | Home screen module groups, quick actions and badge counts from capabilities and inbox kinds |
+| `assistant-files.ts` | Assistant attachments: limits, type from bytes, Office to text, CAD refusal message |
+| `person-history.ts` | Feedback kinds and validation, attendance and estimated earnings per site (exact paise), rating summary |
+| `alert-rules.ts` | Alert categories, per-role channel rules, `decideChannels` (rules, mutes, opt-ins, module off, SMS urgent only) |
+| `whatsapp-bot.ts` | Parsing OpenWA `message.received` (private chats only, phone from `@c.us` or `senderPhone`), fixed bot replies, one stranger note a day |
+| `voice-turn.ts` | Live talk: speech start/end from microphone level (dBFS), idle and max turn, reply language from the detected one |
 
 ## Conventions
 

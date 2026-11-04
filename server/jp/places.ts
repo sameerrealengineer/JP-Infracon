@@ -14,6 +14,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { storageGetSignedUrl } from "../storage";
 import { getAccessibleSites, getSiteScope } from "./access";
+import { disabledModulesFor } from "./module-settings";
 import {
   summarizeProgress,
   taskProgressTenths,
@@ -90,7 +91,14 @@ export async function placeCards(user: Parameters<typeof getAccessibleSites>[0])
   const accessible = await getAccessibleSites(user);
   if (accessible.length === 0) return { sites: [], projects: [], today: todayIn() };
   const db = requireDb(await getDb());
+  // Progress comes from schedule tasks, so it stays empty where the Schedule module is off.
+  const scheduleOff = new Set<string>();
+  for (const orgId of new Set(accessible.map((site) => site.organizationId)))
+    if ((await disabledModulesFor(orgId)).includes("schedule")) scheduleOff.add(orgId);
   const siteIds = accessible.map((site) => site.id);
+  const taskSiteIds = accessible
+    .filter((site) => !scheduleOff.has(site.organizationId))
+    .map((site) => site.id);
   const projectIds = [...new Set(accessible.map((site) => site.projectId))];
   const [siteRows, projectRows, taskRows] = await Promise.all([
     db
@@ -110,7 +118,7 @@ export async function placeCards(user: Parameters<typeof getAccessibleSites>[0])
         plannedEnd: workTasks.plannedEnd,
       })
       .from(workTasks)
-      .where(inArray(workTasks.siteId, siteIds))
+      .where(inArray(workTasks.siteId, taskSiteIds.length ? taskSiteIds : ["-"]))
       .limit(20_000),
   ]);
   const percents = await reportedPercents(

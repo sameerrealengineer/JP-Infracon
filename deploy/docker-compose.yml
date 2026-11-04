@@ -66,6 +66,9 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2785:2785"
+    environment:
+      # Gives the WhatsApp bot the sender's phone when WhatsApp hides it behind a privacy id.
+      RESOLVE_LID_TO_PHONE: "true"
     volumes:
       - openwa-data:/app/data
 

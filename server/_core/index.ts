@@ -9,12 +9,16 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { createCorsMiddleware } from "./cors";
 import { runMigrations } from "./migrate";
+import { registerWhatsAppBot } from "../jp/whatsapp-bot";
 
 async function startServer() {
   const app = express();
   const server = createServer(app);
 
   app.use(createCorsMiddleware());
+
+  // Before the JSON parser: the bot checks its signature over the raw body.
+  registerWhatsAppBot(app);
 
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));

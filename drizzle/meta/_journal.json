@@ -127,6 +127,27 @@
       "when": 1793676330853,
       "tag": "0017_chubby_talon",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1793754391581,
+      "tag": "0018_panoramic_lake",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1793755257795,
+      "tag": "0019_fantastic_ser_duncan",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1793758008041,
+      "tag": "0020_worthless_vertigo",
+      "breakpoints": true
     }
   ]
 }

@@ -222,7 +222,7 @@ test.describe("Role-aware shell and site management", () => {
     await page.goto("/");
     await expect(page.getByText("Hello, Sipun")).toBeVisible();
     await expect(page.getByText("You are all caught up")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Daily report" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Daily report" }).first()).toBeVisible();
     await expect(page.getByRole("button", { name: "Projects & sites" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Team accounts" })).toHaveCount(0);
     await page.screenshot({ path: "test-results/home-supervisor.png", fullPage: true });

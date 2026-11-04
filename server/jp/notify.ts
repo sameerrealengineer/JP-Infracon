@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  alertRules,
+  auditEvents,
   notificationDeliveries,
+  userAlertMutes,
   organizationMemberships,
   pushDevices,
   siteAssignments,
   userContactPreferences,
+  users,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
@@ -24,6 +28,18 @@ import {
   type SmsConfig,
   type WhatsAppConfig,
 } from "../../lib/jp/notify-policy";
+import {
+  ALERT_CATEGORIES,
+  ALERT_CATEGORY_KEYS,
+  ALERT_ROLES,
+  alertCategoryOf,
+  cleanRules,
+  decideChannels,
+  ruleFor,
+  type AlertRole,
+  type AlertRule,
+} from "../../lib/jp/alert-rules";
+import { disabledModulesFor } from "./module-settings";
 
 /** Gateway settings come only from server environment variables; nothing is configured in the app. */
 export function whatsappConfig(env = process.env): WhatsAppConfig | null {
@@ -121,14 +137,24 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
     const db = await getDb();
     if (!db || !event.recipientUserIds.length) return;
     const userIds = [...new Set(event.recipientUserIds)];
-    const devices = await db
-      .select({ userId: pushDevices.userId, token: pushDevices.expoPushToken })
-      .from(pushDevices)
-      .where(and(inArray(pushDevices.userId, userIds), eq(pushDevices.status, "Active")));
-    const prefs = await db
-      .select()
-      .from(userContactPreferences)
-      .where(inArray(userContactPreferences.userId, userIds));
+    const [devices, prefs, rules, mutes, roles, disabledModules] = await Promise.all([
+      db
+        .select({ userId: pushDevices.userId, token: pushDevices.expoPushToken })
+        .from(pushDevices)
+        .where(and(inArray(pushDevices.userId, userIds), eq(pushDevices.status, "Active"))),
+      db
+        .select()
+        .from(userContactPreferences)
+        .where(inArray(userContactPreferences.userId, userIds)),
+      companyRules(event.organizationId),
+      db
+        .select({ userId: userAlertMutes.userId, category: userAlertMutes.category })
+        .from(userAlertMutes)
+        .where(inArray(userAlertMutes.userId, userIds))
+        .catch(() => []),
+      recipientRoles(event.organizationId, event.siteId ?? null, userIds),
+      disabledModulesFor(event.organizationId),
+    ]);
     const log = async (
       userId: number,
       channel: "push" | "whatsapp" | "sms",
@@ -149,10 +175,36 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
         })
         .catch(() => undefined);
 
-    const pushTargets = devices.filter((device) => {
-      const pref = prefs.find((row) => row.userId === device.userId);
-      return pref?.pushOptIn !== "No" && isExpoPushToken(device.token);
-    });
+    // Company rules, personal mutes and opt-ins decide each person's channels.
+    const decisions = new Map(
+      userIds.map((userId) => {
+        const pref = prefs.find((row) => row.userId === userId);
+        return [
+          userId,
+          decideChannels({
+            kind: event.kind,
+            role: roles.get(userId) ?? null,
+            rules,
+            mutedCategories: mutes
+              .filter((row) => row.userId === userId)
+              .map((row) => row.category),
+            disabledModules,
+            optIn: {
+              push: pref?.pushOptIn !== "No",
+              whatsapp: pref?.whatsappOptIn === "Yes",
+              sms: pref?.smsOptIn === "Yes",
+            },
+            urgent: Boolean(event.urgent),
+          }),
+        ] as const;
+      }),
+    );
+    for (const [userId, decision] of decisions)
+      if (decision.skipped) await log(userId, "push", "Skipped", decision.skipped);
+
+    const pushTargets = devices.filter(
+      (device) => decisions.get(device.userId)?.push && isExpoPushToken(device.token),
+    );
     if (pushTargets.length) {
       const result = await send(
         expoPushRequest(
@@ -169,22 +221,29 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
         await log(userId, "push", result.ok ? "Sent" : "Failed", result.detail);
     }
 
-    const text = alertText({ title: event.title, siteName: event.siteName, detail: event.detail });
+    const fullText = alertText({
+      title: event.title,
+      siteName: event.siteName,
+      detail: event.detail,
+    });
+    const shortText = alertText({ title: event.title, siteName: event.siteName, detail: null });
     const wa = whatsappConfig();
     const sms = smsConfig();
     for (const pref of prefs) {
+      const decision = decisions.get(pref.userId);
       const phone = normalizeIndianMobile(pref.phone);
-      if (!phone) continue;
-      if (pref.whatsappOptIn === "Yes" && wa) {
+      if (!phone || !decision) continue;
+      const text = decision.detail === "full" ? fullText : shortText;
+      if (decision.whatsapp && wa) {
         const result = await send(whatsappRequest(wa, phone, text));
         await log(pref.userId, "whatsapp", result.ok ? "Sent" : "Failed", result.detail);
-        if (result.ok && event.media) {
+        if (result.ok && event.media && decision.detail === "full") {
           const media = await send(whatsappMediaRequest(wa, phone, event.media));
           await log(pref.userId, "whatsapp", media.ok ? "Sent" : "Failed", `media ${media.detail}`);
         }
       }
-      // SMS costs money per message, so it is kept for urgent alerts.
-      if (pref.smsOptIn === "Yes" && sms && event.urgent) {
+      // SMS costs money per message, so it is kept for urgent alerts (decideChannels).
+      if (decision.sms && sms) {
         const result = await send(smsRequest(sms, phone, text));
         await log(pref.userId, "sms", result.ok ? "Sent" : "Failed", result.detail);
       }
@@ -192,6 +251,70 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
   } catch {
     console.error("[JP] Alert dispatch failed");
   }
+}
+
+/** Saved company alert rules; none (or no table yet) means every channel stays on. */
+async function companyRules(organizationId: string): Promise<AlertRule[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db
+    .select()
+    .from(alertRules)
+    .where(eq(alertRules.organizationId, organizationId))
+    .catch(() => []);
+  return cleanRules(
+    rows.map((row) => ({
+      category: row.category as AlertRule["category"],
+      role: row.role as AlertRole,
+      push: row.push === "Yes",
+      whatsapp: row.whatsapp === "Yes",
+      sms: row.sms === "Yes",
+      detail: row.detail,
+    })),
+  );
+}
+
+/** Each recipient's role for this alert: leader role first, else their role on the site. */
+async function recipientRoles(organizationId: string, siteId: string | null, userIds: number[]) {
+  const db = await getDb();
+  const roles = new Map<number, AlertRole>();
+  if (!db || !userIds.length) return roles;
+  const [memberships, assignments] = await Promise.all([
+    db
+      .select({
+        userId: organizationMemberships.userId,
+        role: organizationMemberships.businessRole,
+      })
+      .from(organizationMemberships)
+      .where(
+        and(
+          eq(organizationMemberships.organizationId, organizationId),
+          eq(organizationMemberships.status, "Active"),
+          inArray(organizationMemberships.userId, userIds),
+        ),
+      ),
+    siteId
+      ? db
+          .select({ userId: siteAssignments.userId, role: siteAssignments.assignmentRole })
+          .from(siteAssignments)
+          .where(
+            and(
+              eq(siteAssignments.siteId, siteId),
+              eq(siteAssignments.status, "Active"),
+              inArray(siteAssignments.userId, userIds),
+            ),
+          )
+      : Promise.resolve([] as { userId: number; role: string }[]),
+  ]);
+  const leaders = ["owner", "director", "admin"];
+  for (const userId of userIds) {
+    const leader = memberships.find((row) => row.userId === userId && leaders.includes(row.role));
+    const onSite = assignments.find((row) => row.userId === userId);
+    const any = memberships.find((row) => row.userId === userId);
+    const role = (leader ?? onSite ?? any)?.role;
+    if (role && ALERT_ROLES.includes(role as AlertRole)) roles.set(userId, role as AlertRole);
+  }
+  return roles;
 }
 
 /** Organisation leaders plus the site's project managers and supervisors, minus the actor. */
@@ -222,6 +345,26 @@ export async function siteLeadIds(organizationId: string, siteId: string, exclud
   return [...new Set([...leaders, ...team].map((row) => row.userId))].filter(
     (id) => id !== excludeUserId,
   );
+}
+
+/** The caller's company membership, preferring a leader role. */
+async function leaderMembership(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  userId: number,
+) {
+  const rows = await db
+    .select({
+      organizationId: organizationMemberships.organizationId,
+      role: organizationMemberships.businessRole,
+    })
+    .from(organizationMemberships)
+    .where(
+      and(eq(organizationMemberships.userId, userId), eq(organizationMemberships.status, "Active")),
+    )
+    .limit(20);
+  const leaders = ["owner", "director", "admin"];
+  const row = rows.find((r) => leaders.includes(r.role)) ?? rows[0];
+  return row ? { organizationId: row.organizationId, leader: leaders.includes(row.role) } : null;
 }
 
 function requireDb(db: Awaited<ReturnType<typeof getDb>>) {
@@ -330,6 +473,140 @@ export const notificationsRouter = router({
         .onDuplicateKeyUpdate({ set: values });
       return { ok: true, phone };
     }),
+
+  /** Company alert rules for every category and role (defaults filled in). */
+  alertRules: protectedProcedure.query(async ({ ctx }) => {
+    const db = requireDb(await getDb());
+    const membership = await leaderMembership(db, ctx.user.id);
+    if (!membership) return { canManage: false, categories: [], roles: [], rules: [] };
+    const saved = await companyRules(membership.organizationId);
+    return {
+      canManage: membership.leader,
+      categories: ALERT_CATEGORIES.map(({ key, title, detail }) => ({ key, title, detail })),
+      roles: [...ALERT_ROLES],
+      rules: ALERT_CATEGORY_KEYS.flatMap((category) =>
+        ALERT_ROLES.map((role) => ruleFor(saved, category, role)),
+      ),
+    };
+  }),
+
+  /** Replaces the company's alert rules (owner, director or admin). */
+  saveAlertRules: protectedProcedure
+    .input(
+      z.object({
+        rules: z
+          .array(
+            z.object({
+              category: z.string(),
+              role: z.string(),
+              push: z.boolean(),
+              whatsapp: z.boolean(),
+              sms: z.boolean(),
+              detail: z.enum(["full", "title"]),
+            }),
+          )
+          .max(ALERT_CATEGORY_KEYS.length * ALERT_ROLES.length),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      const membership = await leaderMembership(db, ctx.user.id);
+      if (!membership?.leader)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only the owner, a director or an admin can change company alert rules.",
+        });
+      const rules = cleanRules(input.rules as Partial<AlertRule>[]);
+      const yes = (value: boolean) => (value ? ("Yes" as const) : ("No" as const));
+      await db.transaction(async (tx) => {
+        await tx.delete(alertRules).where(eq(alertRules.organizationId, membership.organizationId));
+        if (rules.length)
+          await tx.insert(alertRules).values(
+            rules.map((rule) => ({
+              organizationId: membership.organizationId,
+              category: rule.category,
+              role: rule.role,
+              push: yes(rule.push),
+              whatsapp: yes(rule.whatsapp),
+              sms: yes(rule.sms),
+              detail: rule.detail,
+              updatedBy: ctx.user.id,
+            })),
+          );
+        await tx.insert(auditEvents).values({
+          id: randomUUID(),
+          organizationId: membership.organizationId,
+          actorUserId: ctx.user.id,
+          action: "settings.alert_rules_changed",
+          entityType: "organization",
+          entityId: membership.organizationId,
+          afterSummary: JSON.stringify(
+            rules
+              .filter((rule) => !rule.push || !rule.whatsapp || !rule.sms || rule.detail !== "full")
+              .map((rule) => `${rule.category}/${rule.role}`)
+              .slice(0, 60),
+          ),
+        });
+      });
+      return { saved: rules.length };
+    }),
+
+  /** Categories the caller muted for themselves. */
+  myMutes: protectedProcedure.query(async ({ ctx }) => {
+    const db = requireDb(await getDb());
+    const rows = await db
+      .select({ category: userAlertMutes.category })
+      .from(userAlertMutes)
+      .where(eq(userAlertMutes.userId, ctx.user.id))
+      .catch(() => []);
+    return {
+      categories: ALERT_CATEGORIES.map(({ key, title, detail }) => ({ key, title, detail })),
+      muted: rows
+        .map((row) => row.category)
+        .filter((key) => ALERT_CATEGORY_KEYS.includes(key as never)),
+    };
+  }),
+
+  setMutes: protectedProcedure
+    .input(z.object({ muted: z.array(z.string()).max(ALERT_CATEGORY_KEYS.length) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      const muted = ALERT_CATEGORY_KEYS.filter((key) => input.muted.includes(key));
+      await db.transaction(async (tx) => {
+        await tx.delete(userAlertMutes).where(eq(userAlertMutes.userId, ctx.user.id));
+        if (muted.length)
+          await tx
+            .insert(userAlertMutes)
+            .values(muted.map((category) => ({ userId: ctx.user.id, category })));
+      });
+      return { muted };
+    }),
+
+  /** The company's last alert deliveries (leaders only): what was sent, failed or skipped. */
+  recentDeliveries: protectedProcedure.query(async ({ ctx }) => {
+    const db = requireDb(await getDb());
+    const membership = await leaderMembership(db, ctx.user.id);
+    if (!membership?.leader) return { rows: [] };
+    const rows = await db
+      .select({
+        id: notificationDeliveries.id,
+        channel: notificationDeliveries.channel,
+        status: notificationDeliveries.status,
+        detail: notificationDeliveries.detail,
+        eventKind: notificationDeliveries.eventKind,
+        createdAt: notificationDeliveries.createdAt,
+        userName: users.name,
+      })
+      .from(notificationDeliveries)
+      .leftJoin(users, eq(notificationDeliveries.userId, users.id))
+      .where(eq(notificationDeliveries.organizationId, membership.organizationId))
+      .orderBy(desc(notificationDeliveries.createdAt))
+      .limit(60)
+      .catch(() => []);
+    return {
+      rows: rows.map((row) => ({ ...row, category: alertCategoryOf(row.eventKind) })),
+    };
+  }),
 
   /** Sends a test alert to the caller only, on every channel they enabled. */
   sendTest: protectedProcedure.mutation(async ({ ctx }) => {

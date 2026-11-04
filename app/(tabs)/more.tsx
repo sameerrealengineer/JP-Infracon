@@ -88,6 +88,14 @@ export default function MoreScreen() {
       show: can("workforce.view"),
     },
     {
+      icon: "person-search",
+      title: "People directory",
+      detail: "History, pay, quality, contact",
+      tone: "accent",
+      route: "/people",
+      show: can("workforce.view"),
+    },
+    {
       icon: "inventory",
       title: "Inventory",
       detail: "Catalogue & stock ledger",

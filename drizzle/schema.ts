@@ -1910,3 +1910,128 @@ export const organizationSettings = mysqlTable("organization_settings", {
   updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+/**
+ * Extra details for a worker, technician or subcontractor contact: address, a second phone,
+ * and the subcontractor firm (vendor) they belong to, so bills and payments show on their profile.
+ */
+export const personDetails = mysqlTable("person_details", {
+  personId: varchar("personId", { length: 36 })
+    .primaryKey()
+    .references(() => people.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  addressLine: varchar("addressLine", { length: 300 }),
+  city: varchar("city", { length: 120 }),
+  district: varchar("district", { length: 120 }),
+  pincode: varchar("pincode", { length: 10 }),
+  alternatePhone: varchar("alternatePhone", { length: 40 }),
+  vendorId: varchar("vendorId", { length: 36 }).references(() => vendors.id, {
+    onDelete: "restrict",
+  }),
+  notes: text("notes"),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Append-only notes on a person's work: quality ratings, defaults (left the job, bad work),
+ * safety and praise. A wrong entry is answered by a new one, never edited.
+ */
+export const personFeedback = mysqlTable(
+  "person_feedback",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    kind: mysqlEnum("kind", [
+      "Quality",
+      "Default",
+      "Safety",
+      "Praise",
+      "Payment dispute",
+    ]).notNull(),
+    /** 1 to 5 stars; only for Quality entries. */
+    rating: int("rating"),
+    note: text("note").notNull(),
+    recordedBy: int("recordedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    personFeedbackPersonIndex: index("person_feedback_person_idx").on(
+      table.personId,
+      table.createdAt,
+    ),
+  }),
+);
+
+/** Company rule: for one alert category and role, which channels are used (see lib/jp/alert-rules.ts). */
+export const alertRules = mysqlTable(
+  "alert_rules",
+  {
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 32 }).notNull(),
+    role: varchar("role", { length: 32 }).notNull(),
+    push: mysqlEnum("push", ["Yes", "No"]).default("Yes").notNull(),
+    whatsapp: mysqlEnum("whatsapp", ["Yes", "No"]).default("Yes").notNull(),
+    sms: mysqlEnum("sms", ["Yes", "No"]).default("Yes").notNull(),
+    detail: mysqlEnum("detail", ["full", "title"]).default("full").notNull(),
+    updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    alertRuleUnique: uniqueIndex("alert_rule_org_category_role_uq").on(
+      table.organizationId,
+      table.category,
+      table.role,
+    ),
+  }),
+);
+
+/** Alert categories a person muted for themselves. */
+export const userAlertMutes = mysqlTable(
+  "user_alert_mutes",
+  {
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 32 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userAlertMuteUnique: uniqueIndex("user_alert_mute_uq").on(table.userId, table.category),
+  }),
+);
+
+/**
+ * WhatsApp bot conversation log: each inbound message (deduplicated by WhatsApp id) and each
+ * reply. Gives the bot short context and lets admins see what it said.
+ */
+export const whatsappBotMessages = mysqlTable(
+  "whatsapp_bot_messages",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    waMessageId: varchar("waMessageId", { length: 191 }).unique(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    userId: int("userId").references(() => users.id, { onDelete: "restrict" }),
+    direction: mysqlEnum("direction", ["in", "out"]).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    whatsappBotPhoneIndex: index("whatsapp_bot_phone_idx").on(table.phone, table.createdAt),
+  }),
+);
