@@ -24,12 +24,7 @@ describe("assistant", () => {
         prompts.push(String(init?.body ?? ""));
         return new Response(
           JSON.stringify({
-            steps: [
-              {
-                type: "model_output",
-                content: [{ type: "text", text: JSON.stringify(modelReply) }],
-              },
-            ],
+            candidates: [{ content: { parts: [{ text: JSON.stringify(modelReply) }] } }],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );

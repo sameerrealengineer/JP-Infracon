@@ -1,7 +1,8 @@
-import { zipSync, strToU8 } from "fflate";
+import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
 import {
+  isAiReadable,
   chunkText,
   cosineSimilarity,
   hybridScore,
@@ -28,9 +29,10 @@ describe("sniffDocumentType", () => {
     expect(sniffDocumentType(other, "a.zip")).toBeNull();
   });
 
-  it("accepts CSV only for text named .csv", () => {
+  it("tells CSV from plain text by the name, and refuses binary posing as text", () => {
     expect(sniffDocumentType(strToU8("item,qty\ncement,10\n"), "boq.csv")).toBe("text/csv");
-    expect(sniffDocumentType(strToU8("item,qty"), "boq.txt")).toBeNull();
+    expect(sniffDocumentType(strToU8("item,qty"), "boq.txt")).toBe("text/plain");
+    expect(sniffDocumentType(strToU8("item,qty"), "boq.dat")).toBeNull();
     expect(sniffDocumentType(new Uint8Array([0x41, 0x00, 0x42]), "x.csv")).toBeNull();
   });
 });
@@ -99,5 +101,23 @@ describe("scores", () => {
     const piece = snippet(text, "structural drawing");
     expect(piece).toContain("structural drawing");
     expect(piece.startsWith("…")).toBe(true);
+  });
+
+  it("accepts CAD drawings, old Office files, PowerPoint and text by their bytes", async () => {
+    const ole = new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0]);
+    expect(sniffDocumentType(strToU8("AC1032\u0000\u0000binary"), "plan.dwg")).toBe(
+      "image/vnd.dwg",
+    );
+    expect(sniffDocumentType(strToU8("0\nSECTION\n2\nHEADER"), "plan.dxf")).toBe("image/vnd.dxf");
+    expect(sniffDocumentType(ole, "boq.doc")).toBe("application/msword");
+    expect(sniffDocumentType(ole, "rates.xls")).toBe("application/vnd.ms-excel");
+    expect(sniffDocumentType(ole, "unknown.bin")).toBeNull();
+    expect(
+      sniffDocumentType(zipSync({ "ppt/presentation.xml": strToU8("<p/>") }), "deck.pptx"),
+    ).toBe("application/vnd.openxmlformats-officedocument.presentationml.presentation");
+    expect(sniffDocumentType(strToU8("site notes"), "notes.txt")).toBe("text/plain");
+    expect(sniffDocumentType(strToU8("MZ\u0090\u0000"), "virus.exe")).toBeNull();
+    expect(isAiReadable("image/vnd.dwg")).toBe(false);
+    expect(isAiReadable("image/png")).toBe(true);
   });
 });

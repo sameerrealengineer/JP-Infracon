@@ -144,6 +144,14 @@ export default function MoreScreen() {
       show: can("budget.view"),
     },
     {
+      icon: "health-and-safety",
+      title: "System check",
+      detail: "Test AI, voice, scan, uploads, WhatsApp",
+      tone: "success",
+      route: "/system-check",
+      show: workspace.canManageSites || workspace.canManageAccounts,
+    },
+    {
       icon: "tune",
       title: "Modules",
       detail: "Turn modules on or off, AI advice",

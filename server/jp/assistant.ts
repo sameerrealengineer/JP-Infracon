@@ -5,7 +5,7 @@ import { auditEvents, type User } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites } from "./access";
-import { geminiJson, geminiKey, rateLimit, sarvamJson, sarvamKey } from "./ai";
+import { aiJson, geminiKey, rateLimit, sarvamKey, sarvamSpeak } from "./ai";
 import { siteCapabilities } from "./capabilities";
 import { buildInbox } from "./inbox";
 import { placeCards } from "./places";
@@ -196,26 +196,28 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
     `\nPerson now says:\n"""${input.text}"""`;
   let raw: unknown;
   try {
-    raw = geminiKey()
-      ? await geminiJson(
-          [
-            { text: prompt },
-            ...files.flatMap((file) =>
-              file.kind === "inline"
-                ? [{ image: { data: file.base64, mimeType: file.contentType } }]
-                : [],
-            ),
-          ],
-          answerSchema,
-        )
-      : await sarvamJson(
-          `${prompt}\n\nReply as JSON: {"reply": "...", "action": {"type": "none|open|draft_report|draft_issue", "screen": "...", "siteId": "...", "text": "...", "reportKind": "DPR|DLR"}}`,
-          input.text,
-        );
-  } catch {
+    raw = await aiJson(
+      [
+        { text: prompt },
+        ...files.flatMap((file) =>
+          file.kind === "inline"
+            ? [{ image: { data: file.base64, mimeType: file.contentType } }]
+            : [],
+        ),
+      ],
+      answerSchema,
+      {
+        system: `${prompt}\n\nReply as JSON: {"reply": "...", "action": {"type": "none|open|draft_report|draft_issue", "screen": "...", "siteId": "...", "text": "...", "reportKind": "DPR|DLR"}}`,
+        text: input.text,
+      },
+    );
+  } catch (error) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "The assistant did not answer. Try again in a moment.",
+      message:
+        error instanceof Error && error.message
+          ? error.message
+          : "The assistant did not answer. Try again in a moment.",
     });
   }
   const value = (raw ?? {}) as { reply?: unknown; action?: Record<string, unknown> };
@@ -274,39 +276,9 @@ export const assistantRouter = router({
 
   /** Speaks a reply aloud (Sarvam Bulbul), returned as MP3 for the app to play. */
   speak: protectedProcedure
-    .input(z.object({ text: z.string().trim().min(1).max(1200), language: z.enum(LANGUAGES) }))
+    .input(z.object({ text: z.string().trim().min(1).max(2400), language: z.enum(LANGUAGES) }))
     .mutation(async ({ ctx, input }) => {
-      const key = sarvamKey();
-      if (!key)
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Spoken replies are not set up: add SARVAM_API_KEY on the server.",
-        });
       rateLimit(ctx.user.id, 80);
-      const response = await fetch("https://api.sarvam.ai/text-to-speech", {
-        method: "POST",
-        headers: { "api-subscription-key": key, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: input.text,
-          language_code: input.language,
-          model: process.env.SARVAM_TTS_MODEL?.trim() || "bulbul:v3",
-          speaker: process.env.SARVAM_TTS_SPEAKER?.trim() || "priya",
-          pace: 1.05,
-          output_audio_codec: "mp3",
-        }),
-        signal: AbortSignal.timeout(30_000),
-      }).catch(() => null);
-      if (!response?.ok) {
-        await response?.body?.cancel().catch(() => undefined);
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "The spoken reply could not be made. Read the text instead.",
-        });
-      }
-      const json = (await response.json()) as { audios?: string[] };
-      const audio = (json.audios ?? []).join("");
-      if (!audio)
-        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No audio came back." });
-      return { audioBase64: audio, mimeType: "audio/mpeg" };
+      return sarvamSpeak(input.text, input.language);
     }),
 });

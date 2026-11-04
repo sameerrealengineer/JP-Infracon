@@ -52,15 +52,13 @@ describe("whatsapp bot", () => {
         prompts.push(String(init?.body ?? ""));
         return new Response(
           JSON.stringify({
-            steps: [
+            candidates: [
               {
-                type: "model_output",
-                content: [
-                  {
-                    type: "text",
-                    text: JSON.stringify({ reply: modelReply, action: { type: "none" } }),
-                  },
-                ],
+                content: {
+                  parts: [
+                    { text: JSON.stringify({ reply: modelReply, action: { type: "none" } }) },
+                  ],
+                },
               },
             ],
           }),

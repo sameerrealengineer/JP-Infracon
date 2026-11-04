@@ -12,7 +12,7 @@ import {
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { geminiJson, geminiKey, rateLimit, sarvamJson, sarvamKey } from "./ai";
+import { aiJson, geminiKey, rateLimit, sarvamKey } from "./ai";
 import { disabledModulesFor, forgetModuleSettings } from "./module-settings";
 import {
   MODULES,
@@ -234,13 +234,12 @@ export const modulesRouter = router({
         }"""`;
       let raw: unknown;
       try {
-        raw = geminiKey()
-          ? await geminiJson([{ text: prompt }], suggestionSchema)
-          : await sarvamJson(
-              `${prompt}\nReply as JSON with keys summary, turnOn, turnOff, reasons ` +
-                "(array of {module, reason}). Use only the module keys listed.",
-              input.about || "Suggest modules.",
-            );
+        raw = await aiJson([{ text: prompt }], suggestionSchema, {
+          system:
+            `${prompt}\nReply as JSON with keys summary, turnOn, turnOff, reasons ` +
+            "(array of {module, reason}). Use only the module keys listed.",
+          text: input.about || "Suggest modules.",
+        });
       } catch {
         return ruleSuggestion(counts, disabled);
       }

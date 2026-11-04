@@ -6,6 +6,7 @@ import { geminiJson, geminiKey } from "./ai";
 import {
   DOCUMENT_CATEGORIES,
   chunkText,
+  isAiReadable,
   type DocumentContentType,
 } from "../../lib/jp/document-policy";
 import { extractDocumentText } from "../../lib/jp/document-text";
@@ -123,9 +124,9 @@ export async function indexDocument(args: {
   try {
     let text = extractDocumentText(args.bytes, args.contentType);
     let reader: Reader | null = null;
-    if (geminiKey()) {
-      const readable =
-        args.contentType === "application/pdf" || args.contentType.startsWith("image/");
+    const readable = isAiReadable(args.contentType);
+    // Nothing for the AI to read (a CAD drawing, an old Office file): the title still indexes it.
+    if (geminiKey() && (readable || text.trim())) {
       try {
         reader = (await geminiJson(
           readable

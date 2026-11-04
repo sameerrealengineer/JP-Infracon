@@ -68,7 +68,12 @@ function sheetText(bytes: Uint8Array): string {
 export function extractDocumentText(bytes: Uint8Array, contentType: DocumentContentType): string {
   try {
     let text = "";
-    if (contentType === "text/csv") text = strFromU8(bytes);
+    if (
+      contentType === "text/csv" ||
+      contentType === "text/plain" ||
+      contentType === "image/vnd.dxf"
+    )
+      text = strFromU8(bytes);
     else if (contentType.includes("wordprocessingml")) text = wordText(bytes);
     else if (contentType.includes("spreadsheetml")) text = sheetText(bytes);
     return text.replace(/\u0000/g, "").slice(0, MAX_TEXT);

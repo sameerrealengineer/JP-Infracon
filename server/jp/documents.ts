@@ -168,7 +168,8 @@ function readFile(input: { fileName: string; base64: string }) {
   if (!contentType)
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: "Upload a PDF, photo (JPEG, PNG, WebP), Word, Excel or CSV file.",
+      message:
+        "This file type is not accepted. Upload a PDF, photo (JPEG, PNG, WebP), AutoCAD drawing (DWG, DXF), Word (DOC, DOCX), Excel (XLS, XLSX), PowerPoint (PPTX), CSV or text file.",
     });
   return { bytes, contentType, fileName: safeDocumentName(input.fileName, contentType) };
 }

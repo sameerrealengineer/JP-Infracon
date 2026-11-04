@@ -36,6 +36,15 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      // Log why a request failed (procedure and reason only, never its input), so a feature
+      // that "does not work" on a phone leaves a trace on the server.
+      onError({ path, error }) {
+        if (
+          ["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "BAD_REQUEST", "CONFLICT"].includes(error.code)
+        )
+          return;
+        console.error(`[api] ${path ?? "?"} ${error.code}: ${error.message.slice(0, 300)}`);
+      },
     }),
   );
 

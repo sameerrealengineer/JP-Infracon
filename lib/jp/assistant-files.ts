@@ -1,5 +1,5 @@
 import { extractDocumentText } from "./document-text";
-import { sniffDocumentType, type DocumentContentType } from "./document-policy";
+import { isAiReadable, sniffDocumentType, type DocumentContentType } from "./document-policy";
 
 /**
  * Files a person attaches to an assistant question: photos, PDFs (drawings, contracts),
@@ -70,14 +70,22 @@ export function prepareAssistantFile(
   const safeName = cleanFileName(name);
   if (bytes.length === 0) return { code: "EMPTY", message: `${safeName} is empty.` };
   const contentType = sniffDocumentType(bytes, safeName);
-  if (!contentType)
+  if (
+    !contentType ||
+    contentType === "image/vnd.dwg" ||
+    contentType === "image/vnd.dxf" ||
+    contentType === "application/msword" ||
+    contentType === "application/vnd.ms-excel" ||
+    contentType.includes("presentationml")
+  )
     return {
       code: "UNSUPPORTED",
-      message: /\.(dwg|dxf)$/i.test(safeName)
-        ? `${safeName}: CAD files cannot be read. Export the drawing as PDF or a photo and attach that.`
-        : `${safeName}: only photos, PDF, Word, Excel and CSV files can be read.`,
+      message:
+        /\.(dwg|dxf)$/i.test(safeName) || contentType?.startsWith("image/vnd.")
+          ? `${safeName}: CAD files cannot be read. Export the drawing as PDF or a photo and attach that.`
+          : `${safeName}: only photos, PDF, Word, Excel and CSV files can be read.`,
     };
-  if (contentType === "application/pdf" || contentType.startsWith("image/"))
+  if (isAiReadable(contentType))
     return {
       kind: "inline",
       name: safeName,

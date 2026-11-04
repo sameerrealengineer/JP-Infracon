@@ -499,6 +499,26 @@ export const hi: Dictionary = {
   All: "सभी",
   Pipeline: "पाइपलाइन",
   Clients: "क्लाइंट",
+  // System check
+  "System check": "सिस्टम जाँच",
+  "Tests AI assistant, bill scan, voice, file uploads, document search and WhatsApp for real, and shows what fails and why.":
+    "AI सहायक, बिल स्कैन, आवाज़, फ़ाइल अपलोड, दस्तावेज़ खोज और WhatsApp की असली जाँच करता है, और बताता है क्या और क्यों फ़ेल हुआ।",
+  Server: "सर्वर",
+  "this website": "यह वेबसाइट",
+  "Run system check": "सिस्टम जाँच चलाएँ",
+  "Speak now… (4 seconds)": "अब बोलिए… (4 सेकंड)",
+  "Test this phone's microphone": "इस फ़ोन का माइक जाँचें",
+  "{count} problems found": "{count} समस्याएँ मिलीं",
+  "All working": "सब काम कर रहा है",
+  Database: "डेटाबेस",
+  "AI assistant (text)": "AI सहायक (टेक्स्ट)",
+  "Bill scan / photo reading": "बिल स्कैन / फ़ोटो पढ़ना",
+  "Spoken replies (Sarvam)": "बोलकर जवाब (Sarvam)",
+  "Voice to text (Sarvam)": "आवाज़ से टेक्स्ट (Sarvam)",
+  "File storage (uploads)": "फ़ाइल स्टोरेज (अपलोड)",
+  "Document smart search": "दस्तावेज़ स्मार्ट खोज",
+  "WhatsApp alerts": "WhatsApp अलर्ट",
+  "This phone's microphone → text": "इस फ़ोन का माइक → टेक्स्ट",
 };
 
 export const or: Dictionary = {
@@ -976,6 +996,26 @@ export const or: Dictionary = {
   All: "ସବୁ",
   Pipeline: "ପାଇପଲାଇନ",
   Clients: "କ୍ଲାଏଣ୍ଟ",
+  // System check
+  "System check": "ସିଷ୍ଟମ ଯାଞ୍ଚ",
+  "Tests AI assistant, bill scan, voice, file uploads, document search and WhatsApp for real, and shows what fails and why.":
+    "AI ସହାୟକ, ବିଲ ସ୍କାନ, ସ୍ୱର, ଫାଇଲ ଅପଲୋଡ, ଦଲିଲ ଖୋଜ ଓ WhatsAppର ପ୍ରକୃତ ଯାଞ୍ଚ କରେ, ଏବଂ କଣ ଓ କାହିଁକି ବିଫଳ ହେଲା କହେ।",
+  Server: "ସର୍ଭର",
+  "this website": "ଏହି ୱେବସାଇଟ",
+  "Run system check": "ସିଷ୍ଟମ ଯାଞ୍ଚ ଚଲାନ୍ତୁ",
+  "Speak now… (4 seconds)": "ଏବେ କୁହନ୍ତୁ… (4 ସେକେଣ୍ଡ)",
+  "Test this phone's microphone": "ଏହି ଫୋନର ମାଇକ ଯାଞ୍ଚ କରନ୍ତୁ",
+  "{count} problems found": "{count}ଟି ସମସ୍ୟା ମିଳିଲା",
+  "All working": "ସବୁ କାମ କରୁଛି",
+  Database: "ଡାଟାବେସ",
+  "AI assistant (text)": "AI ସହାୟକ (ଟେକ୍ସଟ)",
+  "Bill scan / photo reading": "ବିଲ ସ୍କାନ / ଫଟୋ ପଢ଼ିବା",
+  "Spoken replies (Sarvam)": "କହି ଉତ୍ତର (Sarvam)",
+  "Voice to text (Sarvam)": "ସ୍ୱରରୁ ଟେକ୍ସଟ (Sarvam)",
+  "File storage (uploads)": "ଫାଇଲ ଷ୍ଟୋରେଜ (ଅପଲୋଡ)",
+  "Document smart search": "ଦଲିଲ ସ୍ମାର୍ଟ ଖୋଜ",
+  "WhatsApp alerts": "WhatsApp ଆଲର୍ଟ",
+  "This phone's microphone → text": "ଏହି ଫୋନର ମାଇକ → ଟେକ୍ସଟ",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

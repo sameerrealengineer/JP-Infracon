@@ -33,8 +33,19 @@ export const documentContentTypes = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "text/csv": "csv",
+  "application/msword": "doc",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+  "image/vnd.dwg": "dwg",
+  "image/vnd.dxf": "dxf",
+  "text/plain": "txt",
 } as const;
 export type DocumentContentType = keyof typeof documentContentTypes;
+
+/** Photos and PDFs the AI reader can look at directly (CAD files are not pictures). */
+export function isAiReadable(contentType: string) {
+  return ["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(contentType);
+}
 
 function containsAscii(bytes: Uint8Array, text: string): boolean {
   const needle = Array.from(text, (char) => char.charCodeAt(0));
@@ -64,15 +75,35 @@ function looksLikeText(bytes: Uint8Array): boolean {
 export function sniffDocumentType(bytes: Uint8Array, fileName: string): DocumentContentType | null {
   const known = sniffContentType(bytes);
   if (known && !isVideoType(known)) return known as Exclude<typeof known, `video/${string}`>;
+  const name = fileName.trim().toLowerCase();
   const isZip = bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03;
   if (isZip) {
     if (containsAscii(bytes, "word/document.xml"))
       return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     if (containsAscii(bytes, "xl/workbook.xml"))
       return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (containsAscii(bytes, "ppt/presentation.xml"))
+      return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
     return null;
   }
-  if (/\.csv$/i.test(fileName.trim()) && looksLikeText(bytes)) return "text/csv";
+  // Old Word and Excel files share one container format; the name tells them apart.
+  const isOle =
+    bytes.length > 8 &&
+    bytes[0] === 0xd0 &&
+    bytes[1] === 0xcf &&
+    bytes[2] === 0x11 &&
+    bytes[3] === 0xe0;
+  if (isOle) {
+    if (name.endsWith(".doc")) return "application/msword";
+    if (name.endsWith(".xls")) return "application/vnd.ms-excel";
+    return null;
+  }
+  // AutoCAD drawings: binary DWG starts "AC10…"; DXF is text.
+  if (bytes.length > 6 && String.fromCharCode(...bytes.subarray(0, 4)) === "AC10")
+    return "image/vnd.dwg";
+  if (name.endsWith(".dxf") && looksLikeText(bytes)) return "image/vnd.dxf";
+  if (name.endsWith(".csv") && looksLikeText(bytes)) return "text/csv";
+  if (name.endsWith(".txt") && looksLikeText(bytes)) return "text/plain";
   return null;
 }
 

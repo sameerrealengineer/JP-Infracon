@@ -36,16 +36,9 @@ import { trpc } from "@/lib/trpc";
 
 const ALL = "all";
 const PROJECT_WIDE = "project";
-const PICKER_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "text/csv",
-  "text/comma-separated-values",
-];
+// Every file can be picked (CAD drawings often have no proper type on Android); the server
+// checks the real type from the bytes and explains what it accepts.
+const PICKER_TYPES = ["*/*"];
 
 type Picked = { name: string; base64: string };
 

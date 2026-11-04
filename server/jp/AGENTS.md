@@ -41,6 +41,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `commercial-access.ts` | Company-level access for CRM and billing: leader-first membership role, organisation grants, module switch, projects visible through the caller's sites |
 | `crm.ts` | `jp.crm`: clients, enquiries (leads) with stages and follow-ups, quotations (server-numbered QT-YYYY-NNNN, exact GST totals); accepting a quotation wins its enquiry |
 | `billing.ts` | `jp.billing`: project contract (client, GST/retention/TDS), contract items (client BOQ, also from an accepted quotation), RA bills (cumulative quantity checked, maker-checker), receipts and reversals, receivables with ageing |
+| `system-check.ts` | `jp.systemCheck.run` (leaders): real calls to Gemini text, Gemini picture reading, Sarvam TTS → STT, storage, embeddings, WhatsApp config, with the provider's reason on failure; `voice` tests the phone's microphone |
 
 ## Conventions
 
@@ -56,6 +57,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 
 - Maker-checker checks call `selfApprovalAllowed` (from `access.ts`): the same person may approve their own record only while a delegation grants `approval.self` for that site.
 - CRM and billing events are company level (`siteId` null); `workspace.auditEvents` shows them to owner, director, admin and auditor.
+- Gemini answers 503 "high demand" often. `geminiJson` retries each model once, then tries `GEMINI_FALLBACK_MODELS` (default `gemini-flash-latest,gemini-2.5-flash`); `aiJson` then falls back to Sarvam for text-only requests. Failed requests are logged by `onError` in `server/_core/index.ts` (procedure and reason, never input). `scripts/check-ai.sh` checks the live server.
 - Alerts are best effort and never throw; they run after the transaction commits.
 - A procedure that checks the site with a core key (`site.view`) and resolves the real permission itself must call `assertModuleOn(organizationId, key)`, or a turned-off module still works (this was the workforce and petty-cash acknowledge bug).
 
