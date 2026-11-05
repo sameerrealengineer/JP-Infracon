@@ -336,7 +336,7 @@ describe("subcontract", () => {
       siteId,
       vendorId,
       paymentDate: isoDay(0),
-      paymentMode: "Bank Transfer",
+      paymentMode: "Bank Transfer" as const,
       paidByName: "JP Infracon accounts",
       fundingSourceLabel: "Current account",
       category: "Subcontract",

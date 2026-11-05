@@ -137,6 +137,21 @@ export const ASSISTANT_SCREENS: readonly AssistantScreen[] = [
     siteScoped: true,
   },
   {
+    key: "payroll",
+    route: "/payroll",
+    title: "Payroll",
+    about: "monthly wage sheet, salaries, PF, ESI, payslips, paying workers",
+    anyOf: ["payroll.view"],
+    siteScoped: true,
+  },
+  {
+    key: "accounts",
+    route: "/accounts",
+    title: "Accounts",
+    about: "PF, ESI and TDS dues and deposits, GST summary, project profit and loss",
+    anyOf: ["accounts.view"],
+  },
+  {
     key: "crm",
     route: "/crm",
     title: "Clients & leads",

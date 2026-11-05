@@ -56,6 +56,17 @@ export const WO_TONE: Record<string, Tone> = {
   Billed: "info",
 };
 
+export const RUN_TONE: Record<string, Tone> = {
+  ...PO_TONE,
+  Paid: "success",
+  Returned: "error",
+  Overdue: "error",
+  Due: "warning",
+  Excess: "info",
+  Reversed: "warning",
+  Recorded: "success",
+};
+
 export const commercialStyles = StyleSheet.create({
   content: { paddingBottom: 32, gap: 10 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },

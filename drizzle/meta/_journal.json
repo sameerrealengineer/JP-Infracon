@@ -169,6 +169,13 @@
       "when": 1793840394547,
       "tag": "0023_big_toro",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1793850601648,
+      "tag": "0024_modern_skin",
+      "breakpoints": true
     }
   ]
 }

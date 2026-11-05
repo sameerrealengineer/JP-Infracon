@@ -78,6 +78,18 @@ export const MODULES = [
     prefixes: ["subcontract."],
   },
   {
+    key: "payroll",
+    title: "Payroll",
+    detail: "Monthly wages and salaries with PF, ESI and payslips",
+    prefixes: ["payroll."],
+  },
+  {
+    key: "accounts",
+    title: "Accounts",
+    detail: "PF, ESI, TDS dues and deposits, GST summary, project profit",
+    prefixes: ["accounts."],
+  },
+  {
     key: "crm",
     title: "Clients & leads (CRM)",
     detail: "Clients, enquiries, follow-ups, quotations",
@@ -136,6 +148,8 @@ const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
   budget: ["budget."],
   purchase: ["purchase."],
   subcontract: ["subcontract."],
+  payroll: ["payroll."],
+  accounts: ["statutory_deposit."],
   crm: ["crm."],
   billing: ["billing."],
 };

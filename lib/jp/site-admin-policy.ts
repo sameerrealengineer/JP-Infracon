@@ -98,7 +98,10 @@ export type InboxItem = {
     | "issue.verify"
     | "purchase.review"
     | "subcontract.review"
-    | "subcontract.check";
+    | "subcontract.check"
+    | "payroll.review"
+    | "payroll.profile"
+    | "accounts.due";
   title: string;
   detail: string;
   siteId: string;

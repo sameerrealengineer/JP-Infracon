@@ -97,6 +97,11 @@ export const permissionKeys = [
   "subcontract.create",
   "subcontract.measure",
   "subcontract.approve",
+  "payroll.view",
+  "payroll.prepare",
+  "payroll.approve",
+  "accounts.view",
+  "accounts.manage",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];

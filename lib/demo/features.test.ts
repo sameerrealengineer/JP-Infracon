@@ -132,7 +132,8 @@ describe("offline demo: every screen and workflow runs on the phone database", (
   });
 
   it("workforce, rates and attendance", async () => {
-    expect((await supervisor.jp.workforce.list({ siteId: siteA })).length).toBe(3);
+    // Three workers and the site engineer added for payroll.
+    expect((await supervisor.jp.workforce.list({ siteId: siteA })).length).toBe(4);
     await accounts.jp.workforce.rates({ siteId: siteA });
     const roster = await manager.jp.attendance.roster({
       siteId: siteA,

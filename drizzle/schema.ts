@@ -2697,3 +2697,213 @@ export const subcontractBillLines = mysqlTable("subcontract_bill_lines", {
   rateMinor: money("rateMinor").notNull(),
   amountMinor: money("amountMinor").notNull(),
 });
+
+// ---------------------------------------------------------------------------------------------
+// Payroll (lib/jp/payroll-domain.ts): statutory rates per company with an effective date, a
+// payroll profile per person (daily from attendance or monthly salary, PF/ESI membership) that
+// a different person approves, and monthly pay runs per site with one line per person.
+// Accounts (lib/jp/accounts-domain.ts): PF, ESI, PT and TDS deposits recorded against dues.
+
+export const payrollSettings = mysqlTable(
+  "payroll_settings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    effectiveFrom: date("effectiveFrom", { mode: "string" }).notNull(),
+    pfWageCeilingMinor: money("pfWageCeilingMinor").notNull(),
+    pfEmployeeBps: int("pfEmployeeBps").notNull(),
+    pfEmployerBps: int("pfEmployerBps").notNull(),
+    epsBps: int("epsBps").notNull(),
+    epsCeilingMinor: money("epsCeilingMinor").notNull(),
+    edliBps: int("edliBps").notNull(),
+    pfAdminBps: int("pfAdminBps").notNull(),
+    esiThresholdMinor: money("esiThresholdMinor").notNull(),
+    esiEmployeeBps: int("esiEmployeeBps").notNull(),
+    esiEmployerBps: int("esiEmployerBps").notNull(),
+    overtimeMultiplierBps: int("overtimeMultiplierBps").notNull(),
+    wageShareBps: int("wageShareBps").notNull(),
+    ptSlabs: text("ptSlabs"),
+    note: text("note"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    payrollSettingsUnique: uniqueIndex("payroll_settings_org_from_uq").on(
+      table.organizationId,
+      table.effectiveFrom,
+    ),
+  }),
+);
+
+export const payrollProfiles = mysqlTable(
+  "payroll_profiles",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    payType: mysqlEnum("payType", ["Daily", "Monthly"]).notNull(),
+    basicMinor: money("basicMinor").notNull(),
+    hraMinor: money("hraMinor").notNull(),
+    otherAllowanceMinor: money("otherAllowanceMinor").notNull(),
+    pfMember: mysqlEnum("pfMember", ["Yes", "No"]).notNull(),
+    esiMember: mysqlEnum("esiMember", ["Yes", "No"]).notNull(),
+    ptApplies: mysqlEnum("ptApplies", ["Yes", "No"]).notNull(),
+    uan: varchar("uan", { length: 12 }),
+    esiNumber: varchar("esiNumber", { length: 10 }),
+    effectiveFrom: date("effectiveFrom", { mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Pending", "Active", "Superseded", "Rejected"])
+      .default("Pending")
+      .notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    payrollProfileSiteIndex: index("payroll_profile_site_idx").on(
+      table.siteId,
+      table.personId,
+      table.status,
+    ),
+  }),
+);
+
+export const payrollRuns = mysqlTable(
+  "payroll_runs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    runNumber: varchar("runNumber", { length: 40 }).notNull(),
+    month: varchar("month", { length: 7 }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Paid", "Returned", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    ratesSnapshot: text("ratesSnapshot").notNull(),
+    lineCount: int("lineCount").notNull(),
+    grossMinor: money("grossMinor").notNull(),
+    deductionMinor: money("deductionMinor").notNull(),
+    netMinor: money("netMinor").notNull(),
+    pfDueMinor: money("pfDueMinor").notNull(),
+    esiDueMinor: money("esiDueMinor").notNull(),
+    ptDueMinor: money("ptDueMinor").notNull(),
+    tdsDueMinor: money("tdsDueMinor").notNull(),
+    costMinor: money("costMinor").notNull(),
+    submittedAt: timestamp("submittedAt"),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    paidOn: date("paidOn", { mode: "string" }),
+    paymentMode: mysqlEnum("paymentMode", ["Bank transfer", "UPI", "Cheque", "Cash"]),
+    paymentReference: varchar("paymentReference", { length: 120 }),
+    paidBy: int("paidBy").references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    payrollRunNumberUnique: uniqueIndex("payroll_run_org_number_uq").on(
+      table.organizationId,
+      table.runNumber,
+    ),
+    payrollRunSiteMonthIndex: index("payroll_run_site_month_idx").on(table.siteId, table.month),
+  }),
+);
+
+export const payrollLines = mysqlTable(
+  "payroll_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    runId: varchar("runId", { length: 36 })
+      .notNull()
+      .references(() => payrollRuns.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    profileId: varchar("profileId", { length: 36 }),
+    payType: mysqlEnum("payType", ["Daily", "Monthly"]).notNull(),
+    workedDaysHundredths: int("workedDaysHundredths").notNull(),
+    paidDaysHundredths: int("paidDaysHundredths").notNull(),
+    paidDaysEdited: mysqlEnum("paidDaysEdited", ["Yes", "No"]).default("No").notNull(),
+    overtimeHundredths: int("overtimeHundredths").notNull(),
+    basicMinor: money("basicMinor").notNull(),
+    hraMinor: money("hraMinor").notNull(),
+    otherAllowanceMinor: money("otherAllowanceMinor").notNull(),
+    overtimeMinor: money("overtimeMinor").notNull(),
+    grossMinor: money("grossMinor").notNull(),
+    pfWageMinor: money("pfWageMinor").notNull(),
+    pfEmployeeMinor: money("pfEmployeeMinor").notNull(),
+    esiEmployeeMinor: money("esiEmployeeMinor").notNull(),
+    ptMinor: money("ptMinor").notNull(),
+    tdsMinor: money("tdsMinor").notNull(),
+    advanceMinor: money("advanceMinor").notNull(),
+    otherDeductionMinor: money("otherDeductionMinor").notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 200 }),
+    netMinor: money("netMinor").notNull(),
+    employerEpfMinor: money("employerEpfMinor").notNull(),
+    employerEpsMinor: money("employerEpsMinor").notNull(),
+    edliAdminMinor: money("edliAdminMinor").notNull(),
+    esiEmployerMinor: money("esiEmployerMinor").notNull(),
+    costMinor: money("costMinor").notNull(),
+    warnings: text("warnings"),
+  },
+  (table) => ({
+    payrollLineUnique: uniqueIndex("payroll_line_run_person_uq").on(table.runId, table.personId),
+  }),
+);
+
+export const statutoryDeposits = mysqlTable(
+  "statutory_deposits",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    kind: mysqlEnum("kind", ["PF", "ESI", "PT", "TDS salary", "TDS contractor"]).notNull(),
+    period: varchar("period", { length: 7 }).notNull(),
+    amountMinor: money("amountMinor").notNull(),
+    paidOn: date("paidOn", { mode: "string" }).notNull(),
+    challanReference: varchar("challanReference", { length: 80 }).notNull(),
+    note: text("note"),
+    status: mysqlEnum("status", ["Recorded", "Reversed"]).default("Recorded").notNull(),
+    reversedBy: int("reversedBy").references(() => users.id, { onDelete: "restrict" }),
+    reversedAt: timestamp("reversedAt"),
+    reverseReason: text("reverseReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    depositPeriodIndex: index("statutory_deposit_org_period_idx").on(
+      table.organizationId,
+      table.kind,
+      table.period,
+    ),
+  }),
+);

@@ -391,8 +391,24 @@ const subcontractRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["subcontract.view"],
 };
 
+/** Payroll (site scoped): accounts prepares, a manager or leader approves. */
+const allPayroll = ["payroll.view", "payroll.prepare", "payroll.approve"];
+/** Accounts (company level): statutory dues and deposits, GST summary, project profit. */
+const allAccounts = ["accounts.view", "accounts.manage"];
+const payrollRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: [...allPayroll, ...allAccounts],
+  director: [...allPayroll, ...allAccounts],
+  admin: [...allPayroll, ...allAccounts],
+  project_manager: ["payroll.view", "payroll.approve"],
+  supervisor: [],
+  accounts: ["payroll.view", "payroll.prepare", ...allAccounts],
+  storekeeper: [],
+  auditor: ["payroll.view", "accounts.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    payrollRoleDefaults[role].includes(permissionKey) ||
     subcontractRoleDefaults[role].includes(permissionKey) ||
     purchaseRoleDefaults[role].includes(permissionKey) ||
     commercialRoleDefaults[role].includes(permissionKey) ||

@@ -6,6 +6,14 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-05 — ERP slice 4: Payroll and Accounts
+
+Delivered in source (typecheck, 413 unit/server tests incl. 8 payroll/accounts flows over the demo SQLite backend, 15 live Playwright flows on the demo server; not run against the shared database or a real bank). Migration 0024 (new tables only) is not applied anywhere yet.
+
+- Payroll per site: company statutory rates with an effective date (defaults: EPF ceiling ₹25,000 from 17 Sep 2026, ESI to ₹21,000, Odisha PT repealed from Apr 2026, overtime 2×, 50% wages rule), payroll profiles approved by a different person, monthly pay runs from approved attendance and salary (submit blocked while the month has unapproved attendance), manual TDS/advance/other deduction per line, maker-checker, "paid" as a ledger record only, payslip PDFs.
+- Accounts (company level): PF/ESI/PT/salary TDS dues from approved pay runs and contractor TDS from approved subcontract bills against recorded challans (reversible with a reason), due dates and overdue alerts in the inbox, GST by month (estimate; GSTR-2B decides credit), receivables/payables, project profit.
+- Open: a separate worker advance/loan ledger (advances are deducted per run only), salary TDS computation (entered by hand), ECR/ESIC/Form 24Q file export, ESI contribution-period locking (month-based with a warning), and CA review of the rates before the first real pay run.
+
 ## Increment 2026-11-02 (c) — delegation, invite sign-up, alerts, AI, GPS, PDF, premium motion
 
 Delivered in source (typecheck, lint with 0 errors, 176 unit tests, API build, web export and 16 Playwright flows pass; not exercised against the shared database, real gateways/AI keys, or an Android device). **Needs additive migration 0013 applied** (plus 0010–0012 if still pending).

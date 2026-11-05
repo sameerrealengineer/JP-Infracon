@@ -72,6 +72,22 @@ export default function MoreScreen() {
       show: can("billing.view"),
     },
     {
+      icon: "account-balance",
+      title: "Accounts",
+      detail: "PF, ESI, TDS dues, GST, project profit",
+      tone: "info",
+      route: "/accounts",
+      show: can("accounts.view"),
+    },
+    {
+      icon: "payments",
+      title: "Payroll",
+      detail: "Monthly wages, salaries, PF, ESI, payslips",
+      tone: "success",
+      route: "/payroll",
+      show: can("payroll.view"),
+    },
+    {
       icon: "health-and-safety",
       title: "Safety & quality",
       detail: "Hazards, defects, blockers",

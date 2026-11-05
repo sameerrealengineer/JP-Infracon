@@ -49,6 +49,9 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `billing-domain.ts` | Lead stages, quantity/percent parsing, quotation and RA bill totals (GST on work value; retention and TDS on work value), contract balance check, payment state from receipts, ageing, numbering |
 | `purchase-domain.ts` | PO totals with GST per line, transitions, receipt state, delivery checks (not over what is due; reason to reject), lowest quote, three-way bill match, ledger quantity text |
 | `subcontract-domain.ts` | Work order and RA bill transitions, measured quantity from nos × L × B × D (exact thousandths), measurement limit vs WO quantity, RA bill totals (GST, retention, TDS on work value; advance recovery; other deduction), advance recovery cap, bill lines from measurements, WO position (value, measured, billed, retention held) |
+| `payroll-domain.ts` | Dated statutory rates (`DEFAULT_RATES`: EPF ceiling ₹25,000 from 17 Sep 2026, ESI to ₹21,000, no Odisha PT from Apr 2026, overtime 2×, 50% wages rule), wages from attendance, proration, PF (rupee rounding, EPS split), ESI (next rupee), PT slabs, pay line and run totals, run transitions |
+| `accounts-domain.ts` | Due dates (PF/ESI 15th, TDS 7th, March TDS 30 April), dues against deposits (Paid/Due/Overdue/Excess), deposit checks, GST by month, project P&L, vendor type → cost head |
+| `payslip.ts` | Escaped printable payslips (A5, one page per person) |
 
 ## Conventions
 

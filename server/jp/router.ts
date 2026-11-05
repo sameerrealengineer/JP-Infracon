@@ -49,6 +49,8 @@ import { billingRouter } from "./billing";
 import { systemCheckRouter } from "./system-check";
 import { purchaseRouter } from "./purchase";
 import { subcontractRouter } from "./subcontract";
+import { payrollRouter } from "./payroll";
+import { booksRouter } from "./books";
 import { buildInbox } from "./inbox";
 import {
   checkReportItems,
@@ -193,6 +195,8 @@ export const jpRouter = router({
   systemCheck: systemCheckRouter,
   purchase: purchaseRouter,
   subcontract: subcontractRouter,
+  payroll: payrollRouter,
+  books: booksRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

@@ -45,6 +45,8 @@ const ROUTES = [
   "/billing",
   "/purchase",
   "/subcontract",
+  "/payroll",
+  "/accounts",
   "/people",
   "/system-check",
 ];

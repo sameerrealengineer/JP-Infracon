@@ -45,6 +45,15 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         route: "/billing",
         anyOf: ["billing.view"],
       },
+      {
+        key: "accounts",
+        title: "Accounts",
+        icon: "account-balance",
+        tone: "info",
+        route: "/accounts",
+        anyOf: ["accounts.view"],
+        inboxKinds: ["accounts.due"],
+      },
     ],
   },
   {
@@ -183,6 +192,15 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         route: "/subcontract",
         anyOf: ["subcontract.view"],
         inboxKinds: ["subcontract.review", "subcontract.check"],
+      },
+      {
+        key: "payroll",
+        title: "Payroll",
+        icon: "payments",
+        tone: "success",
+        route: "/payroll",
+        anyOf: ["payroll.view"],
+        inboxKinds: ["payroll.review", "payroll.profile"],
       },
       {
         key: "people",

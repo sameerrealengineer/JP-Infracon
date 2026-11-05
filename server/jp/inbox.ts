@@ -9,6 +9,9 @@ import {
   purchaseOrders,
   subcontractBills,
   workMeasurements,
+  payrollProfiles,
+  payrollRuns,
+  people,
   workOrders,
   siteIssues,
   sites,
@@ -20,6 +23,7 @@ import {
 import type { getDb } from "../db";
 import { formatMinorAsRupees } from "../../lib/jp/finance-domain";
 import { sortInbox, type InboxItem } from "../../lib/jp/site-admin-policy";
+import { openDues } from "./books";
 
 type Db = NonNullable<Awaited<ReturnType<typeof getDb>>>;
 type Capability = { siteId: string } & Partial<Record<string, boolean | string>>;
@@ -284,6 +288,99 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         occurredAt: iso(row.at),
         route: `/work-order?siteId=${row.siteId}&id=${row.workOrderId}`,
         severity: "normal",
+      });
+  });
+  await guard("payroll", async () => {
+    const approveSites = sitesWith(capabilities, "payroll.approve");
+    if (!approveSites.length) return;
+    const runs = await db
+      .select({
+        id: payrollRuns.id,
+        runNumber: payrollRuns.runNumber,
+        net: payrollRuns.netMinor,
+        count: payrollRuns.lineCount,
+        siteId: payrollRuns.siteId,
+        siteName: sites.name,
+        at: payrollRuns.submittedAt,
+      })
+      .from(payrollRuns)
+      .innerJoin(sites, eq(payrollRuns.siteId, sites.id))
+      .where(
+        and(
+          inArray(payrollRuns.siteId, approveSites),
+          eq(payrollRuns.status, "Submitted"),
+          ne(payrollRuns.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(payrollRuns.submittedAt))
+      .limit(LIMIT);
+    for (const row of runs)
+      items.push({
+        id: `pay-run-${row.id}`,
+        kind: "payroll.review",
+        title: "Pay run awaiting approval",
+        detail: `${row.runNumber} · ${row.count} people · net ${formatMinorAsRupees(row.net)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/pay-run?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const profiles = await db
+      .select({
+        id: payrollProfiles.id,
+        name: people.fullName,
+        payType: payrollProfiles.payType,
+        siteId: payrollProfiles.siteId,
+        siteName: sites.name,
+        at: payrollProfiles.createdAt,
+      })
+      .from(payrollProfiles)
+      .innerJoin(people, eq(payrollProfiles.personId, people.id))
+      .innerJoin(sites, eq(payrollProfiles.siteId, sites.id))
+      .where(
+        and(
+          inArray(payrollProfiles.siteId, approveSites),
+          eq(payrollProfiles.status, "Pending"),
+          ne(payrollProfiles.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(payrollProfiles.createdAt))
+      .limit(LIMIT);
+    for (const row of profiles)
+      items.push({
+        id: `pay-profile-${row.id}`,
+        kind: "payroll.profile",
+        title: "Pay details to approve",
+        detail: `${row.name} · ${row.payType === "Monthly" ? "monthly salary" : "daily wages"}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/payroll?siteId=${row.siteId}&tab=people`,
+        severity: "normal",
+      });
+  });
+  await guard("accounts", async () => {
+    const manageSites = sitesWith(capabilities, "accounts.manage");
+    if (!manageSites.length) return;
+    const [site] = await db
+      .select({ organizationId: sites.organizationId })
+      .from(sites)
+      .where(eq(sites.id, manageSites[0]))
+      .limit(1);
+    if (!site) return;
+    const open = await openDues(db, site.organizationId);
+    for (const line of open.filter((row) => row.state === "Overdue").slice(0, LIMIT))
+      items.push({
+        id: `due-${line.kind}-${line.period}`,
+        kind: "accounts.due",
+        title: `${line.kind} for ${line.period} is overdue`,
+        detail: `${formatMinorAsRupees(line.outstandingMinor)} was due on ${line.dueDate}`,
+        siteId: manageSites[0],
+        siteName: "Company",
+        occurredAt: iso(line.dueDate),
+        route: "/accounts",
+        severity: "high",
       });
   });
   await guard("material", async () => {

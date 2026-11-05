@@ -1,5 +1,6 @@
 import type { DemoWorkspace } from "./seed";
 import { mutationId as id, signIn } from "./seed";
+import { previousMonth } from "../jp/payroll-domain";
 
 function day(offset: number): string {
   const date = new Date();
@@ -218,7 +219,8 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
       engagementType: "Daily wage",
       rateType: "daily",
       rateRupees: ["850", "550", "700"][index],
-      effectiveFrom: day(-30),
+      // From the start of the month before last, so last month's pay run has rates in force.
+      effectiveFrom: `${previousMonth(`${previousMonth(day(0))}-15`)}-01`,
       clientMutationId: id(),
     });
     await owner.jp.workforce.reviewRate({
@@ -831,6 +833,147 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     location: "Ground floor, inside walls rooms 1-4",
     length: "48",
     depth: "3",
+    clientMutationId: id(),
+  });
+
+  // Payroll: pay details (accounts proposes, manager approves), last month's approved
+  // attendance, a pay run made by accounts, approved by the owner and recorded as paid, and
+  // the PF deposit for it. Prakash has no pay details (a warning shows); his request waits.
+  const payMonth = previousMonth(day(0));
+  const engineer = await supervisor.jp.workforce.createPerson({
+    siteId: siteA,
+    fullName: "Anil Mohanty",
+    personType: "technician",
+    skillCategory: "Skilled",
+    tradeType: "Site engineer",
+    clientMutationId: id(),
+  });
+  await manager.jp.workforce.reviewPerson({
+    siteId: siteA,
+    personId: engineer.id,
+    status: "Active",
+    reason: "Joining letter and ID checked",
+    clientMutationId: id(),
+  });
+  const profiles: Parameters<typeof accounts.jp.payroll.saveProfile>[0][] = [
+    {
+      siteId: siteA,
+      personId: workers[0],
+      payType: "Daily",
+      pfMember: true,
+      esiMember: true,
+      ptApplies: false,
+      uan: "100200300401",
+      effectiveFrom: `${payMonth}-01`,
+      clientMutationId: id(),
+    },
+    {
+      siteId: siteA,
+      personId: workers[1],
+      payType: "Daily",
+      pfMember: false,
+      esiMember: true,
+      ptApplies: false,
+      effectiveFrom: `${payMonth}-01`,
+      clientMutationId: id(),
+    },
+    {
+      siteId: siteA,
+      personId: engineer.id,
+      payType: "Monthly",
+      basicRupees: "18000",
+      hraRupees: "4000",
+      pfMember: true,
+      esiMember: true,
+      ptApplies: false,
+      uan: "100200300402",
+      effectiveFrom: `${payMonth}-01`,
+      clientMutationId: id(),
+    },
+  ];
+  for (const profile of profiles) {
+    const saved = await accounts.jp.payroll.saveProfile(profile);
+    await manager.jp.payroll.reviewProfile({
+      siteId: siteA,
+      profileId: saved.id,
+      action: "approve",
+      clientMutationId: id(),
+    });
+  }
+  for (const dayOfMonth of ["02", "03", "04", "05", "06"]) {
+    const workDate = `${payMonth}-${dayOfMonth}`;
+    await supervisor.jp.attendance.mark({
+      siteId: siteA,
+      workDate,
+      shiftCode: "GEN",
+      entries: engagements.map((engagementId, index) => ({
+        engagementId,
+        status: "Full Day",
+        regularHours: "8",
+        overtimeHours: index === 0 && dayOfMonth === "03" ? "2" : "0",
+      })),
+      clientMutationId: id(),
+    });
+    await manager.jp.attendance.approve({
+      siteId: siteA,
+      workDate,
+      shiftCode: "GEN",
+      overtime: "approve",
+      clientMutationId: id(),
+    });
+  }
+  const payRun = await accounts.jp.payroll.create({
+    siteId: siteA,
+    month: payMonth,
+    clientMutationId: id(),
+  });
+  const sheet = await accounts.jp.payroll.run({ siteId: siteA, runId: payRun.id });
+  await accounts.jp.payroll.updateLine({
+    siteId: siteA,
+    runId: payRun.id,
+    lineId: sheet.lines.find((line) => line.personId === workers[1])!.id,
+    advanceRupees: "500",
+    clientMutationId: id(),
+  });
+  await accounts.jp.payroll.transition({
+    siteId: siteA,
+    runId: payRun.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
+  await owner.jp.payroll.transition({
+    siteId: siteA,
+    runId: payRun.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
+  await accounts.jp.payroll.markPaid({
+    siteId: siteA,
+    runId: payRun.id,
+    paidOn: day(0),
+    mode: "Bank transfer",
+    reference: "NEFT batch 0412",
+    clientMutationId: id(),
+  });
+  const paid = await accounts.jp.payroll.run({ siteId: siteA, runId: payRun.id });
+  const pfMinor = BigInt(paid.run.pfDueMinor);
+  await accounts.jp.books.recordDeposit({
+    kind: "PF",
+    period: payMonth,
+    amountRupees: `${pfMinor / 100n}.${String(pfMinor % 100n).padStart(2, "0")}`,
+    paidOn: day(0),
+    challan: "TRRN 2026110400123",
+    note: "ECR for the month",
+    clientMutationId: id(),
+  });
+  await accounts.jp.payroll.saveProfile({
+    siteId: siteA,
+    personId: workers[2],
+    payType: "Daily",
+    pfMember: false,
+    esiMember: true,
+    ptApplies: false,
+    effectiveFrom: day(0),
     clientMutationId: id(),
   });
 }
