@@ -1,5 +1,6 @@
 import type { DemoWorkspace } from "./seed";
 import { mutationId as id, signIn } from "./seed";
+import { DEMO_WORKER } from "./config";
 import { previousMonth } from "../jp/payroll-domain";
 
 function day(offset: number): string {
@@ -922,17 +923,27 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
       clientMutationId: id(),
     });
   }
+  // Sunita took ₹1,000 in cash, recovered ₹500 a month; the pay run deducts it by itself.
+  const sunitaAdvance = await supervisor.jp.advances.request({
+    siteId: siteA,
+    personId: workers[1],
+    entryType: "Advance",
+    amountRupees: "1000",
+    installmentRupees: "500",
+    entryDate: `${payMonth}-04`,
+    mode: "Cash",
+    reason: "Family medical expense",
+    clientMutationId: id(),
+  });
+  await manager.jp.advances.review({
+    siteId: siteA,
+    entryId: sunitaAdvance.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
   const payRun = await accounts.jp.payroll.create({
     siteId: siteA,
     month: payMonth,
-    clientMutationId: id(),
-  });
-  const sheet = await accounts.jp.payroll.run({ siteId: siteA, runId: payRun.id });
-  await accounts.jp.payroll.updateLine({
-    siteId: siteA,
-    runId: payRun.id,
-    lineId: sheet.lines.find((line) => line.personId === workers[1])!.id,
-    advanceRupees: "500",
     clientMutationId: id(),
   });
   await accounts.jp.payroll.transition({
@@ -975,5 +986,45 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     ptApplies: false,
     effectiveFrom: day(0),
     clientMutationId: id(),
+  });
+  // An advance waiting for the manager.
+  await supervisor.jp.advances.request({
+    siteId: siteA,
+    personId: workers[0],
+    entryType: "Advance",
+    amountRupees: "2000",
+    installmentRupees: "1000",
+    entryDate: day(0),
+    mode: "UPI",
+    reference: "UPI 4471",
+    reason: "Rent deposit",
+    clientMutationId: id(),
+  });
+  // Worker app: the supervisor's number (for "Call supervisor"), a drawing for the site, and a
+  // login for Ramesh (mason) with everything switched on.
+  await supervisor.jp.notifications.updatePreferences({
+    phone: "9437011111",
+    whatsappOptIn: true,
+    smsOptIn: false,
+    pushOptIn: true,
+  });
+  const pdf =
+    "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n";
+  await manager.jp.documents.upload({
+    projectId: workspace.projectId,
+    siteId: siteA,
+    category: "Drawings",
+    title: "Block 1 ground floor plan (GF-01)",
+    tags: "drawing, ground floor, block 1",
+    fileName: "GF-01.pdf",
+    base64: Buffer.from(pdf, "latin1").toString("base64"),
+    clientMutationId: id(),
+  });
+  await manager.jp.worker.setLogin({
+    siteId: siteA,
+    personId: workers[0],
+    mobile: DEMO_WORKER.mobile,
+    pin: DEMO_WORKER.pin,
+    features: ["money", "attendance", "drawings", "call"],
   });
 }

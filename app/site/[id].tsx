@@ -474,6 +474,7 @@ function GeofenceCard({
   canManage: boolean;
 }) {
   const colors = useColors();
+  const router = useRouter();
   const utils = trpc.useUtils();
   const setFence = trpc.jp.sitesAdmin.setGeofence.useMutation();
   const [radius, setRadius] = useState<"100" | "200" | "500" | "1000">(
@@ -533,6 +534,11 @@ function GeofenceCard({
                     : "Set to my current location"
               }
               onPress={() => void save()}
+            />
+            <SecondaryButton
+              icon="share-location"
+              label="GPS alerts: working hours and who is told"
+              onPress={() => router.push(`/site-presence?siteId=${siteId}` as never)}
             />
           </>
         ) : null}

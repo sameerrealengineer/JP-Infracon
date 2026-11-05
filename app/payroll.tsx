@@ -27,7 +27,7 @@ import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
 const todayText = () => new Date().toISOString().slice(0, 10);
-const TABS = ["runs", "people", "rates"] as const;
+const TABS = ["runs", "khaata", "people", "rates"] as const;
 type Tab = (typeof TABS)[number];
 
 function recentMonths(today: string) {
@@ -55,8 +55,10 @@ export default function PayrollScreen() {
   const params = useLocalSearchParams<{ siteId?: string; tab?: string }>();
   const workspace = useWorkspace();
   const sites = trpc.jp.workspace.mySites.useQuery();
-  const options = (sites.data ?? []).filter((site) =>
-    workspace.sitesWith("payroll.view").includes(site.id),
+  const viewSites = workspace.sitesWith("payroll.view");
+  const advanceSites = workspace.sitesWith("payroll.advance");
+  const options = (sites.data ?? []).filter(
+    (site) => viewSites.includes(site.id) || advanceSites.includes(site.id),
   );
   const [chosen, setChosen] = useState<string | null>(
     typeof params.siteId === "string" ? params.siteId : null,
@@ -65,7 +67,9 @@ export default function PayrollScreen() {
   const [tabChoice, setTab] = useState<string | null>(
     typeof params.tab === "string" ? params.tab : null,
   );
-  const tab: Tab = TABS.find((value) => value === tabChoice) ?? "runs";
+  // Someone who only hands out advances (a supervisor) sees the khaata and nothing else.
+  const tabs: readonly Tab[] = viewSites.includes(siteId) ? TABS : ["khaata"];
+  const tab: Tab = tabs.find((value) => value === tabChoice) ?? tabs[0];
 
   return (
     <AuthGate>
@@ -90,14 +94,22 @@ export default function PayrollScreen() {
               format={(id) => options.find((site) => site.id === id)?.name ?? id}
             />
           ) : null}
-          <ChipGroup
-            options={TABS}
-            value={tab}
-            onChange={setTab}
-            format={(value) =>
-              value === "runs" ? t("Pay runs") : value === "people" ? t("Pay details") : t("Rates")
-            }
-          />
+          {tabs.length > 1 ? (
+            <ChipGroup
+              options={tabs}
+              value={tab}
+              onChange={setTab}
+              format={(value) =>
+                value === "runs"
+                  ? t("Pay runs")
+                  : value === "khaata"
+                    ? t("Khaata")
+                    : value === "people"
+                      ? t("Pay details")
+                      : t("Rates")
+              }
+            />
+          ) : null}
           {!siteId ? (
             <EmptyState
               icon="payments"
@@ -106,6 +118,8 @@ export default function PayrollScreen() {
             />
           ) : tab === "runs" ? (
             <Runs siteId={siteId} colors={colors} />
+          ) : tab === "khaata" ? (
+            <Khaata siteId={siteId} colors={colors} />
           ) : tab === "people" ? (
             <People siteId={siteId} colors={colors} />
           ) : (
@@ -690,6 +704,264 @@ function Rates({ siteId, colors }: { siteId: string; colors: Colors }) {
           ))}
         </>
       ) : null}
+    </>
+  );
+}
+
+const MODES = ["Cash", "UPI", "Bank transfer", "Cheque"] as const;
+
+/** Each person's money on the site: paid, still due, advance; give an advance or record a repayment. */
+function Khaata({ siteId, colors }: { siteId: string; colors: Colors }) {
+  const { t } = useT();
+  const router = useRouter();
+  const utils = trpc.useUtils();
+  const list = trpc.jp.advances.list.useQuery({ siteId });
+  const request = trpc.jp.advances.request.useMutation();
+  const review = trpc.jp.advances.review.useMutation();
+  const [form, setForm] = useState<{ personId: string; entryType: "Advance" | "Repayment" } | null>(
+    null,
+  );
+  const [amount, setAmount] = useState("");
+  const [installment, setInstallment] = useState("");
+  const [entryDate, setEntryDate] = useState(todayText);
+  const [mode, setMode] = useState<(typeof MODES)[number]>("Cash");
+  const [reference, setReference] = useState("");
+  const [why, setWhy] = useState("");
+  const [reason, setReason] = useState("");
+  const [key, setKey] = useState(createClientMutationId);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const open = (personId: string, entryType: "Advance" | "Repayment") => {
+    setForm({ personId, entryType });
+    setAmount("");
+    setInstallment("");
+    setWhy("");
+    setReference("");
+    setError(null);
+  };
+  const save = async () => {
+    if (!form) return;
+    setError(null);
+    try {
+      await request.mutateAsync({
+        siteId,
+        personId: form.personId,
+        entryType: form.entryType,
+        amountRupees: amount,
+        installmentRupees: form.entryType === "Advance" ? installment : null,
+        entryDate,
+        mode,
+        reference: reference.trim() || null,
+        reason: why,
+        clientMutationId: key,
+      });
+      setKey(createClientMutationId());
+      setForm(null);
+      setMessage(t("Saved. It waits for another person to approve it."));
+      await utils.jp.advances.invalidate();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Not saved.");
+    }
+  };
+  const decide = async (entryId: string, action: "approve" | "reject" | "cancel") => {
+    setError(null);
+    try {
+      await review.mutateAsync({
+        siteId,
+        entryId,
+        action,
+        reason: reason.trim() || null,
+        clientMutationId: createClientMutationId(),
+      });
+      setReason("");
+      await utils.jp.advances.invalidate();
+      await utils.jp.payroll.invalidate();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Not saved.");
+    }
+  };
+
+  if (list.isLoading) return <LoadingBlock label="Loading khaata…" />;
+  if (list.error)
+    return <InlineError message={list.error.message} onRetry={() => void list.refetch()} />;
+  const data = list.data!;
+  return (
+    <>
+      <Card>
+        {data.totals.paidMinor !== null ? (
+          <TotalRow label={t("Paid so far")} value={formatMinorAsRupees(data.totals.paidMinor)} />
+        ) : null}
+        {data.totals.dueMinor !== null ? (
+          <TotalRow
+            label={t("Wages still to pay")}
+            value={formatMinorAsRupees(data.totals.dueMinor)}
+            strong
+          />
+        ) : null}
+        <TotalRow
+          label={t("Advance to recover")}
+          value={formatMinorAsRupees(data.totals.advanceMinor)}
+        />
+      </Card>
+      {message ? <Text style={[styles.meta, { color: colors.success }]}>{message}</Text> : null}
+      {error ? <InlineError message={error} /> : null}
+      {data.pending.length ? (
+        <>
+          <SectionHeader title={t("Waiting for approval")} />
+          {data.pending.some((row) => row.canReview || row.canCancel) ? (
+            <Field
+              label={t("Reason (to reject or cancel)")}
+              value={reason}
+              onChangeText={setReason}
+            />
+          ) : null}
+          {data.pending.map((row) => (
+            <Card key={row.id} accent="warning">
+              <Text style={[styles.title, { color: colors.foreground }]}>
+                {row.personName} · {t(row.entryType)} {formatMinorAsRupees(row.amountMinor)}
+              </Text>
+              <Text style={[styles.meta, { color: colors.muted }]}>
+                {String(row.entryDate)} · {t(row.mode)} · {row.reason}
+                {row.entryType === "Advance" && row.installmentMinor !== "0"
+                  ? ` · ${t("recover {amount} a month", { amount: formatMinorAsRupees(row.installmentMinor) })}`
+                  : ""}
+              </Text>
+              {row.canReview ? (
+                <>
+                  <PrimaryButton
+                    icon="check-circle"
+                    label={t("Approve")}
+                    loading={review.isPending}
+                    onPress={() => void decide(row.id, "approve")}
+                  />
+                  <SecondaryButton
+                    label={t("Reject")}
+                    onPress={() => void decide(row.id, "reject")}
+                  />
+                </>
+              ) : null}
+              {row.canCancel ? (
+                <SecondaryButton
+                  label={t("Cancel")}
+                  onPress={() => void decide(row.id, "cancel")}
+                />
+              ) : null}
+            </Card>
+          ))}
+        </>
+      ) : null}
+      <SectionHeader title={t("People")} />
+      {data.people.length === 0 ? (
+        <EmptyState
+          icon="groups"
+          title="Nobody on this site"
+          detail="Add workers to the site team in Workforce first."
+        />
+      ) : (
+        data.people.map((person) => (
+          <Card key={person.id}>
+            <Text style={[styles.title, { color: colors.foreground }]}>{person.name}</Text>
+            {person.dueMinor !== null ? (
+              <TotalRow
+                label={t("Still to pay")}
+                value={formatMinorAsRupees(person.dueMinor)}
+                strong
+              />
+            ) : null}
+            {person.paidMinor !== null ? (
+              <TotalRow label={t("Paid so far")} value={formatMinorAsRupees(person.paidMinor)} />
+            ) : null}
+            <TotalRow
+              label={t("Advance to recover")}
+              value={formatMinorAsRupees(person.advanceOutstandingMinor)}
+            />
+            {person.lastPaidOn ? (
+              <Text style={[styles.meta, { color: colors.muted }]}>
+                {t("Last paid on {date}", { date: person.lastPaidOn })}
+              </Text>
+            ) : null}
+            <View style={[styles.row, { marginTop: 4 }]}>
+              <Text
+                style={[styles.link, { color: colors.primary }]}
+                accessibilityRole="button"
+                accessibilityLabel={`Open khaata of ${person.name}`}
+                onPress={() =>
+                  router.push(`/khaata?siteId=${siteId}&personId=${person.id}` as never)
+                }
+              >
+                {t("Full khaata")}
+              </Text>
+            </View>
+            {data.can.request && form?.personId !== person.id ? (
+              <View style={[styles.row, { marginTop: 4 }]}>
+                <Text
+                  style={[styles.link, { color: colors.primary }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Give advance to ${person.name}`}
+                  onPress={() => open(person.id, "Advance")}
+                >
+                  {t("Give advance")}
+                </Text>
+                {person.advanceOutstandingMinor !== "0" ? (
+                  <Text
+                    style={[styles.link, { color: colors.primary, marginLeft: 16 }]}
+                    accessibilityRole="button"
+                    onPress={() => open(person.id, "Repayment")}
+                  >
+                    {t("Record repayment")}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+            {form?.personId === person.id ? (
+              <View style={{ marginTop: 8 }}>
+                <Text style={[styles.title, { color: colors.foreground }]}>
+                  {form.entryType === "Advance" ? t("Give advance") : t("Record repayment")}
+                </Text>
+                <Field
+                  label={t("Amount (₹)")}
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="decimal-pad"
+                />
+                {form.entryType === "Advance" ? (
+                  <Field
+                    label={t("Recover each month (₹)")}
+                    hint={t("Empty: recover all from the next pay run.")}
+                    value={installment}
+                    onChangeText={setInstallment}
+                    keyboardType="decimal-pad"
+                  />
+                ) : null}
+                <Field label={t("Date")} value={entryDate} onChangeText={setEntryDate} />
+                <ChipGroup
+                  label={t("Mode")}
+                  options={MODES}
+                  value={mode}
+                  onChange={setMode}
+                  format={(v) => t(v)}
+                />
+                {mode !== "Cash" ? (
+                  <Field
+                    label={t("Reference (bank, UPI or cheque)")}
+                    value={reference}
+                    onChangeText={setReference}
+                  />
+                ) : null}
+                <Field label={t("What is it for")} value={why} onChangeText={setWhy} />
+                <PrimaryButton
+                  icon="save"
+                  label={t("Save")}
+                  loading={request.isPending}
+                  onPress={() => void save()}
+                />
+                <SecondaryButton label={t("Cancel")} onPress={() => setForm(null)} />
+              </View>
+            ) : null}
+          </Card>
+        ))
+      )}
     </>
   );
 }

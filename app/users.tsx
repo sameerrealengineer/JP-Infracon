@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -96,6 +97,7 @@ export default function UserAccountsScreen() {
   const colors = useColors();
   const utils = trpc.useUtils();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
+  const router = useRouter();
   const access = trpc.jp.workspace.onboardingState.useQuery();
   const options = trpc.jp.accounts.options.useQuery();
   const needsCompanySetup = useNeedsCompanySetup();
@@ -637,6 +639,20 @@ export default function UserAccountsScreen() {
                           </View>
                           {account.username ? (
                             <View style={styles.actions}>
+                              {account.id !== me.data?.id && account.businessRole !== "owner" ? (
+                                <Pressable
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Access for ${account.name || account.username}`}
+                                  onPress={() =>
+                                    router.push(
+                                      `/user-access?organizationId=${organizationId}&userId=${account.id}` as never,
+                                    )
+                                  }
+                                  style={[styles.iconAction, { borderColor: colors.border }]}
+                                >
+                                  <MaterialIcons name="tune" size={17} color={colors.primary} />
+                                </Pressable>
+                              ) : null}
                               {me.data?.platformOwner ? (
                                 <Pressable
                                   accessibilityRole="button"

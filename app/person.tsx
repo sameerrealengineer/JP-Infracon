@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { WorkerAppCard } from "@/components/jp/worker-app-card";
 import { Avatar } from "@/components/jp/avatar";
 import {
   AppHeader,
@@ -310,6 +311,9 @@ export default function PersonScreen() {
                 </Card>
               )}
 
+              {data.sites[0] ? (
+                <WorkerAppCard siteId={data.sites[0].siteId} personId={personId} />
+              ) : null}
               <SectionHeader title={t("Work by site")} />
               {data.sites.length === 0 ? (
                 <EmptyState

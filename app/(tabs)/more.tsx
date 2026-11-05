@@ -38,6 +38,7 @@ export default function MoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const auth = useAuth({ autoFetch: false });
+  const serverLogout = trpc.auth.logout.useMutation();
   const workspace = useWorkspace();
   const { colorScheme, setColorScheme } = useThemeContext();
   const { online } = useConnectivity();
@@ -277,6 +278,8 @@ export default function MoreScreen() {
   const signOut = async () => {
     setSigningOut(true);
     try {
+      // Revoke the session on the server (works on every server, including the online demo).
+      await serverLogout.mutateAsync().catch(() => null);
       await auth.logout();
       // Remove every cached record so the next person on this phone sees nothing of yours.
       queryClient.clear();

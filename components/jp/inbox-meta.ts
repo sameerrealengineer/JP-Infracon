@@ -21,5 +21,6 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "subcontract.check": { icon: "straighten", tone: "warning" },
   "payroll.review": { icon: "payments", tone: "accent" },
   "payroll.profile": { icon: "badge", tone: "info" },
+  "payroll.advance": { icon: "savings", tone: "warning" },
   "accounts.due": { icon: "account-balance", tone: "error" },
 };

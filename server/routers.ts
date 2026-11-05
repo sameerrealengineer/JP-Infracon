@@ -12,6 +12,7 @@ import {
   changeOwnPassword,
   credentialSessionLifetimeMs,
   passwordLogin,
+  workerPinLogin,
   registerWithInvite,
   revokeSession,
 } from "./_core/credential-auth";
@@ -45,6 +46,17 @@ export const appRouter = router({
       )
       .mutation(async ({ ctx, input }) => {
         const result = await passwordLogin(input.username, input.password);
+        ctx.res.cookie(getSessionCookieName(ctx.req), result.sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: credentialSessionLifetimeMs,
+        });
+        const webClient = ctx.req.headers["x-jp-client-platform"] === "web";
+        return { user: result.user, sessionToken: webClient ? null : result.sessionToken };
+      }),
+    workerLogin: publicProcedure
+      .input(z.object({ mobile: z.string().trim().min(10).max(16), pin: z.string().max(6) }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await workerPinLogin(input.mobile, input.pin);
         ctx.res.cookie(getSessionCookieName(ctx.req), result.sessionToken, {
           ...getSessionCookieOptions(ctx.req),
           maxAge: credentialSessionLifetimeMs,

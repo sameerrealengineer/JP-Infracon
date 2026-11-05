@@ -65,6 +65,7 @@ export const RUN_TONE: Record<string, Tone> = {
   Excess: "info",
   Reversed: "warning",
   Recorded: "success",
+  Pending: "warning",
 };
 
 export const commercialStyles = StyleSheet.create({

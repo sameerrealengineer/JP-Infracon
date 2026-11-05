@@ -23,6 +23,7 @@ import { formatMinorAsRupees } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { formatDays } from "@/lib/jp/payroll-domain";
 import { buildPayslipsHtml } from "@/lib/jp/payslip";
+import { deliverTextFile } from "@/lib/device-files";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -55,6 +56,7 @@ export default function PayRunScreen() {
   const updateLine = trpc.jp.payroll.updateLine.useMutation();
   const refreshRun = trpc.jp.payroll.refresh.useMutation();
   const markPaid = trpc.jp.payroll.markPaid.useMutation();
+  const exportFile = trpc.jp.payroll.exportFile.useMutation();
   const data = detail.data;
 
   const [reason, setReason] = useState("");
@@ -149,6 +151,22 @@ export default function PayRunScreen() {
       setPayKey(createClientMutationId());
       setMessage(t("Recorded as paid."));
       await refresh();
+    } catch (cause) {
+      fail(cause);
+    }
+  };
+
+  const download = async (kind: "ecr" | "esic") => {
+    setError(null);
+    setMessage(null);
+    try {
+      const file = await exportFile.mutateAsync({ siteId, runId, kind });
+      await deliverTextFile(file.fileName, file.content, file.mimeType);
+      const left = file.skipped.map((row) => `${row.name} (${t(row.reason)})`).join(", ");
+      setMessage(
+        t("{count} people in the file.", { count: file.count }) +
+          (left ? ` ${t("Left out: {names}", { names: left })}` : ""),
+      );
     } catch (cause) {
       fail(cause);
     }
@@ -364,6 +382,28 @@ export default function PayRunScreen() {
               ) : null}
               {error ? <InlineError message={error} /> : null}
 
+              {data.run.status === "Approved" || data.run.status === "Paid" ? (
+                <Card>
+                  <Text style={[styles.title, { color: colors.foreground }]}>
+                    {t("Upload files")}
+                  </Text>
+                  <Text style={[styles.meta, { color: colors.muted }]}>
+                    {t(
+                      "PF ECR 2.0 text for the EPFO portal; ESIC columns to paste into the portal's Excel template.",
+                    )}
+                  </Text>
+                  <SecondaryButton
+                    icon="description"
+                    label={t("PF ECR file")}
+                    onPress={() => void download("ecr")}
+                  />
+                  <SecondaryButton
+                    icon="table-view"
+                    label={t("ESIC file")}
+                    onPress={() => void download("esic")}
+                  />
+                </Card>
+              ) : null}
               <SectionHeader
                 title={t("Wage sheet")}
                 action={data.lines.length ? t("All payslips") : undefined}

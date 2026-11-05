@@ -6,6 +6,8 @@ export const DEMO_MODE = process.env.EXPO_PUBLIC_JP_DEMO === "1";
 
 /** Shared password of every demo account. Demo only: these accounts exist only on the phone. */
 export const DEMO_PASSWORD = "JPDemo@12345";
+/** Worker (mistri) login in the demo: Ramesh Behera, mason. Demo data only. */
+export const DEMO_WORKER = { mobile: "9876500001", pin: "482913" } as const;
 
 export type DemoAccount = {
   username: string;

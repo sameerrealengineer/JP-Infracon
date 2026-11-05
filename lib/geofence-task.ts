@@ -74,6 +74,13 @@ export async function startSiteAlerts(fences: Fence[]): Promise<void> {
     })),
   );
   await AsyncStorage.setItem(ENABLED_KEY, "yes");
+  await createBackgroundClient()
+    .jp.presence.reportTracking.mutate({
+      enabled: true,
+      fenceCount: Math.min(fences.length, 20),
+      platform: Platform.OS,
+    })
+    .catch(() => null);
 }
 
 export async function stopSiteAlerts(): Promise<void> {
@@ -81,6 +88,9 @@ export async function stopSiteAlerts(): Promise<void> {
   if (await Location.hasStartedGeofencingAsync(GEOFENCE_TASK).catch(() => false))
     await Location.stopGeofencingAsync(GEOFENCE_TASK);
   await AsyncStorage.setItem(ENABLED_KEY, "no");
+  await createBackgroundClient()
+    .jp.presence.reportTracking.mutate({ enabled: false, fenceCount: 0, platform: Platform.OS })
+    .catch(() => null);
 }
 
 /** Current position for GPS-tagged photos; null when permission is refused or no fix. */

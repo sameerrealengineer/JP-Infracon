@@ -52,6 +52,11 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `payroll-domain.ts` | Dated statutory rates (`DEFAULT_RATES`: EPF ceiling ₹25,000 from 17 Sep 2026, ESI to ₹21,000, no Odisha PT from Apr 2026, overtime 2×, 50% wages rule), wages from attendance, proration, PF (rupee rounding, EPS split), ESI (next rupee), PT slabs, pay line and run totals, run transitions |
 | `accounts-domain.ts` | Due dates (PF/ESI 15th, TDS 7th, March TDS 30 April), dues against deposits (Paid/Due/Overdue/Excess), deposit checks, GST by month, project P&L, vendor type → cost head |
 | `payslip.ts` | Escaped printable payslips (A5, one page per person) |
+| `advance-domain.ts` | Advance position (given, repaid, recovered by approved runs, pending in open runs, outstanding), recoverable now, suggested installment, entry checks, worker money position |
+| `statutory-files.ts` | EPFO ECR 2.0 monthly text (11 fields, `#~#`, whole rupees, NCP days) and ESIC contribution CSV (template columns); people without UAN / IP number listed as left out |
+| `access-catalog.ts` | Per-user access groups by module, plain labels, company-level keys, who may switch what on |
+| `presence-rules.ts` | IST clock, working hours/days, which arrival/departure alerts, settings checks |
+| `worker-app.ts` | Worker PIN rules (6 digits, no repeats/runs), lock after wrong PINs, switched-on features, attendance signs |
 
 ## Conventions
 

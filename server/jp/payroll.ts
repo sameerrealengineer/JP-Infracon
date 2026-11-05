@@ -18,9 +18,12 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getSiteScope, selfApprovalAllowed, type SiteScope } from "./access";
 import { commercialAccess } from "./commercial-access";
+import { buildEcr, buildEsicCsv, type FileLine } from "../../lib/jp/statutory-files";
+import { advanceLedger } from "./advances";
+import { recoverableNow, suggestedDeduction } from "../../lib/jp/advance-domain";
 import { parseHours, type AttendanceStatus, type RateType } from "../../lib/jp/attendance-domain";
 import { parsePercentBps } from "../../lib/jp/billing-domain";
-import { parseRupeesToMinor } from "../../lib/jp/finance-domain";
+import { formatMinorAsRupees, parseRupeesToMinor } from "../../lib/jp/finance-domain";
 import {
   DEFAULT_RATES,
   RUN_TRANSITIONS,
@@ -241,6 +244,7 @@ async function buildRun(
   month: string,
   rates: PayrollRates,
   keep: Map<string, Adjustment>,
+  runId: string | null,
 ) {
   const bounds = monthBounds(month);
   if (!bounds) bad("Choose a month like 2026-10.");
@@ -277,6 +281,7 @@ async function buildRun(
         .where(inArray(people.id, [...personIds]))
     : [];
   const nameOf = new Map(names.map((row) => [row.id, row.name]));
+  const ledger = await advanceLedger(db, scope.siteId, [...personIds]);
   // People paid at another site this month: ceilings apply per person, so flag it.
   const elsewhere = personIds.size
     ? await db
@@ -294,6 +299,23 @@ async function buildRun(
           ),
         )
     : [];
+  // Advance recovery: what is kept from the run, or the installment of the latest advance,
+  // never more than is still to recover (other open runs' deductions counted).
+  const advanceWarnings = new Map<string, string>();
+  const advanceFor = (personId: string) => {
+    const entries = ledger.entriesOf(personId);
+    const recoverable = recoverableNow(entries, ledger.deductionsOf(personId), runId);
+    const kept = keep.get(personId);
+    const wanted = kept ? kept.advanceMinor : suggestedDeduction(entries, recoverable);
+    if (wanted > recoverable) {
+      advanceWarnings.set(
+        personId,
+        `Advance recovery lowered to ${formatMinorAsRupees(recoverable)}: only that much is left to recover.`,
+      );
+      return recoverable;
+    }
+    return wanted;
+  };
   const lines: BuiltLine[] = [];
   for (const personId of personIds) {
     const profile = profiles.get(personId) ?? null;
@@ -379,10 +401,23 @@ async function buildRun(
       esiMember: profile?.esiMember === "Yes",
       ptApplies: profile?.ptApplies === "Yes",
       tdsMinor: adjust?.tdsMinor ?? 0n,
-      advanceMinor: adjust?.advanceMinor ?? 0n,
+      advanceMinor: advanceFor(personId),
       otherDeductionMinor: adjust?.otherDeductionMinor ?? 0n,
     };
+    const advanceNote = advanceWarnings.get(personId);
+    if (advanceNote) warnings.push(advanceNote);
     let result = payrollLine(input, rates);
+    if ("code" in result && input.advanceMinor > 0n) {
+      // Pay too low for the full installment: recover what the pay allows, the rest next time.
+      const without = payrollLine({ ...input, advanceMinor: 0n }, rates);
+      if (!("code" in without) && without.netMinor > 0n) {
+        const part = input.advanceMinor < without.netMinor ? input.advanceMinor : without.netMinor;
+        result = payrollLine({ ...input, advanceMinor: part }, rates);
+        warnings.push(
+          `Advance recovery lowered to ${formatMinorAsRupees(part)}: this month's pay is low.`,
+        );
+      }
+    }
     if ("code" in result) {
       result = payrollLine({ ...input, advanceMinor: 0n, otherDeductionMinor: 0n }, rates);
       warnings.push(
@@ -889,7 +924,7 @@ export const payrollRouter = router({
           ),
         )
         .limit(1);
-      const built = await buildRun(db, scope, input.month, rates, new Map());
+      const built = await buildRun(db, scope, input.month, rates, new Map(), null);
       return {
         ...totalsOf(built.lines),
         unapproved: built.unapproved,
@@ -935,7 +970,7 @@ export const payrollRouter = router({
           bad(
             `${open[0].runNumber} (${open[0].status}) already covers this month. Cancel it first to make a new one.`,
           );
-        const built = await buildRun(tx as unknown as Db, scope, input.month, rates, new Map());
+        const built = await buildRun(tx as unknown as Db, scope, input.month, rates, new Map(), id);
         if (!built.lines.length)
           bad("Nobody to pay this month: no approved attendance and no monthly salary profiles.");
         const base = `PR-${scope.siteCode}-${input.month.replace("-", "")}`;
@@ -1098,6 +1133,18 @@ export const payrollRouter = router({
           if (paidDays === null || paidDays > BigInt(bounds.days) * 100n)
             bad(`Paid days must be between 0 and ${bounds.days}.`);
         }
+        const ledger = await advanceLedger(tx as unknown as Db, scope.siteId, [line.personId]);
+        const recoverable = recoverableNow(
+          ledger.entriesOf(line.personId),
+          ledger.deductionsOf(line.personId),
+          run.id,
+        );
+        if (advance > recoverable)
+          bad(
+            recoverable === 0n
+              ? "This person has no advance to recover. Record the advance in the khaata first."
+              : `Only ${formatMinorAsRupees(recoverable)} of advance is left to recover.`,
+          );
         const keep = await adjustmentsOf(tx as unknown as Db, run.id);
         keep.set(line.personId, {
           paidDaysHundredths: paidDays,
@@ -1112,6 +1159,7 @@ export const payrollRouter = router({
           run.month,
           snapshotRates(run.ratesSnapshot),
           keep,
+          run.id,
         );
         const updated = built.lines.find((row) => row.personId === line.personId);
         if (!updated) bad("This person has nothing to pay this month any more. Refresh the run.");
@@ -1168,6 +1216,7 @@ export const payrollRouter = router({
           run.month,
           snapshotRates(run.ratesSnapshot),
           keep,
+          run.id,
         );
         await writeLines(tx as unknown as Db, run.id, built.lines);
         await audit(tx as unknown as Db, scope, ctx.user.id, {
@@ -1268,6 +1317,77 @@ export const payrollRouter = router({
         });
       });
       return { ok: true };
+    }),
+
+  /** EPFO ECR 2.0 text or an ESIC contribution CSV for an approved or paid run (audited). */
+  exportFile: protectedProcedure
+    .input(z.object({ siteId: uuid, runId: uuid, kind: z.enum(["ecr", "esic"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const scope = await getSiteScope(ctx.user, input.siteId, "payroll.view");
+      const db = requireDb(await getDb());
+      const run = await loadRun(db, scope.siteId, input.runId);
+      if (run.status !== "Approved" && run.status !== "Paid")
+        bad("Upload files are made only from an approved pay run.");
+      const rows = await db
+        .select({ line: payrollLines, name: people.fullName })
+        .from(payrollLines)
+        .innerJoin(people, eq(payrollLines.personId, people.id))
+        .where(eq(payrollLines.runId, run.id));
+      const profileIds = rows.map((row) => row.line.profileId).filter((id): id is string => !!id);
+      const profiles = profileIds.length
+        ? await db
+            .select({
+              id: payrollProfiles.id,
+              uan: payrollProfiles.uan,
+              esiNumber: payrollProfiles.esiNumber,
+            })
+            .from(payrollProfiles)
+            .where(inArray(payrollProfiles.id, profileIds))
+        : [];
+      const lines: FileLine[] = rows
+        .map(({ line, name }) => {
+          const profile = profiles.find((p) => p.id === line.profileId);
+          return {
+            name,
+            uan: profile?.uan ?? null,
+            esiNumber: profile?.esiNumber ?? null,
+            payType: line.payType,
+            workedDaysHundredths: line.workedDaysHundredths,
+            paidDaysHundredths: line.paidDaysHundredths,
+            grossMinor: line.grossMinor,
+            pfWageMinor: line.pfWageMinor,
+            pfEmployeeMinor: line.pfEmployeeMinor,
+            employerEpsMinor: line.employerEpsMinor,
+            employerEpfMinor: line.employerEpfMinor,
+            esiEmployeeMinor: line.esiEmployeeMinor,
+          };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const bounds = monthBounds(run.month)!;
+      const built =
+        input.kind === "ecr"
+          ? buildEcr(lines, bounds.days, snapshotRates(run.ratesSnapshot).epsCeilingMinor)
+          : buildEsicCsv(lines);
+      if (built.count === 0)
+        bad(
+          input.kind === "ecr"
+            ? "Nobody in this run has PF with a UAN."
+            : "Nobody in this run has ESI with an IP number.",
+        );
+      await audit(db, scope, ctx.user.id, {
+        action: `payroll.export_${input.kind}`,
+        entityType: "payroll_run",
+        entityId: run.id,
+        after: { runNumber: run.runNumber, count: built.count, skipped: built.skipped.length },
+      });
+      const stem = `${run.runNumber}-${input.kind === "ecr" ? "ECR" : "ESIC"}`;
+      return {
+        fileName: input.kind === "ecr" ? `${stem}.txt` : `${stem}.csv`,
+        mimeType: input.kind === "ecr" ? "text/plain" : "text/csv",
+        content: built.text,
+        count: built.count,
+        skipped: built.skipped,
+      };
     }),
 
   /** Record that the approved wages were paid (an internal ledger record, not a bank transfer). */

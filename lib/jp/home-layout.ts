@@ -200,7 +200,7 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         tone: "success",
         route: "/payroll",
         anyOf: ["payroll.view"],
-        inboxKinds: ["payroll.review", "payroll.profile"],
+        inboxKinds: ["payroll.review", "payroll.profile", "payroll.advance"],
       },
       {
         key: "people",

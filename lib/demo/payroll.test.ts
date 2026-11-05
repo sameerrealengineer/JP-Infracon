@@ -165,7 +165,8 @@ describe("payroll and accounts", () => {
       siteId,
       runId: created.id,
       lineId: anil.id,
-      advanceRupees: "99999",
+      otherDeductionRupees: "99999",
+      otherDeductionNote: "Test",
       clientMutationId: mutationId(),
     });
     expect(big.warnings.join(" ")).toMatch(/removed/);

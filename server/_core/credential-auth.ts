@@ -19,8 +19,11 @@ import {
   systemBootstrap,
   userCredentials,
   users,
+  workerAccounts,
   type User,
 } from "../../drizzle/schema";
+import { normalizeIndianMobile } from "../../lib/jp/notify-policy";
+import { afterWrongPin } from "../../lib/jp/worker-app";
 import { isWellFormedInviteCode, normalizeInviteCode } from "../../lib/jp/invite-code";
 import { effectiveNow } from "../../lib/jp/effective-time";
 import { getDb } from "../db";
@@ -87,6 +90,17 @@ export async function hashPassword(password: string): Promise<string> {
       message: "Use a password between 12 and 128 characters.",
     });
   }
+  return scryptHash(password);
+}
+
+/** A worker's 6-digit PIN, hashed the same way (the lock after wrong PINs guards guessing). */
+export async function hashPin(pin: string): Promise<string> {
+  if (!/^\d{6}$/.test(pin))
+    throw new TRPCError({ code: "BAD_REQUEST", message: "The PIN must be 6 digits." });
+  return scryptHash(pin);
+}
+
+async function scryptHash(password: string): Promise<string> {
   const salt = randomBytes(16);
   const digest = (await scrypt(password, salt, SCRYPT_BYTES, {
     N: SCRYPT_N,
@@ -238,6 +252,59 @@ export async function passwordLogin(usernameInput: string, password: string) {
   }
   await clearFailedLogin(identifierHash);
   return issueSession(record.user, record.credential.mustChangePassword === 1);
+}
+
+const INVALID_PIN_MESSAGE =
+  "Mobile number or PIN is wrong, or this login is locked for a while. Ask your supervisor.";
+
+/**
+ * Worker (mistri / labour) sign-in with a mobile number and 6-digit PIN. Five wrong PINs lock the
+ * login for 30 minutes; unknown numbers are throttled too and get the same answer, so the
+ * response never tells which numbers have an account.
+ */
+export async function workerPinLogin(mobileInput: string, pin: string) {
+  const mobile = normalizeIndianMobile(mobileInput);
+  const identifierHash = throttleKey(`worker:${mobile ?? mobileInput}`);
+  if (!mobile || !/^\d{6}$/.test(pin) || (await isLoginBlocked(identifierHash))) {
+    await verifyPassword(pin || "000000", DUMMY_PASSWORD_HASH);
+    throw new TRPCError({ code: "UNAUTHORIZED", message: INVALID_PIN_MESSAGE });
+  }
+  const db = await getDb();
+  if (!db)
+    throw new TRPCError({
+      code: "SERVICE_UNAVAILABLE",
+      message: "Sign-in is temporarily unavailable.",
+    });
+  const [record] = await db
+    .select({ user: users, account: workerAccounts })
+    .from(workerAccounts)
+    .innerJoin(users, eq(workerAccounts.userId, users.id))
+    .where(eq(workerAccounts.mobile, mobile))
+    .limit(1);
+  const now = new Date();
+  const locked = Boolean(record?.account.lockedUntil && record.account.lockedUntil > now);
+  const matches = await verifyPassword(pin, record?.account.pinHash ?? DUMMY_PASSWORD_HASH);
+  if (
+    !record ||
+    locked ||
+    !matches ||
+    record.account.status !== "Active" ||
+    record.user.accountStatus !== "Active"
+  ) {
+    await recordFailedLogin(identifierHash);
+    if (record && !locked && !matches)
+      await db
+        .update(workerAccounts)
+        .set(afterWrongPin(record.account.failedAttempts, now))
+        .where(eq(workerAccounts.id, record.account.id));
+    throw new TRPCError({ code: "UNAUTHORIZED", message: INVALID_PIN_MESSAGE });
+  }
+  await clearFailedLogin(identifierHash);
+  await db
+    .update(workerAccounts)
+    .set({ failedAttempts: 0, lockedUntil: null })
+    .where(eq(workerAccounts.id, record.account.id));
+  return issueSession(record.user, false);
 }
 
 export async function bootstrapStatus(): Promise<{ initialized: boolean }> {

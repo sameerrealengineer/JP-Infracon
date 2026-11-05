@@ -10,6 +10,7 @@ import {
   subcontractBills,
   workMeasurements,
   payrollProfiles,
+  workerAdvances,
   payrollRuns,
   people,
   workOrders,
@@ -357,6 +358,45 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         siteName: row.siteName,
         occurredAt: iso(row.at),
         route: `/payroll?siteId=${row.siteId}&tab=people`,
+        severity: "normal",
+      });
+  });
+  await guard("advances", async () => {
+    const approveSites = sitesWith(capabilities, "payroll.approve");
+    if (!approveSites.length) return;
+    const rows = await db
+      .select({
+        id: workerAdvances.id,
+        entryType: workerAdvances.entryType,
+        amount: workerAdvances.amountMinor,
+        name: people.fullName,
+        personId: workerAdvances.personId,
+        siteId: workerAdvances.siteId,
+        siteName: sites.name,
+        at: workerAdvances.createdAt,
+      })
+      .from(workerAdvances)
+      .innerJoin(people, eq(workerAdvances.personId, people.id))
+      .innerJoin(sites, eq(workerAdvances.siteId, sites.id))
+      .where(
+        and(
+          inArray(workerAdvances.siteId, approveSites),
+          eq(workerAdvances.status, "Pending"),
+          ne(workerAdvances.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workerAdvances.createdAt))
+      .limit(LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `advance-${row.id}`,
+        kind: "payroll.advance",
+        title: row.entryType === "Advance" ? "Advance to approve" : "Advance repayment to approve",
+        detail: `${row.name} · ${formatMinorAsRupees(row.amount)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/payroll?siteId=${row.siteId}&tab=khaata`,
         severity: "normal",
       });
   });

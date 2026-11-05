@@ -2907,3 +2907,108 @@ export const statutoryDeposits = mysqlTable(
     ),
   }),
 );
+
+// Worker advances (lib/jp/advance-domain.ts): money given ahead of wages and cash repaid,
+// each approved by a different person; pay runs recover advances through line deductions.
+export const workerAdvances = mysqlTable(
+  "worker_advances",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    entryType: mysqlEnum("entryType", ["Advance", "Repayment"]).notNull(),
+    amountMinor: money("amountMinor").notNull(),
+    installmentMinor: money("installmentMinor").notNull(),
+    entryDate: date("entryDate", { mode: "string" }).notNull(),
+    mode: mysqlEnum("mode", ["Bank transfer", "UPI", "Cheque", "Cash"]).notNull(),
+    reference: varchar("reference", { length: 120 }),
+    reason: text("reason").notNull(),
+    status: mysqlEnum("status", ["Pending", "Approved", "Rejected", "Cancelled"])
+      .default("Pending")
+      .notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    workerAdvanceSitePersonIndex: index("worker_advance_site_person_idx").on(
+      table.siteId,
+      table.personId,
+      table.status,
+    ),
+  }),
+);
+
+// Site presence rules (lib/jp/presence-rules.ts): working hours and days in India time, which
+// events alert, and who gets the alert (empty = site leads). One row per site.
+export const sitePresenceSettings = mysqlTable("site_presence_settings", {
+  siteId: varchar("siteId", { length: 36 })
+    .primaryKey()
+    .references(() => sites.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  workStart: varchar("workStart", { length: 5 }).notNull(),
+  workEnd: varchar("workEnd", { length: 5 }).notNull(),
+  workDays: varchar("workDays", { length: 20 }).notNull(),
+  alertOnLeave: mysqlEnum("alertOnLeave", ["Yes", "No"]).default("Yes").notNull(),
+  alertOnArrive: mysqlEnum("alertOnArrive", ["Yes", "No"]).default("No").notNull(),
+  recipientUserIds: text("recipientUserIds"),
+  updatedBy: int("updatedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Whether a person's phone is watching site boundaries, reported by the phone itself.
+export const presenceTrackingStatus = mysqlTable("presence_tracking_status", {
+  userId: int("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "restrict" }),
+  enabled: mysqlEnum("enabled", ["Yes", "No"]).notNull(),
+  fenceCount: int("fenceCount").notNull(),
+  platform: varchar("platform", { length: 20 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Worker app logins (lib/jp/worker-app.ts): a mobile number and 6-digit PIN for a workforce
+// person, with its own user row (no company membership, so only the worker procedures answer),
+// the features an authorised person switched on, and a lock after repeated wrong PINs.
+export const workerAccounts = mysqlTable("worker_accounts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  personId: varchar("personId", { length: 36 })
+    .notNull()
+    .unique()
+    .references(() => people.id, { onDelete: "restrict" }),
+  userId: int("userId")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "restrict" }),
+  mobile: varchar("mobile", { length: 15 }).notNull().unique(),
+  pinHash: varchar("pinHash", { length: 255 }).notNull(),
+  features: text("features"),
+  status: mysqlEnum("status", ["Active", "Disabled"]).default("Active").notNull(),
+  failedAttempts: int("failedAttempts").default(0).notNull(),
+  lockedUntil: timestamp("lockedUntil"),
+  createdBy: int("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});

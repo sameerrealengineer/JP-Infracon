@@ -6,6 +6,17 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-05 (b) — worker khaata, ECR/ESIC, per-user access, GPS alert rules, mistri app
+
+Delivered in source (typecheck, 445 unit/server tests including demo-backend flows for advances, user access, GPS rules and the worker app; live Playwright on the demo server). Migrations 0025–0027 add new tables only and are not applied anywhere yet. Sized for one company with 5–50 users.
+
+- Worker khaata: advances and repayments with maker-checker, recovered once through pay runs (installment suggested and capped), paid / due / advance per person.
+- PF ECR 2.0 text and ESIC contribution CSV from approved pay runs (ESIC still has to be pasted into the portal's .xls template).
+- Per-user access: authorised people switch any module or action On/Off per user, for all sites or one site, enforced by the server.
+- GPS alerts: per-site working hours/days (IST) and recipients; leaving the site in working hours alerts them (WhatsApp needs the recipient's opt-in); tracking on/off per person visible to site managers. Tracking cannot be forced on a phone.
+- Mistri app: mobile + 6-digit PIN login (lock after 5 wrong), simple big-tile screen with only switched-on features (money, attendance, drawings, call supervisor), also shown on a supervisor's phone for workers without a smartphone.
+- Open: read-aloud (voice) on the worker screen, OTP/forgot-PIN by WhatsApp, native-speaker review of the new Hindi/Odia text, field test with real workers.
+
 ## Increment 2026-11-05 — ERP slice 4: Payroll and Accounts
 
 Delivered in source (typecheck, 413 unit/server tests incl. 8 payroll/accounts flows over the demo SQLite backend, 15 live Playwright flows on the demo server; not run against the shared database or a real bank). Migration 0024 (new tables only) is not applied anywhere yet.

@@ -101,6 +101,7 @@ export type InboxItem = {
     | "subcontract.check"
     | "payroll.review"
     | "payroll.profile"
+    | "payroll.advance"
     | "accounts.due";
   title: string;
   detail: string;

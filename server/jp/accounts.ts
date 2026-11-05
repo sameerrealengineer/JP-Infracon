@@ -56,7 +56,7 @@ function requireDb(db: Awaited<ReturnType<typeof getDb>>) {
   return db;
 }
 
-async function assertCanManageOrganization(
+export async function assertCanManageOrganization(
   user: typeof users.$inferSelect,
   organizationId: string,
 ) {

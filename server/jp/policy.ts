@@ -392,16 +392,17 @@ const subcontractRoleDefaults: Record<BusinessRole, readonly string[]> = {
 };
 
 /** Payroll (site scoped): accounts prepares, a manager or leader approves. */
-const allPayroll = ["payroll.view", "payroll.prepare", "payroll.approve"];
+const allPayroll = ["payroll.view", "payroll.prepare", "payroll.approve", "payroll.advance"];
 /** Accounts (company level): statutory dues and deposits, GST summary, project profit. */
 const allAccounts = ["accounts.view", "accounts.manage"];
 const payrollRoleDefaults: Record<BusinessRole, readonly string[]> = {
   owner: [...allPayroll, ...allAccounts],
   director: [...allPayroll, ...allAccounts],
   admin: [...allPayroll, ...allAccounts],
-  project_manager: ["payroll.view", "payroll.approve"],
-  supervisor: [],
-  accounts: ["payroll.view", "payroll.prepare", ...allAccounts],
+  project_manager: ["payroll.view", "payroll.approve", "payroll.advance"],
+  // Supervisors hand out site advances, so they may request one (a manager approves it).
+  supervisor: ["payroll.advance"],
+  accounts: ["payroll.view", "payroll.prepare", "payroll.advance", ...allAccounts],
   storekeeper: [],
   auditor: ["payroll.view", "accounts.view"],
 };

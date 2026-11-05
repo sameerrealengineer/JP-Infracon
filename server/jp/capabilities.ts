@@ -100,6 +100,7 @@ export const permissionKeys = [
   "payroll.view",
   "payroll.prepare",
   "payroll.approve",
+  "payroll.advance",
   "accounts.view",
   "accounts.manage",
 ] as const;
