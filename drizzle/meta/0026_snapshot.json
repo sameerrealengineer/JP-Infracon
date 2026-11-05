@@ -2920,8 +2920,8 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
-        "goods_receipt_lines_purchaseOrderLineId_purchase_order_lines_id_fk": {
-          "name": "goods_receipt_lines_purchaseOrderLineId_purchase_order_lines_id_fk",
+        "grn_line_po_line_fk": {
+          "name": "grn_line_po_line_fk",
           "tableFrom": "goods_receipt_lines",
           "tableTo": "purchase_order_lines",
           "columnsFrom": [

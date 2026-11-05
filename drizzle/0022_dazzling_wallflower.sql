@@ -89,7 +89,7 @@ CREATE TABLE `purchase_orders` (
 );
 --> statement-breakpoint
 ALTER TABLE `goods_receipt_lines` ADD CONSTRAINT `goods_receipt_lines_goodsReceiptId_goods_receipts_id_fk` FOREIGN KEY (`goodsReceiptId`) REFERENCES `goods_receipts`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `goods_receipt_lines` ADD CONSTRAINT `goods_receipt_lines_purchaseOrderLineId_purchase_order_lines_id_fk` FOREIGN KEY (`purchaseOrderLineId`) REFERENCES `purchase_order_lines`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `goods_receipt_lines` ADD CONSTRAINT `grn_line_po_line_fk` FOREIGN KEY (`purchaseOrderLineId`) REFERENCES `purchase_order_lines`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `goods_receipts` ADD CONSTRAINT `goods_receipts_organizationId_organizations_id_fk` FOREIGN KEY (`organizationId`) REFERENCES `organizations`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `goods_receipts` ADD CONSTRAINT `goods_receipts_siteId_sites_id_fk` FOREIGN KEY (`siteId`) REFERENCES `sites`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `goods_receipts` ADD CONSTRAINT `goods_receipts_purchaseOrderId_purchase_orders_id_fk` FOREIGN KEY (`purchaseOrderId`) REFERENCES `purchase_orders`(`id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint

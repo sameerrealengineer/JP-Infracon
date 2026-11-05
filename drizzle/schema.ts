@@ -2478,27 +2478,36 @@ export const goodsReceipts = mysqlTable(
   }),
 );
 
-export const goodsReceiptLines = mysqlTable("goods_receipt_lines", {
-  id: varchar("id", { length: 36 }).primaryKey(),
-  goodsReceiptId: varchar("goodsReceiptId", { length: 36 })
-    .notNull()
-    .references(() => goodsReceipts.id, { onDelete: "restrict" }),
-  purchaseOrderLineId: varchar("purchaseOrderLineId", { length: 36 })
-    .notNull()
-    .references(() => purchaseOrderLines.id, { onDelete: "restrict" }),
-  acceptedThousandths: decimal("acceptedThousandths", {
-    precision: 18,
-    scale: 0,
-    mode: "string",
-  }).notNull(),
-  rejectedThousandths: decimal("rejectedThousandths", {
-    precision: 18,
-    scale: 0,
-    mode: "string",
-  }).notNull(),
-  rejectReason: varchar("rejectReason", { length: 300 }),
-  inventoryMovementId: varchar("inventoryMovementId", { length: 36 }),
-});
+export const goodsReceiptLines = mysqlTable(
+  "goods_receipt_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    goodsReceiptId: varchar("goodsReceiptId", { length: 36 })
+      .notNull()
+      .references(() => goodsReceipts.id, { onDelete: "restrict" }),
+    purchaseOrderLineId: varchar("purchaseOrderLineId", { length: 36 }).notNull(),
+    acceptedThousandths: decimal("acceptedThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rejectedThousandths: decimal("rejectedThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rejectReason: varchar("rejectReason", { length: 300 }),
+    inventoryMovementId: varchar("inventoryMovementId", { length: 36 }),
+  },
+  (table) => ({
+    // Named by hand: the generated name is longer than MySQL's 64-character limit.
+    poLineFk: foreignKey({
+      name: "grn_line_po_line_fk",
+      columns: [table.purchaseOrderLineId],
+      foreignColumns: [purchaseOrderLines.id],
+    }).onDelete("restrict"),
+  }),
+);
 
 /** A supplier bill (supplier_invoices) matched to the purchase order it is for. */
 export const purchaseInvoiceLinks = mysqlTable("purchase_invoice_links", {
