@@ -49,6 +49,13 @@ export const PO_TONE: Record<string, Tone> = {
   "No bill yet": "info",
 };
 
+export const WO_TONE: Record<string, Tone> = {
+  ...PO_TONE,
+  Recorded: "warning",
+  Checked: "success",
+  Billed: "info",
+};
+
 export const commercialStyles = StyleSheet.create({
   content: { paddingBottom: 32, gap: 10 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },

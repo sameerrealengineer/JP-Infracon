@@ -17,4 +17,6 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "issue.assigned": { icon: "assignment-ind", tone: "warning" },
   "issue.verify": { icon: "verified", tone: "success" },
   "purchase.review": { icon: "shopping-cart", tone: "accent" },
+  "subcontract.review": { icon: "engineering", tone: "accent" },
+  "subcontract.check": { icon: "straighten", tone: "warning" },
 };

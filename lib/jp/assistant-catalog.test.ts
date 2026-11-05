@@ -17,6 +17,16 @@ describe("assistant actions", () => {
     expect(keys).toContain("profile");
     expect(keys).not.toContain("finance");
     expect(keys).not.toContain("modules");
+    expect(keys).not.toContain("subcontract");
+    expect(keys).not.toContain("billing");
+  });
+
+  it("offers the ERP screens only with their permission", () => {
+    const keys = availableScreens(new Set(["subcontract.view", "purchase.view"])).map(
+      (row) => row.key,
+    );
+    expect(keys).toEqual(expect.arrayContaining(["subcontract", "purchase"]));
+    expect(keys).not.toContain("crm");
   });
 
   it("opens a known screen for the person's own site only", () => {

@@ -2513,3 +2513,187 @@ export const purchaseInvoiceLinks = mysqlTable("purchase_invoice_links", {
     .references(() => users.id, { onDelete: "restrict" }),
   linkedAt: timestamp("linkedAt").defaultNow().notNull(),
 });
+
+// ---------------------------------------------------------------------------------------------
+// Subcontract (lib/jp/subcontract-domain.ts): work orders to subcontractors (their BOQ), the
+// measurement book (recorded on site, checked by a different person), RA bills built from
+// checked measurements with GST, retention, TDS and advance recovery. An approved bill becomes
+// an Approved supplier invoice so accounts pays it through supplier payments.
+
+const money = (name: string) => decimal(name, { precision: 18, scale: 0, mode: "string" });
+
+export const workOrders = mysqlTable(
+  "work_orders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    vendorId: varchar("vendorId", { length: 36 })
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    woNumber: varchar("woNumber", { length: 40 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    scope: text("scope"),
+    startDate: date("startDate", { mode: "string" }).notNull(),
+    endDate: date("endDate", { mode: "string" }),
+    status: mysqlEnum("status", [
+      "Draft",
+      "Submitted",
+      "Approved",
+      "Rejected",
+      "Cancelled",
+      "Closed",
+    ])
+      .default("Draft")
+      .notNull(),
+    gstBps: int("gstBps").notNull(),
+    retentionBps: int("retentionBps").notNull(),
+    tdsBps: int("tdsBps").notNull(),
+    valueMinor: money("valueMinor").notNull(),
+    advanceMinor: money("advanceMinor").notNull(),
+    advanceRecoveryBps: int("advanceRecoveryBps").notNull(),
+    advanceInvoiceId: varchar("advanceInvoiceId", { length: 36 }),
+    retentionReleasedMinor: money("retentionReleasedMinor").notNull(),
+    retentionInvoiceId: varchar("retentionInvoiceId", { length: 36 }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    woNumberUnique: uniqueIndex("wo_org_number_uq").on(table.organizationId, table.woNumber),
+    woSiteStatusIndex: index("wo_site_status_idx").on(table.siteId, table.status),
+    woVendorIndex: index("wo_vendor_idx").on(table.vendorId),
+  }),
+);
+
+export const workOrderItems = mysqlTable(
+  "work_order_items",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    lineNumber: int("lineNumber").notNull(),
+    itemCode: varchar("itemCode", { length: 40 }).notNull(),
+    description: varchar("description", { length: 500 }).notNull(),
+    unit: varchar("unit", { length: 20 }).notNull(),
+    quantityThousandths: money("quantityThousandths").notNull(),
+    rateMinor: money("rateMinor").notNull(),
+    amountMinor: money("amountMinor").notNull(),
+  },
+  (table) => ({
+    woItemCodeUnique: uniqueIndex("wo_item_code_uq").on(table.workOrderId, table.itemCode),
+  }),
+);
+
+/** Measurement book: one entry per measured portion; deductions are negative quantities. */
+export const workMeasurements = mysqlTable(
+  "work_measurements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    itemId: varchar("itemId", { length: 36 })
+      .notNull()
+      .references(() => workOrderItems.id, { onDelete: "restrict" }),
+    measuredOn: date("measuredOn", { mode: "string" }).notNull(),
+    location: varchar("location", { length: 200 }).notNull(),
+    nos: varchar("nos", { length: 20 }),
+    length: varchar("length", { length: 20 }),
+    breadth: varchar("breadth", { length: 20 }),
+    depth: varchar("depth", { length: 20 }),
+    deduction: mysqlEnum("deduction", ["Yes", "No"]).default("No").notNull(),
+    quantityThousandths: money("quantityThousandths").notNull(),
+    status: mysqlEnum("status", ["Recorded", "Checked", "Rejected"]).default("Recorded").notNull(),
+    checkedBy: int("checkedBy").references(() => users.id, { onDelete: "restrict" }),
+    checkedAt: timestamp("checkedAt"),
+    rejectReason: text("rejectReason"),
+    billId: varchar("billId", { length: 36 }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    measurementWoIndex: index("measurement_wo_idx").on(table.workOrderId, table.status),
+    measurementSiteIndex: index("measurement_site_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const subcontractBills = mysqlTable(
+  "subcontract_bills",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    billNumber: varchar("billNumber", { length: 60 }).notNull(),
+    billDate: date("billDate", { mode: "string" }).notNull(),
+    periodTo: date("periodTo", { mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Rejected", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    workValueMinor: money("workValueMinor").notNull(),
+    gstMinor: money("gstMinor").notNull(),
+    retentionMinor: money("retentionMinor").notNull(),
+    tdsMinor: money("tdsMinor").notNull(),
+    advanceRecoveryMinor: money("advanceRecoveryMinor").notNull(),
+    otherDeductionMinor: money("otherDeductionMinor").notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 300 }),
+    netPayableMinor: money("netPayableMinor").notNull(),
+    invoiceId: varchar("invoiceId", { length: 36 }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    subBillNumberUnique: uniqueIndex("sub_bill_org_number_uq").on(
+      table.organizationId,
+      table.billNumber,
+    ),
+    subBillWoIndex: index("sub_bill_wo_idx").on(table.workOrderId, table.status),
+  }),
+);
+
+export const subcontractBillLines = mysqlTable("subcontract_bill_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => subcontractBills.id, { onDelete: "restrict" }),
+  itemId: varchar("itemId", { length: 36 })
+    .notNull()
+    .references(() => workOrderItems.id, { onDelete: "restrict" }),
+  quantityThousandths: money("quantityThousandths").notNull(),
+  rateMinor: money("rateMinor").notNull(),
+  amountMinor: money("amountMinor").notNull(),
+});

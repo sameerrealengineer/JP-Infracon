@@ -72,6 +72,12 @@ export const MODULES = [
     prefixes: ["purchase."],
   },
   {
+    key: "subcontract",
+    title: "Subcontractors",
+    detail: "Work orders, measurement book, RA bills, retention",
+    prefixes: ["subcontract."],
+  },
+  {
     key: "crm",
     title: "Clients & leads (CRM)",
     detail: "Clients, enquiries, follow-ups, quotations",
@@ -129,6 +135,7 @@ const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
   documents: ["document."],
   budget: ["budget."],
   purchase: ["purchase."],
+  subcontract: ["subcontract."],
   crm: ["crm."],
   billing: ["billing."],
 };

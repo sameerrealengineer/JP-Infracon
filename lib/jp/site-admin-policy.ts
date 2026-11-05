@@ -96,7 +96,9 @@ export type InboxItem = {
     | "issue.critical"
     | "issue.assigned"
     | "issue.verify"
-    | "purchase.review";
+    | "purchase.review"
+    | "subcontract.review"
+    | "subcontract.check";
   title: string;
   detail: string;
   siteId: string;

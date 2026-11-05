@@ -176,6 +176,15 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         anyOf: ["workforce.view"],
       },
       {
+        key: "subcontract",
+        title: "Subcontractors",
+        icon: "engineering",
+        tone: "accent",
+        route: "/subcontract",
+        anyOf: ["subcontract.view"],
+        inboxKinds: ["subcontract.review", "subcontract.check"],
+      },
+      {
         key: "people",
         title: "People directory",
         icon: "person-search",

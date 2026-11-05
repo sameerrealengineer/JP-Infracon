@@ -7,6 +7,9 @@ import {
   pettyCashFunds,
   pettyCashMovements,
   purchaseOrders,
+  subcontractBills,
+  workMeasurements,
+  workOrders,
   siteIssues,
   sites,
   supplierInvoices,
@@ -170,6 +173,116 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         siteName: row.siteName,
         occurredAt: iso(row.at),
         route: `/po?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+  });
+  await guard("subcontract", async () => {
+    const approveSites = sitesWith(capabilities, "subcontract.approve");
+    if (!approveSites.length) return;
+    const orders = await db
+      .select({
+        id: workOrders.id,
+        woNumber: workOrders.woNumber,
+        title: workOrders.title,
+        value: workOrders.valueMinor,
+        vendorName: vendors.legalName,
+        siteId: workOrders.siteId,
+        siteName: sites.name,
+        at: workOrders.updatedAt,
+      })
+      .from(workOrders)
+      .innerJoin(sites, eq(workOrders.siteId, sites.id))
+      .innerJoin(vendors, eq(workOrders.vendorId, vendors.id))
+      .where(
+        and(
+          inArray(workOrders.siteId, approveSites),
+          eq(workOrders.status, "Submitted"),
+          ne(workOrders.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workOrders.updatedAt))
+      .limit(LIMIT);
+    for (const row of orders)
+      items.push({
+        id: `wo-${row.id}`,
+        kind: "subcontract.review",
+        title: "Work order awaiting approval",
+        detail: `${row.woNumber} · ${row.vendorName} · ${formatMinorAsRupees(row.value)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/work-order?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const bills = await db
+      .select({
+        id: subcontractBills.id,
+        billNumber: subcontractBills.billNumber,
+        net: subcontractBills.netPayableMinor,
+        workOrderId: subcontractBills.workOrderId,
+        siteId: subcontractBills.siteId,
+        siteName: sites.name,
+        at: subcontractBills.updatedAt,
+      })
+      .from(subcontractBills)
+      .innerJoin(sites, eq(subcontractBills.siteId, sites.id))
+      .where(
+        and(
+          inArray(subcontractBills.siteId, approveSites),
+          eq(subcontractBills.status, "Submitted"),
+          ne(subcontractBills.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(subcontractBills.updatedAt))
+      .limit(LIMIT);
+    for (const row of bills)
+      items.push({
+        id: `sub-bill-${row.id}`,
+        kind: "subcontract.review",
+        title: "Subcontractor bill awaiting approval",
+        detail: `${row.billNumber} · net ${formatMinorAsRupees(row.net)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/sub-bill?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const waiting = await db
+      .select({
+        workOrderId: workMeasurements.workOrderId,
+        woNumber: workOrders.woNumber,
+        siteId: workMeasurements.siteId,
+        siteName: sites.name,
+        at: workMeasurements.createdAt,
+      })
+      .from(workMeasurements)
+      .innerJoin(workOrders, eq(workMeasurements.workOrderId, workOrders.id))
+      .innerJoin(sites, eq(workMeasurements.siteId, sites.id))
+      .where(
+        and(
+          inArray(workMeasurements.siteId, approveSites),
+          eq(workMeasurements.status, "Recorded"),
+          ne(workMeasurements.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workMeasurements.createdAt))
+      .limit(200);
+    const perOrder = new Map<string, (typeof waiting)[number] & { count: number }>();
+    for (const row of waiting) {
+      const entry = perOrder.get(row.workOrderId);
+      if (entry) entry.count += 1;
+      else perOrder.set(row.workOrderId, { ...row, count: 1 });
+    }
+    for (const row of perOrder.values())
+      items.push({
+        id: `mb-${row.workOrderId}`,
+        kind: "subcontract.check",
+        title: "Measurements to check",
+        detail: `${row.woNumber} · ${row.count} ${row.count === 1 ? "entry" : "entries"}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/work-order?siteId=${row.siteId}&id=${row.workOrderId}`,
         severity: "normal",
       });
   });

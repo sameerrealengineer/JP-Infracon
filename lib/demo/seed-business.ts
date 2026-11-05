@@ -721,4 +721,116 @@ export async function seedBusinessData(workspace: DemoWorkspace): Promise<void> 
     action: "submit",
     clientMutationId: id(),
   });
+
+  // Subcontract: a masonry work order with an advance, measurements (one still to check) and
+  // an approved RA bill that became a payable.
+  const mason = await accounts.jp.finance.createVendor({
+    siteId: siteA,
+    vendorType: "Subcontractor",
+    legalName: "Jagannath Masonry Works",
+    contactName: "Prakash Behera",
+    phone: "+91 90000 00021",
+    paymentTermsDays: 15,
+    clientMutationId: id(),
+  });
+  const wo = await manager.jp.subcontract.create({
+    siteId: siteA,
+    vendorId: mason.id,
+    title: "Brickwork and plaster, Block 1",
+    scope: "Labour with tools and scaffolding; cement, sand and bricks supplied by JP Infracon.",
+    startDate: day(-12),
+    endDate: day(40),
+    gstPercent: "18",
+    retentionPercent: "5",
+    tdsPercent: "1",
+    advanceRupees: "50000",
+    advanceRecoveryPercent: "20",
+    items: [
+      {
+        itemCode: "M1",
+        description: "230 mm brick masonry in CM 1:6",
+        unit: "cum",
+        quantity: "120",
+        rateRupees: "1850",
+      },
+      {
+        itemCode: "M2",
+        description: "12 mm cement plaster in CM 1:4",
+        unit: "sqm",
+        quantity: "900",
+        rateRupees: "95",
+      },
+    ],
+    clientMutationId: id(),
+  });
+  await manager.jp.subcontract.transition({
+    siteId: siteA,
+    woId: wo.id,
+    action: "submit",
+    clientMutationId: id(),
+  });
+  await owner.jp.subcontract.transition({
+    siteId: siteA,
+    woId: wo.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
+  const woDetail = await supervisor.jp.subcontract.detail({ siteId: siteA, woId: wo.id });
+  const brick = woDetail.items.find((row) => row.itemCode === "M1")!.id;
+  const plaster = woDetail.items.find((row) => row.itemCode === "M2")!.id;
+  const m1 = await supervisor.jp.subcontract.measure({
+    siteId: siteA,
+    woId: wo.id,
+    itemId: brick,
+    measuredOn: day(-6),
+    location: "Ground floor, grid A-D outer walls",
+    nos: "1",
+    length: "64.5",
+    breadth: "0.23",
+    depth: "3",
+    clientMutationId: id(),
+  });
+  const m2 = await supervisor.jp.subcontract.measure({
+    siteId: siteA,
+    woId: wo.id,
+    itemId: brick,
+    measuredOn: day(-6),
+    location: "Ground floor, door openings D1",
+    nos: "6",
+    length: "1",
+    breadth: "0.23",
+    depth: "2.1",
+    deduction: true,
+    clientMutationId: id(),
+  });
+  await manager.jp.subcontract.checkMeasurement({
+    siteId: siteA,
+    measurementIds: [m1.id, m2.id],
+    action: "check",
+    clientMutationId: id(),
+  });
+  const subRa1 = await accounts.jp.subcontract.createBill({
+    siteId: siteA,
+    woId: wo.id,
+    billDate: day(-3),
+    periodTo: day(-4),
+    submit: true,
+    clientMutationId: id(),
+  });
+  await owner.jp.subcontract.billTransition({
+    siteId: siteA,
+    billId: subRa1.id,
+    action: "approve",
+    clientMutationId: id(),
+  });
+  await supervisor.jp.subcontract.measure({
+    siteId: siteA,
+    woId: wo.id,
+    itemId: plaster,
+    measuredOn: day(-1),
+    location: "Ground floor, inside walls rooms 1-4",
+    length: "48",
+    depth: "3",
+    clientMutationId: id(),
+  });
 }

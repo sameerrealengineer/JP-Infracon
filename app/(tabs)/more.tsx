@@ -120,6 +120,14 @@ export default function MoreScreen() {
       show: can("purchase.view"),
     },
     {
+      icon: "engineering",
+      title: "Subcontractors",
+      detail: "Work orders, measurement book, RA bills",
+      tone: "accent",
+      route: "/subcontract",
+      show: can("subcontract.view"),
+    },
+    {
       icon: "inventory",
       title: "Inventory",
       detail: "Catalogue & stock ledger",

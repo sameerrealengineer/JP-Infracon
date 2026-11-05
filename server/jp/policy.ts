@@ -373,8 +373,27 @@ const purchaseRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["purchase.view"],
 };
 
+/** Subcontractor work orders, measurement book and RA bills (site scoped). */
+const allSubcontract = [
+  "subcontract.view",
+  "subcontract.create",
+  "subcontract.measure",
+  "subcontract.approve",
+];
+const subcontractRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: allSubcontract,
+  director: allSubcontract,
+  admin: allSubcontract,
+  project_manager: allSubcontract,
+  supervisor: ["subcontract.view", "subcontract.measure"],
+  accounts: ["subcontract.view", "subcontract.create"],
+  storekeeper: [],
+  auditor: ["subcontract.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    subcontractRoleDefaults[role].includes(permissionKey) ||
     purchaseRoleDefaults[role].includes(permissionKey) ||
     commercialRoleDefaults[role].includes(permissionKey) ||
     documentRoleDefaults[role].includes(permissionKey) ||

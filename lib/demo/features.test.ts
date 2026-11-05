@@ -213,7 +213,8 @@ describe("offline demo: every screen and workflow runs on the phone database", (
   it("supplier bills and payments: review and post by different people", async () => {
     await accounts.jp.finance.listVendors({ siteId: siteA });
     const invoices = await accounts.jp.finance.listInvoices({ siteId: siteA });
-    expect(invoices.rows.length).toBe(2);
+    // 2 supplier bills + the subcontractor advance and RA-01 posted as payables
+    expect(invoices.rows.length).toBe(4);
     await accounts.jp.finance.invoiceDetail({ siteId: siteA, invoiceId: invoices.rows[0].id });
     const payments = await manager.jp.finance.payments.listPayments({ siteId: siteA });
     const payment = payments.rows[0];
