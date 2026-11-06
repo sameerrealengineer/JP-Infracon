@@ -6,6 +6,19 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-06 — access fixes, photos, faster AI, team tracking, project page, help, crews
+
+Delivered in source and deployed to the Azure server (typecheck, lint 0 errors, 492 unit/server tests including demo-backend flows for billing access, tracking and crews; browser checks on the demo server for each screen; APKs 1.5.1–1.5.4 built). Migration 0029 (new tables only: crews, crew_members, crew_deployments) applied on the server at deploy after a backup.
+
+- Billing/CRM/Accounts tiles now follow the company role the server checks, so a tile never opens to an error; permission refusals show "No access" in plain words instead of "Something went wrong".
+- Home "Add photo" opens the site's camera/gallery sheet; up to 10 photos at once with progress; the first photo becomes the cover.
+- Gemini calls have one deadline (45 s text, 90 s files), less thinking, and timing in the logs. Not yet measured on the live server.
+- Team tracking (leaders: all sites; project managers: their sites): monthly attendance, hours, overtime, site presence, reports, and wages/advances for people with payroll rights.
+- Project page: progress, sites, budget vs spend, client billing, documents and links, each part shown only with the right permission.
+- Help & guide plus a "?" on 21 screens; long guide text is English only for now.
+- Crews (trade-wise teams): members with history, daily work per task, labour cost from approved attendance.
+- Open: tasks have no assignee yet (no per-person task completion), help text in Hindi/Odia, AI latency measurement on the server, device testing of the new APKs.
+
 ## Increment 2026-11-05 (b) — worker khaata, ECR/ESIC, per-user access, GPS alert rules, mistri app
 
 Delivered in source (typecheck, 445 unit/server tests including demo-backend flows for advances, user access, GPS rules and the worker app; live Playwright on the demo server). Migrations 0025–0027 add new tables only and are not applied anywhere yet. Sized for one company with 5–50 users.
