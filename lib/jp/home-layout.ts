@@ -203,6 +203,14 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
         inboxKinds: ["payroll.review", "payroll.profile", "payroll.advance"],
       },
       {
+        key: "crews",
+        title: "Crews",
+        icon: "diversity-3",
+        tone: "accent",
+        route: "/crews",
+        anyOf: ["workforce.view"],
+      },
+      {
         key: "tracking",
         title: "Team tracking",
         icon: "insights",

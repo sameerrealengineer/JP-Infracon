@@ -204,6 +204,13 @@
       "when": 1793928467162,
       "tag": "0028_wild_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1793969496131,
+      "tag": "0029_spicy_impossible_man",
+      "breakpoints": true
     }
   ]
 }

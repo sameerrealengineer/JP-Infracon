@@ -3061,3 +3061,86 @@ export const appReports = mysqlTable(
     fingerprintIndex: index("app_report_fingerprint_idx").on(table.fingerprint, table.lastSeenAt),
   }),
 );
+
+/**
+ * Crews: a trade-wise team on one site (shuttering, bar-bending, masonry…). Membership keeps
+ * history (joined / left dates); daily deployments record which crew worked on which task.
+ */
+export const crews = mysqlTable(
+  "crews",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    trade: varchar("trade", { length: 80 }).notNull(),
+    status: mysqlEnum("status", ["Active", "Closed"]).default("Active").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crewSiteNameUnique: uniqueIndex("crew_site_name_uq").on(table.siteId, table.name),
+    crewSiteStatusIndex: index("crew_site_status_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const crewMembers = mysqlTable(
+  "crew_members",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    crewId: varchar("crewId", { length: 36 })
+      .notNull()
+      .references(() => crews.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    joinedOn: date("joinedOn", { mode: "string" }).notNull(),
+    /** Null while the person is still in the crew. */
+    leftOn: date("leftOn", { mode: "string" }),
+    addedBy: int("addedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crewMemberCrewIndex: index("crew_member_crew_idx").on(table.crewId, table.leftOn),
+    crewMemberPersonIndex: index("crew_member_person_idx").on(table.personId, table.leftOn),
+  }),
+);
+
+export const crewDeployments = mysqlTable(
+  "crew_deployments",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    crewId: varchar("crewId", { length: 36 })
+      .notNull()
+      .references(() => crews.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workDate: date("workDate", { mode: "string" }).notNull(),
+    /** The task the crew worked on, if one was chosen. */
+    taskId: varchar("taskId", { length: 36 }).references(() => workTasks.id, {
+      onDelete: "restrict",
+    }),
+    headcount: int("headcount").notNull(),
+    note: varchar("note", { length: 300 }),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crewDeploySiteDateIndex: index("crew_deploy_site_date_idx").on(table.siteId, table.workDate),
+    crewDeployCrewDateIndex: index("crew_deploy_crew_date_idx").on(table.crewId, table.workDate),
+  }),
+);

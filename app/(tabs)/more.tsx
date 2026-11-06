@@ -129,6 +129,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "diversity-3",
+      title: "Crews",
+      detail: "Trade teams, daily work, cost",
+      tone: "accent",
+      route: "/crews",
+      show: can("workforce.view"),
+    },
+    {
       icon: "insights",
       title: "Team tracking",
       detail: "Attendance, presence, reports, pay",

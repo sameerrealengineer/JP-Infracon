@@ -112,6 +112,17 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     anyOf: ["workforce.view"],
   },
   {
+    key: "crews",
+    route: "/crews",
+    title: "Crews",
+    what: "Trade-wise teams on a site (shuttering, masonry…): members, daily work and labour cost.",
+    who: "Supervisors and project managers make crews and record their work; payroll staff see the cost.",
+    first: "Make a crew, choose its trade and add the site's workers to it.",
+    next: "Each day record which task the crew worked on and how many people. Labour cost per crew comes from approved attendance.",
+    approval: "Closing a crew needs a reason. A worker can be in only one open crew on a site.",
+    anyOf: ["workforce.view"],
+  },
+  {
     key: "tracking",
     route: "/tracking",
     title: "Team tracking",
@@ -363,6 +374,12 @@ export const START_PATHS: Readonly<Record<string, readonly StartStep[]>> = {
       detail: "Safety & quality → report with a photo; critical issues alert the managers.",
       route: "/issues",
       anyOf: ["issue.view"],
+    },
+    {
+      title: "Record crew work",
+      detail: "Crews → open the crew and save today's task and headcount.",
+      route: "/crews",
+      anyOf: ["workforce.view"],
     },
     {
       title: "Add site photos",
