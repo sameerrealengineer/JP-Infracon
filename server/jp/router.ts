@@ -52,6 +52,7 @@ import { subcontractRouter } from "./subcontract";
 import { payrollRouter } from "./payroll";
 import { booksRouter } from "./books";
 import { advancesRouter } from "./advances";
+import { trackingRouter } from "./tracking";
 import { userAccessRouter } from "./user-access";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
@@ -202,6 +203,7 @@ export const jpRouter = router({
   payroll: payrollRouter,
   books: booksRouter,
   advances: advancesRouter,
+  tracking: trackingRouter,
   userAccess: userAccessRouter,
   worker: workerRouter,
   feedback: reportsRouter,

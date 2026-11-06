@@ -165,7 +165,7 @@ export async function advanceLedger(db: Db, siteId: string, personIds: readonly 
 }
 
 /** Approved attendance earnings (estimate) in months with no approved or paid pay run. */
-async function unpaidAttendance(db: Db, siteId: string) {
+export async function unpaidAttendance(db: Db, siteId: string) {
   const covered = await db
     .select({ month: payrollRuns.month })
     .from(payrollRuns)
@@ -203,7 +203,7 @@ async function unpaidAttendance(db: Db, siteId: string) {
   return map;
 }
 
-async function runShares(db: Db, siteId: string) {
+export async function runShares(db: Db, siteId: string) {
   return db
     .select({
       personId: payrollLines.personId,

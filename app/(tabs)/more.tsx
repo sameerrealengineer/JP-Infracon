@@ -121,6 +121,14 @@ export default function MoreScreen() {
       show: can("workforce.view"),
     },
     {
+      icon: "insights",
+      title: "Team tracking",
+      detail: "Attendance, presence, reports, pay",
+      tone: "info",
+      route: "/tracking",
+      show: can("workforce.review"),
+    },
+    {
       icon: "person-search",
       title: "People directory",
       detail: "History, pay, quality, contact",
