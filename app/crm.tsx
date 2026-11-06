@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -61,7 +62,11 @@ export default function CrmScreen() {
       <AuthGate>
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
-            <AppHeader eyebrow={t("Business")} title={t("Clients & leads")} />
+            <AppHeader
+              right={<HelpButton topicKey="crm" />}
+              eyebrow={t("Business")}
+              title={t("Clients & leads")}
+            />
             <NoAccess area={t("Clients & leads")} message={error?.message} />
           </ScrollView>
         </Screen>
@@ -84,6 +89,7 @@ export default function CrmScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="crm" />}
             eyebrow={t("Business")}
             title={t("Clients & leads")}
             subtitle={t("Enquiries, follow-ups, quotations and clients in one place.")}

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -95,6 +96,7 @@ export default function DocumentsScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="documents" />}
             eyebrow="Records"
             title="Project documents"
             subtitle="Contracts, drawings, BOQs, bills, approvals and photos, with every version kept."

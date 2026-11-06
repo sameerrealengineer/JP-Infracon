@@ -1,4 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { RUN_TONE, TotalRow, commercialStyles as styles } from "@/components/jp/commercial-ui";
@@ -48,7 +49,11 @@ export default function KhaataScreen() {
             <LoadingBlock label="Loading khaata…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Khaata")} title={t("Not available")} />
+              <AppHeader
+                right={<HelpButton topicKey="khaata" />}
+                eyebrow={t("Khaata")}
+                title={t("Not available")}
+              />
               <InlineError
                 message={detail.error?.message ?? "This khaata could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -57,6 +62,7 @@ export default function KhaataScreen() {
           ) : (
             <>
               <AppHeader
+                right={<HelpButton topicKey="khaata" />}
                 eyebrow={t("Khaata")}
                 title={data.person.name}
                 subtitle={`${data.person.trade ?? ""}${data.person.trade ? " · " : ""}${data.siteName}`}

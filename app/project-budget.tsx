@@ -1,4 +1,5 @@
 import type { inferRouterOutputs } from "@trpc/server";
+import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -89,6 +90,7 @@ export default function ProjectBudgetScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="budget" />}
             eyebrow="Money"
             title="Project budget"
             subtitle="Approved budget per cost head against the approved bills, labour and site expenses."

@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -80,6 +81,7 @@ export default function PayrollScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            right={<HelpButton topicKey="payroll" />}
             eyebrow={t("Payroll")}
             title={t("Wages and salaries")}
             subtitle={t(

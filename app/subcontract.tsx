@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -55,6 +56,7 @@ export default function SubcontractScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="subcontract" />}
             eyebrow={t("Subcontractors")}
             title={t("Work orders")}
             subtitle={t(

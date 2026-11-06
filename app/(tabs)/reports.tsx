@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useCallback, useMemo, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -205,6 +206,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
     <Screen inTabs={inTabs}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppHeader
+          right={<HelpButton topicKey="reports" />}
           eyebrow="Field records"
           title="Reports"
           subtitle="Daily progress (DPR) and labour (DLR) reports for your sites."

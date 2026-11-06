@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -428,6 +429,7 @@ export default function FinanceScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="finance" />}
             eyebrow="Commercial records"
             title="Finance"
             subtitle="Suppliers, invoices, payments and petty cash for your sites."

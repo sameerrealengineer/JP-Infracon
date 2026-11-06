@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -265,6 +266,7 @@ export default function ScheduleScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="schedule" />}
             eyebrow="Site operations"
             title="Schedule"
             subtitle="Task dates, dependencies, and reviewed schedule changes."

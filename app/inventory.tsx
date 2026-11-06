@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -318,6 +319,7 @@ export default function InventoryScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="inventory" />}
             eyebrow="Stock control"
             title="Inventory"
             subtitle="Live stock for each site, calculated from posted entries."

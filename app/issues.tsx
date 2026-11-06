@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -77,6 +78,7 @@ export default function IssuesScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="issues" />}
             eyebrow={t("Safety & quality")}
             title={t("Site issues")}
             subtitle="Hazards, incidents, defects and blockers — owned, tracked and closed with evidence."

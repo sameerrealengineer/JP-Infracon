@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -310,6 +311,7 @@ export default function WorkforceScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="workforce" />}
             eyebrow="People & compensation"
             title="Workforce"
             subtitle="Workers, technicians and contacts with KYC status and approved rates."

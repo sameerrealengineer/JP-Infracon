@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -58,7 +59,11 @@ export default function BillingScreen() {
       <AuthGate>
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
-            <AppHeader eyebrow={t("Business")} title={t("Client billing")} />
+            <AppHeader
+              right={<HelpButton topicKey="billing" />}
+              eyebrow={t("Business")}
+              title={t("Client billing")}
+            />
             <NoAccess
               area={t("Client billing")}
               message={(projects.error ?? receivables.error)?.message}
@@ -84,6 +89,7 @@ export default function BillingScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="billing" />}
             eyebrow={t("Business")}
             title={t("Client billing")}
             subtitle={t(

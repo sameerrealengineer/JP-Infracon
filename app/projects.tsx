@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -66,6 +67,7 @@ export default function ProjectsScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="projects" />}
             eyebrow="Administration"
             title="Projects & sites"
             subtitle="Create projects, add sites, update details and control whether a site accepts new work."

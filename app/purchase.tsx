@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -54,6 +55,7 @@ export default function PurchaseScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="purchase" />}
             eyebrow={t("Materials & stock")}
             title={t("Purchase orders")}
             subtitle={t(

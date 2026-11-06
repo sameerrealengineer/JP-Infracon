@@ -1,4 +1,5 @@
 import type { inferRouterOutputs } from "@trpc/server";
+import { HelpButton } from "@/components/jp/help";
 import type { AppRouter } from "@/server/routers";
 import { useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
@@ -62,6 +63,7 @@ export default function AccountsScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="accounts" />}
             eyebrow={t("Accounts")}
             title={t("Dues, GST and profit")}
             subtitle={t(

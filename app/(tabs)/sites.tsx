@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -73,6 +74,7 @@ export default function SitesScreen() {
         }
       >
         <AppHeader
+          right={<HelpButton topicKey="sites" />}
           eyebrow={t("Portfolio")}
           title={t("Sites")}
           subtitle="Every site you can access, with status and your role."

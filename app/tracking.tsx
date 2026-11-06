@@ -1,4 +1,5 @@
 import { MaterialIcons } from "@expo/vector-icons";
+import { HelpButton } from "@/components/jp/help";
 import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "@/server/routers";
 import { useRouter } from "expo-router";
@@ -67,7 +68,11 @@ export default function TrackingScreen() {
       <AuthGate>
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
-            <AppHeader eyebrow={t("People")} title={t("Team tracking")} />
+            <AppHeader
+              right={<HelpButton topicKey="tracking" />}
+              eyebrow={t("People")}
+              title={t("Team tracking")}
+            />
             <NoAccess area={t("Team tracking")} message={overview.error?.message} />
           </ScrollView>
         </Screen>
@@ -94,6 +99,7 @@ export default function TrackingScreen() {
           }
         >
           <AppHeader
+            right={<HelpButton topicKey="tracking" />}
             eyebrow={t("People")}
             title={t("Team tracking")}
             subtitle={t(

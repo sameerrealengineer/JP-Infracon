@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { HelpButton } from "@/components/jp/help";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
@@ -73,6 +74,7 @@ export default function AttendanceScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <AppHeader
+            right={<HelpButton topicKey="attendance" />}
             eyebrow="Workforce"
             title={t("Attendance")}
             subtitle="Mark daily attendance, approve it, and see the estimated labour cost."

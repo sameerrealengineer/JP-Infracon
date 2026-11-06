@@ -121,6 +121,14 @@ export default function MoreScreen() {
       show: can("workforce.view"),
     },
     {
+      icon: "menu-book",
+      title: "Help & guide",
+      detail: "Where to start, how each part works",
+      tone: "accent",
+      route: "/help",
+      show: true,
+    },
+    {
       icon: "insights",
       title: "Team tracking",
       detail: "Attendance, presence, reports, pay",

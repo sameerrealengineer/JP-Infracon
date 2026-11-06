@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { VoiceRequestAssist } from "@/components/jp/voice-assist";
 import { useWorkspace } from "@/hooks/use-workspace";
@@ -240,6 +241,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
     <Screen inTabs={inTabs}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppHeader
+          right={<HelpButton topicKey="requests" />}
           eyebrow="Material control"
           title="Requests"
           subtitle="Raise material needs from site and track every decision."
