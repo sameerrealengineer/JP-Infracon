@@ -284,7 +284,8 @@ export async function getAccessibleSites(user: User) {
         code: "INTERNAL_SERVER_ERROR",
         message: "The assigned site role could not be resolved.",
       });
-    return { ...site, businessRole };
+    // organizationRole decides company-level keys (CRM, billing, accounts), like commercialAccess.
+    return { ...site, businessRole, organizationRole };
   });
   const organizationIds = [...new Set(scopedSites.map((site) => site.organizationId))];
   const scopeCheckTime = new Date();

@@ -159,6 +159,21 @@ export const hi: Dictionary = {
   Close: "बंद करें",
   "Loading…": "लोड हो रहा है…",
   "Something went wrong": "कुछ गड़बड़ हुई",
+  "No access": "अनुमति नहीं है",
+  Photos: "फ़ोटो",
+  "Uploading…": "अपलोड हो रहा है…",
+  "Uploading {done} of {total}…": "{total} में से {done} अपलोड हो रहा है…",
+  "Add site photo": "साइट की फ़ोटो जोड़ें",
+  "Take a photo or choose from the gallery": "फ़ोटो खींचें या गैलरी से चुनें",
+  "Photos can be added only while the site is Active.":
+    "फ़ोटो तभी जोड़ी जा सकती है जब साइट Active हो।",
+  "Adding photos needs site management or daily report rights.":
+    "फ़ोटो जोड़ने के लिए साइट प्रबंधन या दैनिक रिपोर्ट की अनुमति चाहिए।",
+  "You don't have access to {area}": "आपको {area} खोलने की अनुमति नहीं है",
+  "Your role does not allow “{permission}”. Ask your owner or admin to switch it on for you in User access.":
+    "आपकी भूमिका में “{permission}” की अनुमति नहीं है। मालिक या एडमिन से User access में इसे चालू करने को कहें।",
+  "Ask your owner or admin to switch it on for you in User access.":
+    "मालिक या एडमिन से User access में इसे चालू करने को कहें।",
   // Profile, media, progress, modules and assistant
   "Project documents": "प्रोजेक्ट दस्तावेज़",
   "Contracts, drawings, bills, smart search": "अनुबंध, ड्रॉइंग, बिल, स्मार्ट खोज",
@@ -1250,6 +1265,20 @@ export const or: Dictionary = {
   Close: "ବନ୍ଦ",
   "Loading…": "ଲୋଡ ହେଉଛି…",
   "Something went wrong": "କିଛି ଭୁଲ ହେଲା",
+  "No access": "ଅନୁମତି ନାହିଁ",
+  Photos: "ଫଟୋ",
+  "Uploading…": "ଅପଲୋଡ ହେଉଛି…",
+  "Uploading {done} of {total}…": "{total} ରୁ {done} ଅପଲୋଡ ହେଉଛି…",
+  "Add site photo": "ସାଇଟ ଫଟୋ ଯୋଡନ୍ତୁ",
+  "Take a photo or choose from the gallery": "ଫଟୋ ଉଠାନ୍ତୁ କିମ୍ବା ଗ୍ୟାଲେରୀରୁ ବାଛନ୍ତୁ",
+  "Photos can be added only while the site is Active.": "ସାଇଟ Active ଥିଲେ ହିଁ ଫଟୋ ଯୋଡାଯାଇପାରିବ।",
+  "Adding photos needs site management or daily report rights.":
+    "ଫଟୋ ଯୋଡିବାକୁ ସାଇଟ ପରିଚାଳନା କିମ୍ବା ଦୈନିକ ରିପୋର୍ଟ ଅନୁମତି ଦରକାର।",
+  "You don't have access to {area}": "ଆପଣଙ୍କୁ {area} ଖୋଲିବାକୁ ଅନୁମତି ନାହିଁ",
+  "Your role does not allow “{permission}”. Ask your owner or admin to switch it on for you in User access.":
+    "ଆପଣଙ୍କ ଭୂମିକାରେ “{permission}” ର ଅନୁମତି ନାହିଁ। ମାଲିକ କିମ୍ବା ଆଡମିନଙ୍କୁ User access ରେ ଏହା ଚାଲୁ କରିବାକୁ କୁହନ୍ତୁ।",
+  "Ask your owner or admin to switch it on for you in User access.":
+    "ମାଲିକ କିମ୍ବା ଆଡମିନଙ୍କୁ User access ରେ ଏହା ଚାଲୁ କରିବାକୁ କୁହନ୍ତୁ।",
   // Profile, media, progress, modules and assistant
   "Project documents": "ପ୍ରୋଜେକ୍ଟ ଦଲିଲ",
   "Contracts, drawings, bills, smart search": "ଚୁକ୍ତି, ଡ୍ରଇଂ, ବିଲ୍, ସ୍ମାର୍ଟ ସନ୍ଧାନ",

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Gemini often answers "503 high demand" for a moment; AI features must retry, then use the
 // next model, then Sarvam for text, instead of failing at once.
-const { aiJson, geminiJson, geminiModels } = await import("../../server/jp/ai");
+const { aiJson, geminiJson, geminiModels, AI_DEADLINE_MS } = await import("../../server/jp/ai");
 
 const ok = (value: unknown) =>
   new Response(
@@ -93,5 +93,49 @@ describe("AI resilience", () => {
         },
       ),
     ).rejects.toThrow(/busy/);
+  }, 30_000);
+
+  it("asks for no thinking on text and a little on photos", async () => {
+    process.env.GEMINI_API_KEY = "k";
+    const budgets: unknown[] = [];
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      budgets.push(JSON.parse(String(init.body)).generationConfig.thinkingConfig?.thinkingBudget);
+      return ok({ ok: true });
+    });
+    await geminiJson([{ text: "fill the form" }], {});
+    await geminiJson([{ text: "read" }, { image: { data: "AAAA", mimeType: "image/png" } }], {});
+    expect(budgets).toEqual([0, 1024]);
+  });
+
+  it("asks the same model again without thinking when it refuses that setting", async () => {
+    process.env.GEMINI_API_KEY = "k";
+    process.env.GEMINI_MODEL = "gemini-old-flash";
+    const sent: boolean[] = [];
+    vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
+      const thinking = Boolean(JSON.parse(String(init.body)).generationConfig.thinkingConfig);
+      sent.push(thinking);
+      return thinking
+        ? new Response(JSON.stringify({ error: { message: "Thinking is not supported" } }), {
+            status: 400,
+          })
+        : ok({ fine: 1 });
+    });
+    expect(await geminiJson([{ text: "hi" }], {})).toEqual({ fine: 1 });
+    expect(sent).toEqual([true, false]);
+  });
+
+  it("gives up within the deadline instead of trying every model for minutes", async () => {
+    process.env.GEMINI_API_KEY = "k";
+    let clock = 0;
+    let calls = 0;
+    // Each busy answer takes 20 s of (fake) time.
+    vi.stubGlobal("fetch", async () => {
+      calls += 1;
+      clock += 20_000;
+      return busy();
+    });
+    await expect(geminiJson([{ text: "hi" }], {}, () => clock)).rejects.toThrow(/within 45 s/);
+    expect(calls).toBe(3);
+    expect(clock).toBeLessThanOrEqual(AI_DEADLINE_MS.text + 20_000);
   }, 30_000);
 });

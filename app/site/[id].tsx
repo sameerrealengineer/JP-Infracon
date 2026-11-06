@@ -24,6 +24,7 @@ import {
   Screen,
   SecondaryButton,
   SectionHeader,
+  Sheet,
   StatusPill,
   formatDateTime,
   type IconName,
@@ -53,8 +54,10 @@ import { mapsLink } from "@/lib/jp/geo";
 
 export default function SiteDetailScreen() {
   const { t } = useT();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, photo } = useLocalSearchParams<{ id: string; photo?: string }>();
   const siteId = typeof id === "string" ? id : "";
+  // "Add photo" on the home card opens this page with ?photo=1: show the camera/gallery sheet.
+  const [photoSheetClosed, setPhotoSheetClosed] = useState(false);
   const colors = useColors();
   const router = useRouter();
   const { sitesWith } = useWorkspace();
@@ -74,6 +77,27 @@ export default function SiteDetailScreen() {
   );
 
   const has = (key: string) => sitesWith(key).includes(siteId);
+  const loadedSite = detail.data?.site;
+  const canUploadPhotos = Boolean(
+    loadedSite &&
+    loadedSite.status === "Active" &&
+    (detail.data?.canManage || has("dpr.create") || has("issue.create")),
+  );
+  const setSiteCover = async (attachmentId: string) => {
+    await setCover.mutateAsync({ entityType: "site", entityId: siteId, attachmentId });
+    await Promise.all([
+      utils.jp.places.cards.invalidate(),
+      utils.jp.sitesAdmin.siteDetail.invalidate({ siteId }),
+    ]);
+  };
+  const coverChoice = detail.data?.canManage
+    ? { currentId: loadedSite?.coverAttachmentId ?? null, onSet: setSiteCover }
+    : undefined;
+  // The first photo of a site with no cover becomes its cover, so the home card shows it.
+  const coverFirstPhoto = async (attachmentId: string, isImage: boolean) => {
+    if (isImage && detail.data?.canManage && !loadedSite?.coverAttachmentId)
+      await setSiteCover(attachmentId);
+  };
   const modules: { icon: IconName; title: string; tone: Tone; route: string; show: boolean }[] = [
     {
       icon: "assignment",
@@ -304,28 +328,14 @@ export default function SiteDetailScreen() {
                   entityId={site.id}
                   title="Gallery"
                   allowVideo
-                  canUpload={
-                    site.status === "Active" &&
-                    (data.canManage || has("dpr.create") || has("issue.create"))
+                  canUpload={canUploadPhotos}
+                  noUploadReason={
+                    site.status !== "Active"
+                      ? t("Photos can be added only while the site is Active.")
+                      : t("Adding photos needs site management or daily report rights.")
                   }
-                  cover={
-                    data.canManage
-                      ? {
-                          currentId: data.site.coverAttachmentId ?? null,
-                          onSet: async (attachmentId) => {
-                            await setCover.mutateAsync({
-                              entityType: "site",
-                              entityId: site.id,
-                              attachmentId,
-                            });
-                            await Promise.all([
-                              utils.jp.places.cards.invalidate(),
-                              utils.jp.sitesAdmin.siteDetail.invalidate({ siteId }),
-                            ]);
-                          },
-                        }
-                      : undefined
-                  }
+                  cover={coverChoice}
+                  onUploaded={coverFirstPhoto}
                 />
               </Card>
 
@@ -427,6 +437,23 @@ export default function SiteDetailScreen() {
           onClose={() => setAssignOpen(false)}
         />
         <RemoveMemberSheet member={removing} onClose={() => setRemoving(null)} />
+        {photo === "1" && !photoSheetClosed && loadedSite ? (
+          <Sheet visible title={t("Add site photo")} onClose={() => setPhotoSheetClosed(true)}>
+            <AttachmentStrip
+              entityType="site"
+              entityId={siteId}
+              title={t("Take a photo or choose from the gallery")}
+              canUpload={canUploadPhotos}
+              noUploadReason={
+                loadedSite.status !== "Active"
+                  ? t("Photos can be added only while the site is Active.")
+                  : t("Adding photos needs site management or daily report rights.")
+              }
+              cover={coverChoice}
+              onUploaded={coverFirstPhoto}
+            />
+          </Sheet>
+        ) : null}
       </Screen>
     </AuthGate>
   );

@@ -273,6 +273,7 @@ export default function HomeScreen() {
                   progress={card?.progress ?? null}
                   canAddPhoto={workspace.canManageSites}
                   onPress={() => router.push(`/site/${site.id}` as never)}
+                  onAddPhoto={() => router.push(`/site/${site.id}?photo=1` as never)}
                 />
               );
             })}
@@ -489,6 +490,7 @@ function SitePhotoCard({
   progress,
   canAddPhoto,
   onPress,
+  onAddPhoto,
 }: {
   width: number;
   name: string;
@@ -507,6 +509,8 @@ function SitePhotoCard({
   } | null;
   canAddPhoto: boolean;
   onPress: () => void;
+  /** Opens the site straight on its camera/gallery sheet. */
+  onAddPhoto: () => void;
 }) {
   const { t } = useT();
   const colors = useColors();
@@ -546,10 +550,16 @@ function SitePhotoCard({
         <View style={styles.siteTopRow}>
           <StatusPill label={t(status)} tone={tone} compact />
           {!coverUrl && canAddPhoto ? (
-            <View style={styles.addPhoto}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("Add photo")}
+              onPress={onAddPhoto}
+              hitSlop={10}
+              style={({ pressed }) => [styles.addPhoto, pressed && styles.pressed]}
+            >
               <MaterialIcons name="add-a-photo" size={13} color="#FFFFFF" />
               <Text style={styles.addPhotoText}>{t("Add photo")}</Text>
-            </View>
+            </Pressable>
           ) : null}
         </View>
         <View style={styles.siteText}>

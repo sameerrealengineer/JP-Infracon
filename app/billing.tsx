@@ -11,7 +11,9 @@ import {
   Field,
   HeroCard,
   InlineError,
+  isAccessDenied,
   LoadingBlock,
+  NoAccess,
   PrimaryButton,
   Screen,
   SectionHeader,
@@ -50,6 +52,21 @@ export default function BillingScreen() {
   const can = projects.data?.can;
   const error = projects.error ?? receivables.error ?? contract.error ?? bills.error;
   const refresh = () => utils.jp.billing.invalidate();
+
+  if (isAccessDenied(projects.error) || isAccessDenied(receivables.error))
+    return (
+      <AuthGate>
+        <Screen>
+          <ScrollView contentContainerStyle={styles.content}>
+            <AppHeader eyebrow={t("Business")} title={t("Client billing")} />
+            <NoAccess
+              area={t("Client billing")}
+              message={(projects.error ?? receivables.error)?.message}
+            />
+          </ScrollView>
+        </Screen>
+      </AuthGate>
+    );
 
   return (
     <AuthGate>

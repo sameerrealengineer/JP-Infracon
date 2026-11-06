@@ -41,6 +41,15 @@ export function permissionLabel(key: string) {
   return `${nice}: ${VERB[verb] ?? verb}`;
 }
 
+/**
+ * The permission named in a server refusal such as "Your role does not include billing.view."
+ * or "...does not include dpr.create for this site.", or null for any other message. Lets the
+ * app say "No access" in plain words instead of "Something went wrong" with a code.
+ */
+export function deniedPermission(message: string): string | null {
+  return /does not include ([a-z_]+(?:\.[a-z_]+)+)/.exec(message)?.[1] ?? null;
+}
+
 /** Checked once for the whole company, so they can only be switched for "all sites". */
 export function isCompanyLevel(key: string) {
   return (

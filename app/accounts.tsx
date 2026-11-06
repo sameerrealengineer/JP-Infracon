@@ -11,7 +11,9 @@ import {
   EmptyState,
   Field,
   InlineError,
+  isAccessDenied,
   LoadingBlock,
+  NoAccess,
   PrimaryButton,
   Screen,
   SecondaryButton,
@@ -68,6 +70,8 @@ export default function AccountsScreen() {
           />
           {overview.isLoading ? (
             <LoadingBlock label="Loading accounts…" />
+          ) : isAccessDenied(overview.error) ? (
+            <NoAccess area={t("Accounts")} message={overview.error?.message} />
           ) : overview.error ? (
             <InlineError message={overview.error.message} onRetry={() => void overview.refetch()} />
           ) : overview.data ? (

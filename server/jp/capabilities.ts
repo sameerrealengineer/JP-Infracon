@@ -1,6 +1,7 @@
 import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { disabledModulesFor } from "./module-settings";
 import { isPermissionDisabled } from "../../lib/jp/modules";
+import { isCompanyLevel } from "../../lib/jp/access-catalog";
 import { TRPCError } from "@trpc/server";
 import { permissionGrants } from "../../drizzle/schema";
 import { getAccessibleSites, getSiteScope } from "./access";
@@ -137,6 +138,21 @@ export async function siteCapabilities(
     const capabilities = {} as Record<PermissionKey, boolean>;
     const disabled = disabledByOrg.get(site.organizationId) ?? [];
     for (const permissionKey of permissionKeys) {
+      // CRM, billing and accounts are checked once for the company (commercialAccess), with the
+      // company role, not the site role. Resolve them the same way so a tile is shown only when
+      // the screen behind it will open.
+      if (isCompanyLevel(permissionKey) && permissionKey !== "user.manage") {
+        capabilities[permissionKey] =
+          !isPermissionDisabled(permissionKey, disabled) &&
+          resolveOrganizationPermission({
+            role: site.organizationRole,
+            permissionKey,
+            organizationId: site.organizationId,
+            grants: grants as PermissionGrantForResolution[],
+            now,
+          });
+        continue;
+      }
       const siteIsAvailable =
         (site.status === "Active" || permissionKey.endsWith(".view")) &&
         !isPermissionDisabled(permissionKey, disabled);

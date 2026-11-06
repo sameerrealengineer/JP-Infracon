@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessGroups, mayGrant, permissionLabel } from "./access-catalog";
+import { accessGroups, deniedPermission, mayGrant, permissionLabel } from "./access-catalog";
 
 describe("access catalogue", () => {
   it("groups permissions by module and leaves out self-approval", () => {
@@ -35,5 +35,14 @@ describe("access catalogue", () => {
     expect(mayGrant({ ...base, managerIsOwner: true, key: "approval.self", choice: "allow" })).toBe(
       false,
     );
+  });
+
+  it("finds the permission named in a server refusal", () => {
+    expect(deniedPermission("Your role does not include billing.view.")).toBe("billing.view");
+    expect(
+      deniedPermission("Your current role does not include finance.payment.review for this site."),
+    ).toBe("finance.payment.review");
+    expect(deniedPermission("Your role does not include account management.")).toBeNull();
+    expect(deniedPermission("The server could not be reached.")).toBeNull();
   });
 });

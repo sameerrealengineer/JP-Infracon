@@ -10,7 +10,9 @@ import {
   EmptyState,
   Field,
   InlineError,
+  isAccessDenied,
   LoadingBlock,
+  NoAccess,
   PrimaryButton,
   Screen,
   StatusPill,
@@ -53,6 +55,18 @@ export default function CrmScreen() {
 
   const refresh = () =>
     Promise.all([lookups.refetch(), leads.refetch(), clients.refetch(), quotes.refetch()]);
+
+  if (isAccessDenied(error))
+    return (
+      <AuthGate>
+        <Screen>
+          <ScrollView contentContainerStyle={styles.content}>
+            <AppHeader eyebrow={t("Business")} title={t("Clients & leads")} />
+            <NoAccess area={t("Clients & leads")} message={error?.message} />
+          </ScrollView>
+        </Screen>
+      </AuthGate>
+    );
 
   return (
     <AuthGate>

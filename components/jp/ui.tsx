@@ -27,6 +27,7 @@ import {
 } from "@/lib/jp/domain";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
+import { deniedPermission, permissionLabel } from "@/lib/jp/access-catalog";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -805,6 +806,35 @@ function friendlyError(message: string) {
   return message;
 }
 
+function noAccessDetail(permission: string, t: ReturnType<typeof useT>["t"]) {
+  return t(
+    "Your role does not allow “{permission}”. Ask your owner or admin to switch it on for you in User access.",
+    { permission: permissionLabel(permission) },
+  );
+}
+
+/** True when a tRPC error is a permission refusal (the screen should show NoAccess). */
+export function isAccessDenied(error: unknown) {
+  return (error as { data?: { code?: string } } | null)?.data?.code === "FORBIDDEN";
+}
+
+/** Whole-screen state for a person whose role does not include this screen. */
+export function NoAccess({ area, message }: { area: string; message?: string }) {
+  const { t } = useT();
+  const denied = message ? deniedPermission(message) : null;
+  return (
+    <EmptyState
+      icon="lock-outline"
+      title={t("You don't have access to {area}", { area })}
+      detail={
+        denied
+          ? noAccessDetail(denied, t)
+          : t("Ask your owner or admin to switch it on for you in User access.")
+      }
+    />
+  );
+}
+
 export function InlineError({
   message,
   onRetry,
@@ -816,6 +846,8 @@ export function InlineError({
 }) {
   const colors = useColors();
   const { t } = useT();
+  // A permission refusal is not a fault: say so plainly, without the internal key.
+  const denied = deniedPermission(message);
   return (
     <View
       style={[
@@ -824,14 +856,20 @@ export function InlineError({
       ]}
       accessibilityRole="alert"
     >
-      <MaterialIcons name="error-outline" size={19} color={colors.error} />
+      <MaterialIcons
+        name={denied ? "lock-outline" : "error-outline"}
+        size={19}
+        color={colors.error}
+      />
       <View style={{ flex: 1 }}>
         <Text style={[styles.errorTitle, { color: colors.foreground }]}>
-          {title ?? t("Something went wrong")}
+          {title ?? (denied ? t("No access") : t("Something went wrong"))}
         </Text>
-        <Text style={[styles.errorDetail, { color: colors.muted }]}>{friendlyError(message)}</Text>
+        <Text style={[styles.errorDetail, { color: colors.muted }]}>
+          {denied ? noAccessDetail(denied, t) : friendlyError(message)}
+        </Text>
       </View>
-      {onRetry ? (
+      {onRetry && !denied ? (
         <Pressable accessibilityRole="button" onPress={onRetry} hitSlop={8}>
           <Text style={[styles.retryText, { color: colors.primary }]}>{t("Retry")}</Text>
         </Pressable>

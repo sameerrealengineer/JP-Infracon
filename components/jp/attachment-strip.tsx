@@ -40,6 +40,8 @@ export function AttachmentStrip({
   title = "Photos & documents",
   allowVideo = false,
   cover,
+  onUploaded,
+  noUploadReason,
 }: {
   entityType: AttachmentEntityType;
   entityId: string;
@@ -49,6 +51,10 @@ export function AttachmentStrip({
   allowVideo?: boolean;
   /** Lets a manager pick one of the photos as the cover. */
   cover?: { currentId: string | null; onSet: (attachmentId: string) => Promise<void> };
+  /** Called after the server keeps each file (isImage: a photo, not a video or PDF). */
+  onUploaded?: (attachmentId: string, isImage: boolean) => Promise<void> | void;
+  /** Shown instead of the add buttons when this person cannot add files here. */
+  noUploadReason?: string;
 }) {
   const { t } = useT();
   const colors = useColors();
@@ -58,6 +64,7 @@ export function AttachmentStrip({
   const open = trpc.jp.attachments.open.useMutation();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const send = async (
     base64: string,
@@ -72,7 +79,7 @@ export function AttachmentStrip({
           ? "This video is larger than 30 MB. Record a shorter clip."
           : "This file is larger than 8 MB.",
       );
-    await upload.mutateAsync({
+    const saved = await upload.mutateAsync({
       entityType,
       entityId,
       fileName,
@@ -83,6 +90,7 @@ export function AttachmentStrip({
       clientMutationId: createClientMutationId(),
     });
     await utils.jp.attachments.list.invalidate({ entityType, entityId });
+    await onUploaded?.(saved.id, /\.(jpe?g|png|webp)$/i.test(fileName));
   };
 
   const run = async (label: string, task: () => Promise<void>) => {
@@ -93,6 +101,7 @@ export function AttachmentStrip({
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The file could not be added.");
     } finally {
+      setProgress(null);
       setBusy(null);
     }
   };
@@ -111,16 +120,31 @@ export function AttachmentStrip({
       await send(base64, `photo-${Date.now()}.jpg`, "Captured in app", location);
     });
 
+  // Several photos at once (up to 10); each is sent on its own so one failure keeps the rest.
   const pickPhoto = () =>
     run("gallery", async () => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         quality: 0.9,
+        allowsMultipleSelection: true,
+        selectionLimit: 10,
       });
-      if (result.canceled || !result.assets[0]) return;
-      const asset = result.assets[0];
-      const base64 = await compressPhoto(asset.uri);
-      await send(base64, asset.fileName ?? `photo-${Date.now()}.jpg`, "Selected from device");
+      if (result.canceled || !result.assets.length) return;
+      const failed: string[] = [];
+      for (const [index, asset] of result.assets.entries()) {
+        setProgress({ done: index, total: result.assets.length });
+        const name = asset.fileName ?? `photo-${Date.now()}-${index + 1}.jpg`;
+        try {
+          await send(await compressPhoto(asset.uri), name, "Selected from device");
+        } catch (cause) {
+          failed.push(`${name}: ${cause instanceof Error ? cause.message : "not added"}`);
+        }
+      }
+      setProgress(null);
+      if (failed.length)
+        throw new Error(
+          `${result.assets.length - failed.length} of ${result.assets.length} added. ${failed.join(" ")}`,
+        );
     });
 
   const pickVideo = (fromCamera: boolean) =>
@@ -305,7 +329,16 @@ export function AttachmentStrip({
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="collections"
-              label={busy === "gallery" ? "Uploading…" : t("Photo")}
+              label={
+                busy !== "gallery"
+                  ? t("Photos")
+                  : progress && progress.total > 1
+                    ? t("Uploading {done} of {total}…", {
+                        done: String(progress.done + 1),
+                        total: String(progress.total),
+                      })
+                    : t("Uploading…")
+              }
               disabled={Boolean(busy)}
               onPress={() => void pickPhoto()}
             />
@@ -319,6 +352,8 @@ export function AttachmentStrip({
             />
           </View>
         </View>
+      ) : noUploadReason ? (
+        <Text style={[styles.empty, { color: colors.muted }]}>{noUploadReason}</Text>
       ) : null}
       {canUpload && allowVideo ? (
         <View style={styles.actions}>

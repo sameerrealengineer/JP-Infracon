@@ -186,18 +186,43 @@ export function retryableStatus(status: number | null) {
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Whole-request limits: text answers should be quick; photos and PDFs take longer to read. */
+export const AI_DEADLINE_MS = { text: 45_000, files: 90_000 } as const;
+const ATTEMPT_MS = { text: 20_000, files: 45_000 } as const;
+
+/**
+ * How long Gemini may "think" before answering. Thinking is most of the wait on flash models:
+ * none for text (forms, chat), a little for photos and PDFs (bills, drawings) to keep accuracy.
+ */
+export function thinkingBudget(hasFiles: boolean) {
+  return hasFiles ? 1024 : 0;
+}
+
+/** Models that refused the thinking setting once; asked again without it. */
+const noThinking = new Set<string>();
+
 /**
  * Calls Gemini with JSON output. Google often answers "503 high demand" for a few seconds, so
- * each model is tried twice with a short wait, then the next model. A model that does not exist
- * (404) is skipped; a bad key (400/401/403) stops at once with the reason.
+ * each model is tried twice with a short wait, then the next model, all within one deadline
+ * (45 s for text, 90 s with files) so a person never waits minutes. A model that does not exist
+ * (404) is skipped; a bad key (400/401/403) stops at once with the reason. Each call's time is
+ * logged (model and milliseconds only, never the content) so speed can be measured on the server.
  */
-export async function geminiJson(parts: Part[], schema: object): Promise<unknown> {
+export async function geminiJson(
+  parts: Part[],
+  schema: object,
+  now: () => number = Date.now,
+): Promise<unknown> {
   const key = geminiKey();
   if (!key)
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
       message: "AI is not set up: add GEMINI_API_KEY on the server.",
     });
+  const hasFiles = parts.some((part) => !("text" in part));
+  const kind = hasFiles ? "files" : "text";
+  const started = now();
+  const deadline = started + AI_DEADLINE_MS[kind];
   const contents = [
     {
       role: "user",
@@ -209,33 +234,54 @@ export async function geminiJson(parts: Part[], schema: object): Promise<unknown
     },
   ];
   let lastDetail = "no answer";
-  for (const model of geminiModels()) {
+  models: for (const model of geminiModels()) {
     for (let attempt = 0; attempt < 2; attempt += 1) {
+      const left = deadline - now();
+      if (left < 2_000) {
+        lastDetail = `no answer within ${Math.round(AI_DEADLINE_MS[kind] / 1000)} s`;
+        break models;
+      }
+      const withThinking = !noThinking.has(model);
+      const callStarted = now();
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-          signal: AbortSignal.timeout(60_000),
+          signal: AbortSignal.timeout(Math.min(left, ATTEMPT_MS[kind])),
           body: JSON.stringify({
             contents,
-            generationConfig: { responseMimeType: "application/json", responseSchema: schema },
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: schema,
+              ...(withThinking
+                ? { thinkingConfig: { thinkingBudget: thinkingBudget(hasFiles) } }
+                : {}),
+            },
           }),
         },
       ).catch(() => null);
+      const took = now() - callStarted;
       if (response?.ok) {
         const json = (await response.json()) as {
           candidates?: { content?: { parts?: { text?: string }[] } }[];
         };
         const text =
           json.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("") ?? "";
+        console.log(`[AI] Gemini ${model} ${kind} ok in ${took} ms (total ${now() - started} ms)`);
         if (text) return parseModelJson(text);
         lastDetail = `${model} gave an empty answer`;
         break;
       }
       lastDetail = `${model} ${await providerError(response)}`;
       const status = response?.status ?? null;
-      console.error(`[AI] Gemini ${lastDetail}`);
+      console.error(`[AI] Gemini ${lastDetail} after ${took} ms`);
+      // An older or newer model may not take the thinking setting: ask it again without.
+      if (status === 400 && withThinking && /thinking/i.test(lastDetail)) {
+        noThinking.add(model);
+        attempt -= 1;
+        continue;
+      }
       if (status === 400 || status === 401 || status === 403)
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -288,7 +334,7 @@ export async function sarvamJson(system: string, text: string): Promise<unknown>
   const response = await fetch("https://api.sarvam.ai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-subscription-key": key },
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(30_000),
     body: JSON.stringify({
       model: "sarvam-105b",
       messages: [

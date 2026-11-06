@@ -18,6 +18,7 @@ let clientId = "";
 let leadId = "";
 let quotationId = "";
 let billId = "";
+let siteId = "";
 
 describe("CRM and client billing", () => {
   beforeAll(async () => {
@@ -42,6 +43,7 @@ describe("CRM and client billing", () => {
       name: "Khurda Block 1",
       clientMutationId: mutationId(),
     });
+    siteId = site.id;
     // Accounts and the project manager work on this project's site.
     for (const [caller, role] of [
       [accounts, "accounts"],
@@ -323,5 +325,22 @@ describe("CRM and client billing", () => {
       "billing.receipt_reversed",
     ])
       expect(audit).toContain(action);
+  });
+
+  it("shows the billing tile only to people the billing screen will let in", async () => {
+    const billingOn = async (caller: Caller) =>
+      (await caller.jp.workspace.myCapabilities()).some((row) => row.siteId && row["billing.view"]);
+    // Manager's company role includes billing: tile and screen agree.
+    expect(await billingOn(manager)).toBe(true);
+    await expect(manager.jp.billing.projects()).resolves.toBeTruthy();
+    // A company supervisor made project manager on one site still has no company billing.
+    await owner.jp.sitesAdmin.assignMember({
+      siteId,
+      userId: (await supervisor.auth.me())!.id,
+      role: "project_manager",
+      clientMutationId: mutationId(),
+    });
+    expect(await billingOn(supervisor)).toBe(false);
+    await expect(supervisor.jp.billing.projects()).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });

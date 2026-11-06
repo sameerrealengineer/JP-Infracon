@@ -42,6 +42,7 @@ function site(
     projectId: PROJECT,
     project: "Khurda Rural Water Supply",
     businessRole: role,
+    organizationRole: role,
   };
 }
 
