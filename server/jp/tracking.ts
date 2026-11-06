@@ -11,6 +11,7 @@ import {
   users,
   workerAccounts,
   workerEngagements,
+  workTasks,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
@@ -26,6 +27,8 @@ import {
 import { workerPosition } from "../../lib/jp/advance-domain";
 import {
   countReports,
+  countTasks,
+  istDate,
   emptyAttendance,
   monthInstants,
   monthRange,
@@ -96,7 +99,7 @@ export const trackingRouter = router({
       const db = requireDb(await getDb());
       const now = new Date();
 
-      const [workerRows, staffRows, attendance, events, reports] = await Promise.all([
+      const [workerRows, staffRows, attendance, events, reports, tasks] = await Promise.all([
         db
           .select({
             personId: people.id,
@@ -177,7 +180,19 @@ export const trackingRouter = router({
               between(dailyReports.reportDate, range.from, range.to),
             ),
           ),
+        db
+          .select({
+            assigneeUserId: workTasks.assigneeUserId,
+            status: workTasks.status,
+            plannedEnd: workTasks.plannedEnd,
+          })
+          .from(workTasks)
+          .where(inArray(workTasks.siteId, siteIds)),
       ]);
+      const taskCounts = countTasks(
+        tasks.map((row) => ({ ...row, plannedEnd: String(row.plannedEnd) })),
+        istDate(now),
+      );
 
       const personIds = [...new Set(workerRows.map((row) => row.personId))];
       const logins = personIds.length
@@ -312,6 +327,7 @@ export const trackingRouter = router({
             reportsApproved: count.approved,
             reportsReturned: count.returned,
             reportDrafts: count.drafts,
+            tasks: taskCounts.get(userId) ?? { open: 0, done: 0, overdue: 0 },
             presence: presenceOut(presence.get(userId)),
           };
         })

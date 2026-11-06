@@ -1,9 +1,11 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   auditEvents,
+  crews,
+  siteAssignments,
   taskDependencies,
   taskScheduleChanges,
   taskScheduleRevisions,
@@ -70,7 +72,7 @@ function requireDb(db: Awaited<ReturnType<typeof import("../db").getDb>>) {
   return db;
 }
 
-function scheduleTasks(rows: Array<typeof workTasks.$inferSelect>): ScheduleTask[] {
+function scheduleTasks(rows: (typeof workTasks.$inferSelect)[]): ScheduleTask[] {
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -81,7 +83,7 @@ function scheduleTasks(rows: Array<typeof workTasks.$inferSelect>): ScheduleTask
 }
 
 function scheduleDependencies(
-  rows: Array<typeof taskDependencies.$inferSelect>,
+  rows: (typeof taskDependencies.$inferSelect)[],
 ): ScheduleDependency[] {
   return rows.map((row) => ({
     predecessorTaskId: row.predecessorTaskId,
@@ -113,7 +115,7 @@ async function recordTaskAudit(
   });
 }
 
-function conflictingScheduleMessage(conflicts: Array<{ message: string }>): string {
+function conflictingScheduleMessage(conflicts: { message: string }[]): string {
   return conflicts
     .map((conflict) => conflict.message)
     .join(" ")
@@ -131,7 +133,7 @@ async function verifyTaskCreateReplay(
     plannedStart: string;
     plannedEnd: string;
     priority: "Low" | "Normal" | "High" | "Critical";
-    dependencies: Array<{ taskId: string; lagDays: number }>;
+    dependencies: { taskId: string; lagDays: number }[];
   },
   userId: number,
   siteId: string,
@@ -236,8 +238,32 @@ export const taskRouter = router({
               .select({ id: workTasks.id, taskCode: workTasks.taskCode, title: workTasks.title })
               .from(workTasks)
               .where(inArray(workTasks.id, predecessorIds));
+      const assigneeIds = [
+        ...new Set(
+          rows.map((task) => task.assigneeUserId).filter((id): id is number => id !== null),
+        ),
+      ];
+      const crewIds = [
+        ...new Set(rows.map((task) => task.crewId).filter((id): id is string => id !== null)),
+      ];
+      const [assignees, crewRows] = await Promise.all([
+        assigneeIds.length
+          ? db
+              .select({ id: users.id, name: users.name })
+              .from(users)
+              .where(inArray(users.id, assigneeIds))
+          : [],
+        crewIds.length
+          ? db
+              .select({ id: crews.id, name: crews.name })
+              .from(crews)
+              .where(inArray(crews.id, crewIds))
+          : [],
+      ]);
       return rows.map((task) => ({
         ...task,
+        assigneeName: assignees.find((row) => row.id === task.assigneeUserId)?.name ?? null,
+        crewName: crewRows.find((row) => row.id === task.crewId)?.name ?? null,
         dependencies: edges
           .filter((edge) => edge.successorTaskId === task.id)
           .map((edge) => ({
@@ -762,6 +788,110 @@ export const taskRouter = router({
         if (replay) return replay;
         throw error;
       }
+    }),
+
+  /** Choose who is responsible for a task and which crew does it (either may be cleared). */
+  assign: protectedProcedure
+    .input(
+      z.object({
+        taskId: z.string().uuid(),
+        assigneeUserId: z.number().int().positive().nullable(),
+        crewId: z.string().uuid().nullable(),
+        clientMutationId: mutationIdSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await (await import("../db")).getDb());
+      const [task] = await db
+        .select()
+        .from(workTasks)
+        .where(eq(workTasks.id, input.taskId))
+        .limit(1);
+      if (!task) throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+      const scope = await getSiteScope(ctx.user, task.siteId, "task.manage");
+      const [prior] = await db
+        .select()
+        .from(auditEvents)
+        .where(
+          and(
+            eq(auditEvents.actorUserId, ctx.user.id),
+            eq(auditEvents.clientMutationId, input.clientMutationId),
+          ),
+        )
+        .limit(1);
+      if (prior) {
+        if (prior.action !== "task.assigned" || prior.entityId !== task.id)
+          throw new TRPCError({ code: "CONFLICT", message: "This retry key was already used." });
+        return { id: task.id };
+      }
+      if (input.assigneeUserId !== null) {
+        const now = new Date();
+        const [member] = await db
+          .select({ id: siteAssignments.id })
+          .from(siteAssignments)
+          .where(
+            and(
+              eq(siteAssignments.siteId, task.siteId),
+              eq(siteAssignments.userId, input.assigneeUserId),
+              eq(siteAssignments.status, "Active"),
+              lte(siteAssignments.effectiveFrom, now),
+              or(isNull(siteAssignments.effectiveTo), gte(siteAssignments.effectiveTo, now)),
+            ),
+          )
+          .limit(1);
+        if (!member)
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Choose someone from this site's team.",
+          });
+      }
+      if (input.crewId !== null) {
+        const [crew] = await db
+          .select({ siteId: crews.siteId, status: crews.status })
+          .from(crews)
+          .where(eq(crews.id, input.crewId))
+          .limit(1);
+        if (!crew || crew.siteId !== task.siteId || crew.status !== "Active")
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Choose an open crew of this site.",
+          });
+      }
+      await db.transaction(async (tx) => {
+        const [locked] = await tx
+          .select()
+          .from(workTasks)
+          .where(eq(workTasks.id, task.id))
+          .for("update")
+          .limit(1);
+        if (!locked) throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
+        await tx
+          .update(workTasks)
+          .set({
+            assigneeUserId: input.assigneeUserId,
+            crewId: input.crewId,
+            recordVersion: locked.recordVersion + 1,
+            updatedAt: new Date(),
+          })
+          .where(eq(workTasks.id, locked.id));
+        await recordTaskAudit(tx, {
+          organizationId: scope.organizationId,
+          siteId: scope.siteId,
+          actorUserId: ctx.user.id,
+          action: "task.assigned",
+          entityId: task.id,
+          clientMutationId: input.clientMutationId,
+          beforeSummary: JSON.stringify({
+            assigneeUserId: locked.assigneeUserId,
+            crewId: locked.crewId,
+          }),
+          afterSummary: JSON.stringify({
+            assigneeUserId: input.assigneeUserId,
+            crewId: input.crewId,
+          }),
+        });
+      });
+      return { id: task.id };
     }),
 
   history: protectedProcedure

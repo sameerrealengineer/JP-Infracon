@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  type AnyMySqlColumn,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import { issueCategories } from "../lib/jp/issue-policy";
@@ -268,6 +269,12 @@ export const workTasks = mysqlTable(
       .default("Planned")
       .notNull(),
     holdReason: text("holdReason"),
+    /** The person responsible for the task (a site team member), if one is chosen. */
+    assigneeUserId: int("assigneeUserId").references(() => users.id, { onDelete: "restrict" }),
+    /** The crew doing the work, if one is chosen. */
+    crewId: varchar("crewId", { length: 36 }).references((): AnyMySqlColumn => crews.id, {
+      onDelete: "restrict",
+    }),
     scheduleRevision: int("scheduleRevision").default(1).notNull(),
     recordVersion: int("recordVersion").default(1).notNull(),
     clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),

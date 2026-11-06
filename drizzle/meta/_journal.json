@@ -211,6 +211,13 @@
       "when": 1793969496131,
       "tag": "0029_spicy_impossible_man",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1793973313032,
+      "tag": "0030_vengeful_ricochet",
+      "breakpoints": true
     }
   ]
 }

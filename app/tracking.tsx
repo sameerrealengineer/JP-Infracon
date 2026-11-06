@@ -402,6 +402,14 @@ function StaffCard({ person }: { person: Overview["staff"][number] }) {
         <Stat value={String(person.reportDrafts)} label={t("Drafts")} />
         <Stat value={String(person.presence?.daysOnSite ?? 0)} label={t("Days on site")} />
       </View>
+      {person.tasks.open + person.tasks.done > 0 ? (
+        <View style={styles.stats}>
+          <Stat value={String(person.tasks.done)} label={t("Tasks done")} />
+          <Stat value={String(person.tasks.open)} label={t("Tasks open")} />
+          <Stat value={String(person.tasks.overdue)} label={t("Tasks late")} />
+          <View style={styles.stat} />
+        </View>
+      ) : null}
       <PresenceLine presence={person.presence} hasLogin />
     </Card>
   );

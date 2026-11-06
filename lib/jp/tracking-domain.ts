@@ -176,3 +176,24 @@ export function countReports(rows: readonly { createdBy: number; status: string 
   }
   return byUser;
 }
+
+export type TaskCount = { open: number; done: number; overdue: number };
+
+/** Tasks per responsible person: done, still open, and open past their planned end. */
+export function countTasks(
+  rows: readonly { assigneeUserId: number | null; status: string; plannedEnd: string }[],
+  today: string,
+) {
+  const byUser = new Map<number, TaskCount>();
+  for (const row of rows) {
+    if (row.assigneeUserId === null || row.status === "Cancelled") continue;
+    const count = byUser.get(row.assigneeUserId) ?? { open: 0, done: 0, overdue: 0 };
+    if (row.status === "Completed") count.done += 1;
+    else {
+      count.open += 1;
+      if (row.plannedEnd < today) count.overdue += 1;
+    }
+    byUser.set(row.assigneeUserId, count);
+  }
+  return byUser;
+}

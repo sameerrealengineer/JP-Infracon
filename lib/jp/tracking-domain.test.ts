@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   attendancePercent,
   countReports,
+  countTasks,
   formatHalfDays,
   istDate,
   monthInstants,
@@ -95,5 +96,20 @@ describe("tracking domain", () => {
       { createdBy: 7, status: "Returned for Correction" },
     ]).get(7);
     expect(counts).toEqual({ submitted: 3, approved: 1, returned: 1, drafts: 1 });
+  });
+
+  it("counts each person's tasks and which are late", () => {
+    const counts = countTasks(
+      [
+        { assigneeUserId: 5, status: "Completed", plannedEnd: "2026-11-01" },
+        { assigneeUserId: 5, status: "In Progress", plannedEnd: "2026-11-01" },
+        { assigneeUserId: 5, status: "Planned", plannedEnd: "2026-11-30" },
+        { assigneeUserId: 5, status: "Cancelled", plannedEnd: "2026-11-01" },
+        { assigneeUserId: null, status: "Planned", plannedEnd: "2026-11-01" },
+      ],
+      "2026-11-06",
+    );
+    expect(counts.get(5)).toEqual({ open: 2, done: 1, overdue: 1 });
+    expect(counts.size).toBe(1);
   });
 });

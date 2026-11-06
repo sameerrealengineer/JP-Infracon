@@ -12,7 +12,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 | `access.ts` | `getSiteScope(user, siteId, permissionKey)` and `getAccessibleSites`: membership, site assignment, and grant checks |
 | `policy.ts` | Role to permission resolution with scoped, effective dated grants (`resolveSitePermission`, `resolveOrganizationPermission`) |
 | `accounts.ts` | Organisation user and site account administration |
-| `tasks.ts` | Tasks, Finish to Start dependencies, rescheduling with impact preview |
+| `tasks.ts` | Tasks, Finish to Start dependencies, rescheduling with impact preview; `assign` (`task.manage`) sets the responsible person (must be on the site team) and crew (open crew of the site), audited as `task.assigned` |
 | `workforce.ts` | Workers, KYC review, effective dated rates |
 | `inventory.ts` | Catalogue, stock movements, derived stock |
 | `sites-admin.ts` | Projects and sites: create, edit, status changes with reason, site team assign/remove (`site.manage`, organisation level) |

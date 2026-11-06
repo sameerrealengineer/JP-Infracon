@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AssignTaskSheet } from "@/components/jp/assign-task-sheet";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
@@ -99,6 +100,7 @@ export default function ScheduleScreen() {
   const [statusReason, setStatusReason] = useState("");
   const [statusMutationId, setStatusMutationId] = useState<string | null>(null);
   const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
+  const [assignTaskId, setAssignTaskId] = useState<string | null>(null);
 
   const siteOptions = useMemo(
     () =>
@@ -581,6 +583,16 @@ export default function ScheduleScreen() {
                             {task.workCategory}
                           </Text>
                         ) : null}
+                        {task.assigneeName || task.crewName ? (
+                          <Text style={[styles.cardMeta, { color: colors.foreground }]}>
+                            {[
+                              task.assigneeName ? `Responsible: ${task.assigneeName}` : null,
+                              task.crewName ? `Crew: ${task.crewName}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </Text>
+                        ) : null}
                         {task.description ? (
                           <Text style={[styles.cardDescription, { color: colors.muted }]}>
                             {task.description}
@@ -613,6 +625,15 @@ export default function ScheduleScreen() {
                                 }
                                 setMessage(null);
                               }}
+                            />
+                          ) : null}
+                          {canManage &&
+                          task.status !== "Completed" &&
+                          task.status !== "Cancelled" ? (
+                            <SecondaryButton
+                              icon="assignment-ind"
+                              label="Assign"
+                              onPress={() => setAssignTaskId(task.id)}
                             />
                           ) : null}
                           <SecondaryButton
@@ -945,6 +966,18 @@ export default function ScheduleScreen() {
             </>
           ) : null}
         </ScrollView>
+        {assignTaskId && siteId
+          ? (() => {
+              const task = tasksQuery.data?.find((row) => row.id === assignTaskId);
+              return task ? (
+                <AssignTaskSheet
+                  task={task}
+                  siteId={siteId}
+                  onClose={() => setAssignTaskId(null)}
+                />
+              ) : null;
+            })()
+          : null}
       </Screen>
     </AuthGate>
   );
