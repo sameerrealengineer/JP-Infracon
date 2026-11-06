@@ -197,6 +197,13 @@
       "when": 1793888282881,
       "tag": "0027_dry_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1793928467162,
+      "tag": "0028_wild_tyger_tiger",
+      "breakpoints": true
     }
   ]
 }

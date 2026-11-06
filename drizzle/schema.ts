@@ -3021,3 +3021,43 @@ export const workerAccounts = mysqlTable("worker_accounts", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+
+/**
+ * Problem reports: a worker's "something is wrong", a forgotten PIN, staff feedback and app
+ * errors the phone sends by itself. No foreign keys on purpose, so a report is never lost
+ * because of the very problem it describes; ids are checked by the server when written.
+ */
+export const appReports = mysqlTable(
+  "app_reports",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    source: mysqlEnum("source", ["worker", "pin_reset", "staff", "app_error"]).notNull(),
+    organizationId: varchar("organizationId", { length: 36 }),
+    siteId: varchar("siteId", { length: 36 }),
+    userId: int("userId"),
+    personId: varchar("personId", { length: 36 }),
+    category: varchar("category", { length: 40 }).notNull(),
+    message: varchar("message", { length: 1000 }),
+    detail: text("detail"),
+    screen: varchar("screen", { length: 160 }),
+    appVersion: varchar("appVersion", { length: 32 }),
+    platform: varchar("platform", { length: 16 }),
+    fingerprint: varchar("fingerprint", { length: 255 }),
+    repeatCount: int("repeatCount").default(1).notNull(),
+    status: mysqlEnum("status", ["Open", "Resolved"]).default("Open").notNull(),
+    resolvedBy: int("resolvedBy"),
+    resolvedAt: timestamp("resolvedAt"),
+    resolution: varchar("resolution", { length: 300 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    lastSeenAt: timestamp("lastSeenAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    orgStatusIndex: index("app_report_org_status_idx").on(
+      table.organizationId,
+      table.status,
+      table.createdAt,
+    ),
+    siteStatusIndex: index("app_report_site_status_idx").on(table.siteId, table.status),
+    fingerprintIndex: index("app_report_fingerprint_idx").on(table.fingerprint, table.lastSeenAt),
+  }),
+);

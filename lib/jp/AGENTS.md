@@ -56,6 +56,8 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `statutory-files.ts` | EPFO ECR 2.0 monthly text (11 fields, `#~#`, whole rupees, NCP days) and ESIC contribution CSV (template columns); people without UAN / IP number listed as left out |
 | `access-catalog.ts` | Per-user access groups by module, plain labels, company-level keys, who may switch what on |
 | `presence-rules.ts` | IST clock, working hours/days, which arrival/departure alerts, settings checks |
+| `app-reports.ts` | Report sources, worker problem tiles, staff categories, text cleaning, stack trimming, error fingerprints, and `transportError` (plain messages for no internet, 502/503/504, a web page instead of data) used by `friendlyErrorLink` in `lib/trpc.ts` |
+| `worker-speech.ts` | What the worker screen says aloud in English, Hindi and Odia (whole rupees, attendance counts, drawings) and the speech language codes |
 | `worker-app.ts` | Worker PIN rules (6 digits, no repeats/runs), lock after wrong PINs, switched-on features, attendance signs |
 
 ## Conventions

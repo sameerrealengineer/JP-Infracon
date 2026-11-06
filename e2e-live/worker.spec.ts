@@ -102,3 +102,74 @@ test("the owner sets a site's GPS alert hours", async ({ page }) => {
   await expect(page.getByText("Saved.").filter({ visible: true })).toBeVisible();
   await expect(page.getByText("Site team tracking").filter({ visible: true })).toBeVisible();
 });
+
+test("a mistri who forgot the PIN tells the supervisor; the manager sets a new PIN", async ({
+  page,
+}) => {
+  await page.context().clearCookies();
+  await page.goto("/");
+  await page.getByRole("button", { name: /Mistri \/ worker login/ }).click();
+  // Without a number the app asks for it first.
+  await page.getByRole("button", { name: "Forgot PIN" }).click();
+  await expect(page.getByText("First write your mobile number above.")).toBeVisible();
+  await page.getByLabel("Mobile number").fill("9876500001");
+  await page.getByRole("button", { name: "Forgot PIN" }).click();
+  await expect(page.getByText(/your supervisor has been told/)).toBeVisible();
+
+  await signIn(page, "manager");
+  await page.goto("/app-reports");
+  await expect(page.getByText("Ramesh Behera").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Forgot PIN").filter({ visible: true }).first()).toBeVisible();
+  await page
+    .getByRole("button", { name: "Set a new PIN" })
+    .filter({ visible: true })
+    .first()
+    .click();
+  await expect(page.getByText("Ramesh Behera").filter({ visible: true }).first()).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: /Reset PIN/ })
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+});
+
+test("the worker screen has a read-aloud button and, when switched on, problem tiles", async ({
+  page,
+}) => {
+  await page.context().clearCookies();
+  await page.goto("/");
+  await page.getByRole("button", { name: /Mistri \/ worker login/ }).click();
+  await page.getByLabel("Mobile number").fill("9876500001");
+  for (const digit of "482913")
+    await page.getByRole("button", { name: digit, exact: true }).click();
+  await expect(page.getByText("🙏 Ramesh Behera")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Read aloud" })).toBeVisible();
+});
+
+test("staff report a problem and the owner sees it in App problems", async ({ page }) => {
+  await signIn(page, "store");
+  await page.goto("/report-problem");
+  await page
+    .getByLabel(/What happened\?/)
+    .filter({ visible: true })
+    .fill("Stock card shows the wrong unit for cement");
+  await page.getByRole("button", { name: "Send" }).filter({ visible: true }).click();
+  await expect(page.getByText(/Sent\. Thank you/).filter({ visible: true })).toBeVisible();
+
+  await signIn(page, "owner");
+  await page.goto("/app-reports");
+  await page
+    .getByRole("radio", { name: /^Staff report/ })
+    .filter({ visible: true })
+    .click();
+  await expect(
+    page.getByText("Stock card shows the wrong unit for cement").filter({ visible: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Mark done" }).filter({ visible: true }).first().click();
+  await page.getByLabel("What was done (optional)").filter({ visible: true }).fill("Unit fixed");
+  await page.getByRole("button", { name: "Mark done" }).filter({ visible: true }).first().click();
+  await expect(
+    page.getByText("Stock card shows the wrong unit for cement").filter({ visible: true }),
+  ).toHaveCount(0);
+});

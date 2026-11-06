@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
+import * as Speech from "expo-speech";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -16,19 +18,33 @@ import { useColors } from "@/hooks/use-colors";
 import { useAuth } from "@/hooks/use-auth";
 import { formatMinorAsRupees } from "@/lib/jp/finance-domain";
 import { attendanceSign } from "@/lib/jp/worker-app";
+import { WORKER_PROBLEMS, type WorkerProblem } from "@/lib/jp/app-reports";
+import {
+  DEVICE_SPEECH_LANGUAGE,
+  SPEECH_LANGUAGE,
+  attendanceSpeech,
+  drawingsSpeech,
+  moneySpeech,
+} from "@/lib/jp/worker-speech";
+import { audioFileFromBase64 } from "@/lib/device-files";
 import { siteAlertsEnabled, startSiteAlerts, stopSiteAlerts } from "@/lib/geofence-task";
 import { languageNames, useT, type Language } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 import type { AppRouter } from "@/server/routers";
 
 type Bundle = inferRouterOutputs<AppRouter>["jp"]["worker"]["me"];
-type Section = "money" | "attendance" | "drawings" | "call";
+type Section = "money" | "attendance" | "drawings" | "call" | "help";
+type SpeakFn = (
+  text: string,
+  language: "en-IN" | "hi-IN" | "od-IN",
+) => Promise<{ audioBase64: string; mimeType: string }>;
 
 const TILES: { key: Section; emoji: string; label: string }[] = [
   { key: "money", emoji: "💰", label: "My money" },
   { key: "attendance", emoji: "📅", label: "My attendance" },
   { key: "drawings", emoji: "📐", label: "Drawings" },
   { key: "call", emoji: "📞", label: "Call supervisor" },
+  { key: "help", emoji: "🆘", label: "Problem? Tell us" },
 ];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -43,17 +59,110 @@ export function WorkerHome({
   data,
   openDrawing,
   selfMode,
+  speak,
+  reportProblem,
 }: {
   data: Bundle;
   openDrawing: (documentId: string) => Promise<{ url: string }>;
   /** The worker's own phone (sign out and site tracking); false when a supervisor shows it. */
   selfMode: boolean;
+  /** Server voice (clear Hindi and Odia); the phone's own voice is used when it fails. */
+  speak?: SpeakFn;
+  /** Sends "something is wrong" to the supervisor (worker's own phone only). */
+  reportProblem?: (problem: WorkerProblem) => Promise<unknown>;
 }) {
   const colors = useColors();
   const { t, language, setLanguage } = useT();
-  const tiles = TILES.filter((tile) => data.features.includes(tile.key));
+  const tiles = TILES.filter(
+    (tile) => data.features.includes(tile.key) && (tile.key !== "help" || reportProblem),
+  );
   const [open, setOpen] = useState<Section | null>(tiles[0]?.key ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+  const [sent, setSent] = useState<WorkerProblem | null>(null);
+  const [sending, setSending] = useState<WorkerProblem | null>(null);
+  const player = useRef<AudioPlayer | null>(null);
+
+  const stopSpeaking = () => {
+    player.current?.remove();
+    player.current = null;
+    void Speech.stop().catch(() => undefined);
+    setSpeaking(false);
+  };
+  useEffect(
+    () => () => {
+      player.current?.remove();
+      void Speech.stop().catch(() => undefined);
+    },
+    [],
+  );
+
+  /** What the open part of the screen says, in the chosen language. */
+  const speechText = () => {
+    if (open === "attendance" && data.attendance)
+      return attendanceSpeech(data.attendance, language);
+    if (open === "drawings" && data.drawings)
+      return drawingsSpeech(
+        data.drawings.map((doc) => doc.title),
+        language,
+      );
+    if (data.money) return moneySpeech(data.person.name, data.money, language);
+    return data.person.name;
+  };
+
+  const sayIt = async () => {
+    if (speaking) return stopSpeaking();
+    setError(null);
+    setSpeaking(true);
+    const text = speechText();
+    const deviceVoice = () =>
+      Speech.speak(text, {
+        language: DEVICE_SPEECH_LANGUAGE[language],
+        rate: 0.9,
+        onDone: () => setSpeaking(false),
+        onStopped: () => setSpeaking(false),
+        onError: () => {
+          setSpeaking(false);
+          setError(t("Could not speak. Please read the screen or ask your supervisor."));
+        },
+      });
+    try {
+      if (!speak) throw new Error("No server voice here.");
+      const audio = await speak(text, SPEECH_LANGUAGE[language]);
+      await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
+      player.current?.remove();
+      const next = createAudioPlayer({
+        uri: audioFileFromBase64(audio.audioBase64, audio.mimeType),
+      });
+      player.current = next;
+      next.addListener("playbackStatusUpdate", (status) => {
+        if (status.didJustFinish) setSpeaking(false);
+      });
+      next.play();
+    } catch {
+      // No internet or no server voice: the phone's own voice reads it.
+      try {
+        deviceVoice();
+      } catch {
+        setSpeaking(false);
+        setError(t("Could not speak. Please read the screen or ask your supervisor."));
+      }
+    }
+  };
+
+  const tell = async (problem: WorkerProblem) => {
+    if (!reportProblem) return;
+    setError(null);
+    setSending(problem);
+    try {
+      await reportProblem(problem);
+      setSent(problem);
+    } catch (cause) {
+      setError(cause instanceof Error ? t(cause.message) : t("Could not send. Try again."));
+    } finally {
+      setSending(null);
+    }
+  };
   const totalDue = (data.money ?? []).reduce((sum, row) => sum + BigInt(row.dueMinor), 0n);
 
   const showDrawing = async (id: string) => {
@@ -62,7 +171,7 @@ export function WorkerHome({
       const { url } = await openDrawing(id);
       await Linking.openURL(url);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t("Could not open."));
+      setError(cause instanceof Error ? t(cause.message) : t("Could not open."));
     }
   };
 
@@ -115,6 +224,14 @@ export function WorkerHome({
           </Text>
         </View>
       ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={speaking ? "Stop speaking" : "Read aloud"}
+        onPress={() => void sayIt()}
+        style={[styles.speak, { backgroundColor: speaking ? colors.warning : colors.primary }]}
+      >
+        <Text style={styles.speakText}>{speaking ? `⏹ ${t("Stop")}` : `🔊 ${t("Listen")}`}</Text>
+      </Pressable>
       <View style={styles.grid}>
         {tiles.map((tile) => (
           <Pressable
@@ -271,6 +388,51 @@ export function WorkerHome({
         </View>
       ) : null}
 
+      {open === "help" && reportProblem ? (
+        <View style={{ gap: 10 }}>
+          {sent ? (
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: colors.surface, borderColor: colors.success },
+              ]}
+            >
+              <Text style={[styles.cardTitle, { color: colors.success }]}>
+                ✅ {t("Your supervisor has been told. They will call you.")}
+              </Text>
+            </View>
+          ) : (
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              {t("What is wrong? Tap one.")}
+            </Text>
+          )}
+          {WORKER_PROBLEMS.map((item) => (
+            <Pressable
+              key={item.key}
+              accessibilityRole="button"
+              accessibilityLabel={t(item.label)}
+              disabled={sending !== null}
+              onPress={() => void tell(item.key)}
+              style={[
+                styles.card,
+                styles.drawing,
+                {
+                  backgroundColor: sent === item.key ? `${colors.success}22` : colors.surface,
+                  borderColor: sent === item.key ? colors.success : colors.border,
+                },
+              ]}
+            >
+              <Text style={styles.tileEmoji}>{item.emoji}</Text>
+              <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>
+                {t(item.label)}
+              </Text>
+              {sending === item.key ? <ActivityIndicator color={colors.primary} /> : null}
+              {sent === item.key ? <Text style={styles.tileEmoji}>✅</Text> : null}
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+
       {selfMode ? <WorkerFooter /> : null}
     </ScrollView>
   );
@@ -391,6 +553,8 @@ export function WorkerSelf() {
   const { t } = useT();
   const me = trpc.jp.worker.me.useQuery();
   const open = trpc.jp.worker.openDrawing.useMutation();
+  const speak = trpc.jp.worker.speak.useMutation();
+  const report = trpc.jp.worker.reportProblem.useMutation();
   if (me.isLoading)
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>
@@ -401,7 +565,7 @@ export function WorkerSelf() {
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>
         <Text style={[styles.cardTitle, { color: colors.error }]}>
-          {me.error?.message ?? t("Could not open.")}
+          {me.error?.message ? t(me.error.message) : t("Could not open.")}
         </Text>
         <Pressable
           accessibilityRole="button"
@@ -418,6 +582,8 @@ export function WorkerSelf() {
       data={me.data}
       selfMode
       openDrawing={(documentId) => open.mutateAsync({ documentId })}
+      speak={(text, language) => speak.mutateAsync({ text: text.slice(0, 600), language })}
+      reportProblem={(problem) => report.mutateAsync({ problem })}
     />
   );
 }
@@ -459,6 +625,8 @@ const styles = StyleSheet.create({
   call: { borderRadius: 22, padding: 20, alignItems: "center" },
   callText: { color: "#fff", fontSize: 24, fontWeight: "900" },
   callSub: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  speak: { borderRadius: 18, padding: 14, alignItems: "center" },
+  speakText: { color: "#fff", fontSize: 22, fontWeight: "900" },
   signOut: { borderRadius: 20, borderWidth: 1, padding: 16, alignItems: "center" },
   error: { fontSize: 16, fontWeight: "700" },
 });

@@ -11,7 +11,7 @@ import {
   StatusPill,
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { WORKER_FEATURES, type WorkerFeature } from "@/lib/jp/worker-app";
+import { DEFAULT_WORKER_FEATURES, WORKER_FEATURES, type WorkerFeature } from "@/lib/jp/worker-app";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -20,6 +20,7 @@ const FEATURE_LABEL: Record<WorkerFeature, string> = {
   attendance: "📅 Attendance",
   drawings: "📐 Site drawings",
   call: "📞 Call supervisor",
+  help: "🆘 Tell a problem / ask for help",
 };
 
 /**
@@ -42,7 +43,7 @@ export function WorkerAppCard({ siteId, personId }: { siteId: string; personId: 
   if (query.isLoading || query.error) return null;
   const data = query.data!;
   const account = data.account;
-  const features = account?.features ?? ["money", "attendance", "call"];
+  const features = account?.features ?? DEFAULT_WORKER_FEATURES;
 
   const refresh = () => utils.jp.worker.account.invalidate({ siteId, personId });
   const saveLogin = async () => {

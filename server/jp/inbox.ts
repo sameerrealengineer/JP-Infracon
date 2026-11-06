@@ -25,6 +25,8 @@ import type { getDb } from "../db";
 import { formatMinorAsRupees } from "../../lib/jp/finance-domain";
 import { sortInbox, type InboxItem } from "../../lib/jp/site-admin-policy";
 import { openDues } from "./books";
+import { openWorkerRequests } from "./reports";
+import { WORKER_PROBLEMS } from "../../lib/jp/app-reports";
 
 type Db = NonNullable<Awaited<ReturnType<typeof getDb>>>;
 type Capability = { siteId: string } & Partial<Record<string, boolean | string>>;
@@ -397,6 +399,25 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         siteName: row.siteName,
         occurredAt: iso(row.at),
         route: `/payroll?siteId=${row.siteId}&tab=khaata`,
+        severity: "normal",
+      });
+  });
+  await guard("worker-help", async () => {
+    const reviewSites = sitesWith(capabilities, "workforce.review");
+    const rows = await openWorkerRequests(db, reviewSites, LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `worker-help-${row.id}`,
+        kind: "worker.help",
+        title: row.source === "pin_reset" ? "Worker forgot PIN" : "Worker needs help",
+        detail:
+          row.source === "pin_reset"
+            ? `${row.name} · set a new PIN`
+            : `${row.name} · ${WORKER_PROBLEMS.find((p) => p.key === row.category)?.label ?? row.category}`,
+        siteId: row.siteId!,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/person?id=${row.personId}`,
         severity: "normal",
       });
   });

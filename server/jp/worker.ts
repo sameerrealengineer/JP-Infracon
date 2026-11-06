@@ -22,6 +22,9 @@ import { hashPassword, hashPin } from "../_core/credential-auth";
 import { getDb } from "../db";
 import { getSiteScope } from "./access";
 import { personPosition } from "./advances";
+import { allowHit, closePinResets, workerProblem } from "./reports";
+import { sarvamSpeak } from "./ai";
+import { WORKER_PROBLEM_KEYS } from "../../lib/jp/app-reports";
 import { normalizeIndianMobile } from "../../lib/jp/notify-policy";
 import {
   WORKER_FEATURES,
@@ -312,6 +315,43 @@ export const workerRouter = router({
       return openDrawing(db, input.documentId);
     }),
 
+  /** The worker taps "something is wrong"; their supervisor and managers are told. */
+  reportProblem: protectedProcedure
+    .input(
+      z.object({
+        problem: z.enum(WORKER_PROBLEM_KEYS),
+        message: z.string().trim().max(500).nullish(),
+        appVersion: z.string().trim().max(32).nullish(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account, person } = await workerOf(ctx.user);
+      if (!parseFeatures(account.features).includes("help"))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Asking for help in the app is not switched on for you. Call your supervisor.",
+        });
+      return workerProblem(db, account, person.fullName, input);
+    }),
+
+  /** Reads the worker's own screen aloud (Sarvam), for workers who read little. */
+  speak: protectedProcedure
+    .input(
+      z.object({
+        text: z.string().trim().min(1).max(600),
+        language: z.enum(["od-IN", "hi-IN", "en-IN"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await workerOf(ctx.user);
+      if (!allowHit(`worker-speak:${ctx.user.id}`, 60))
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Too many tries. Wait a minute and try again.",
+        });
+      return sarvamSpeak(input.text, input.language);
+    }),
+
   /** Supervisor shows a worker their own screen on the supervisor's phone. */
   viewFor: protectedProcedure
     .input(z.object({ siteId: z.string().uuid(), personId: z.string().uuid() }))
@@ -467,6 +507,8 @@ export const workerRouter = router({
           }),
         });
       });
+      // A forgotten-PIN request is answered by this new PIN.
+      await closePinResets(db, input.personId, ctx.user.id).catch(() => undefined);
       return { ok: true };
     }),
 

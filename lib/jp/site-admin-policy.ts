@@ -102,7 +102,8 @@ export type InboxItem = {
     | "payroll.review"
     | "payroll.profile"
     | "payroll.advance"
-    | "accounts.due";
+    | "accounts.due"
+    | "worker.help";
   title: string;
   detail: string;
   siteId: string;

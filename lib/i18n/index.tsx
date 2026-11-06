@@ -14,6 +14,12 @@ export { languageNames, type Language } from "./strings";
 
 const KEY = "jp-infracon.language.v1";
 
+/** The chosen language, for text made outside React (such as network error messages). */
+let activeLanguage: Language = "en";
+export function translateNow(text: string, vars?: Record<string, string | number>) {
+  return translate(activeLanguage, text, vars);
+}
+
 type I18n = {
   language: Language;
   setLanguage: (language: Language) => void;
@@ -33,7 +39,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     let active = true;
     AsyncStorage.getItem(KEY)
       .then((saved) => {
-        if (active && isLanguage(saved)) setLanguageState(saved);
+        if (active && isLanguage(saved)) {
+          activeLanguage = saved;
+          setLanguageState(saved);
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -41,6 +50,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   const setLanguage = useCallback((next: Language) => {
+    activeLanguage = next;
     setLanguageState(next);
     AsyncStorage.setItem(KEY, next).catch(() => undefined);
   }, []);

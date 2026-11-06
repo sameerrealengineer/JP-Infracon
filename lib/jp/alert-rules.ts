@@ -55,6 +55,13 @@ export const ALERT_CATEGORIES = [
     prefixes: ["presence."],
   },
   {
+    key: "workers",
+    title: "Worker help",
+    detail: "Forgot PIN, problem reported",
+    module: null,
+    prefixes: ["worker."],
+  },
+  {
     key: "access",
     title: "Access & authority",
     detail: "Delegation granted",

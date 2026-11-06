@@ -25,6 +25,8 @@ export function WorkerSignIn({
   const colors = useColors();
   const { t } = useT();
   const login = trpc.auth.workerLogin.useMutation();
+  const forgot = trpc.auth.workerForgotPin.useMutation();
+  const [notice, setNotice] = useState<string | null>(null);
   const [mobile, setMobile] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,22 @@ export function WorkerSignIn({
       await onSignedIn(result);
     } catch (cause) {
       setPin("");
-      setError(cause instanceof Error ? cause.message : t("Could not sign in."));
+      // Server messages are English text keys, so they show in the worker's language.
+      setError(cause instanceof Error ? t(cause.message) : t("Could not sign in."));
+    }
+  };
+  const askNewPin = async () => {
+    setError(null);
+    setNotice(null);
+    if (mobile.replace(/\D/g, "").length < 10) {
+      setError(t("First write your mobile number above."));
+      return;
+    }
+    try {
+      const result = await forgot.mutateAsync({ mobile: mobile.trim() });
+      setNotice(t(result.message));
+    } catch (cause) {
+      setError(cause instanceof Error ? t(cause.message) : t("Could not send. Try again."));
     }
   };
   const press = (key: (typeof KEYS)[number]) => {
@@ -107,7 +124,31 @@ export function WorkerSignIn({
         ))}
       </View>
       {login.isPending ? <ActivityIndicator color={colors.primary} size="large" /> : null}
-      {error ? <Text style={[styles.error, { color: colors.error }]}>{error}</Text> : null}
+      {error ? (
+        <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
+          {error}
+        </Text>
+      ) : null}
+      {notice ? (
+        <Text accessibilityRole="alert" style={[styles.notice, { color: colors.success }]}>
+          ✅ {notice}
+        </Text>
+      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Forgot PIN"
+        disabled={forgot.isPending}
+        onPress={() => void askNewPin()}
+        style={[styles.forgot, { borderColor: colors.border, backgroundColor: colors.surface }]}
+      >
+        {forgot.isPending ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <Text style={[styles.forgotText, { color: colors.foreground }]}>
+            🤔 {t("Forgot PIN? Tell supervisor")}
+          </Text>
+        )}
+      </Pressable>
       {DEMO_MODE ? (
         <Pressable
           accessibilityRole="button"
@@ -151,5 +192,8 @@ const styles = StyleSheet.create({
   },
   keyText: { fontSize: 28, fontWeight: "900" },
   error: { fontSize: 16, fontWeight: "700", textAlign: "center" },
+  notice: { fontSize: 16, fontWeight: "700", textAlign: "center" },
+  forgot: { borderWidth: 1, borderRadius: 16, padding: 14, alignItems: "center" },
+  forgotText: { fontSize: 17, fontWeight: "800" },
   back: { textAlign: "center", fontSize: 15, fontWeight: "700", marginTop: 4 },
 });

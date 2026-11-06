@@ -541,9 +541,21 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 </>
               )}
               {setup.isError ? (
-                <Text style={[styles.error, { color: colors.error }]}>
-                  Account setup status could not be reached. Check your connection and retry.
-                </Text>
+                <View style={{ gap: 6 }}>
+                  <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
+                    {setup.error?.message ||
+                      t("The server could not be reached. Check your connection and try again.")}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => void setup.refetch()}
+                    hitSlop={8}
+                  >
+                    <Text style={[styles.error, { color: colors.primary }]}>
+                      🔄 {t("Try again")}
+                    </Text>
+                  </Pressable>
+                </View>
               ) : null}
               {formError ? (
                 <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>

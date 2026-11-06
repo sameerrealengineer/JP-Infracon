@@ -32,7 +32,8 @@ export async function saveServerAddress(value: string): Promise<string> {
   const address = normalizeServerAddress(value);
   if (!address) throw new Error("Enter a valid https:// server address.");
   const response = await fetch(`${address}/api/health`).catch(() => null);
-  if (!response?.ok)
+  // 503 means the server is there but its database is down for now: still the right address.
+  if (!response || (!response.ok && response.status !== 503))
     throw new Error("That server did not answer. Check the address and your internet.");
   setApiBaseUrlOverride(address);
   await AsyncStorage.setItem(KEY, address);

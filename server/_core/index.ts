@@ -10,6 +10,23 @@ import { createContext } from "./context";
 import { createCorsMiddleware } from "./cors";
 import { runMigrations } from "./migrate";
 import { registerWhatsAppBot } from "../jp/whatsapp-bot";
+import { sql } from "drizzle-orm";
+import { getDb } from "../db";
+
+/** "ok" when a trivial query answers within 4 seconds, otherwise "down". */
+async function databaseAnswers(): Promise<"ok" | "down"> {
+  try {
+    const db = await getDb();
+    if (!db) return "down";
+    await Promise.race([
+      db.execute(sql`select 1`),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 4000)),
+    ]);
+    return "ok";
+  } catch {
+    return "down";
+  }
+}
 
 async function startServer() {
   const app = express();
@@ -27,8 +44,11 @@ async function startServer() {
   registerFileRoute(app);
   registerCredentialRoutes(app);
 
-  app.get("/api/health", (_req, res) => {
-    res.json({ ok: true, timestamp: Date.now() });
+  // Healthy only when the database answers too, so Docker and the watchdog see a real outage.
+  app.get("/api/health", async (_req, res) => {
+    const database = process.env.DATABASE_URL ? await databaseAnswers() : "not configured";
+    const ok = database !== "down";
+    res.status(ok ? 200 : 503).json({ ok, database, timestamp: Date.now() });
   });
 
   app.use(

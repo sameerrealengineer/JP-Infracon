@@ -21,9 +21,9 @@ describe("worker app rules", () => {
   });
 
   it("reads switched-on features, defaulting to money, attendance and call", () => {
-    expect(parseFeatures(null)).toEqual(["money", "attendance", "call"]);
+    expect(parseFeatures(null)).toEqual(["money", "attendance", "call", "help"]);
     expect(parseFeatures('["drawings","money","bogus"]')).toEqual(["money", "drawings"]);
-    expect(parseFeatures("not json")).toEqual(["money", "attendance", "call"]);
+    expect(parseFeatures("not json")).toEqual(["money", "attendance", "call", "help"]);
   });
 
   it("shows attendance as a simple sign", () => {

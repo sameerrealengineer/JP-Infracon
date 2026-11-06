@@ -54,6 +54,7 @@ import { booksRouter } from "./books";
 import { advancesRouter } from "./advances";
 import { userAccessRouter } from "./user-access";
 import { workerRouter } from "./worker";
+import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
 import {
   checkReportItems,
@@ -203,6 +204,7 @@ export const jpRouter = router({
   advances: advancesRouter,
   userAccess: userAccessRouter,
   worker: workerRouter,
+  feedback: reportsRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);

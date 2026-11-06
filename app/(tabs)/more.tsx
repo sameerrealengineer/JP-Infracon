@@ -266,6 +266,22 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "support-agent",
+      title: "Report a problem",
+      detail: "Tell the admin what is wrong or what you need",
+      tone: "warning",
+      route: "/report-problem",
+      show: true,
+    },
+    {
+      icon: "bug-report",
+      title: "App problems",
+      detail: "Errors, worker help, forgotten PINs",
+      tone: "error",
+      route: "/app-reports",
+      show: workspace.canManageAccounts || can("workforce.review"),
+    },
+    {
       icon: "notifications-none",
       title: "Notifications",
       detail: "Work waiting on you",

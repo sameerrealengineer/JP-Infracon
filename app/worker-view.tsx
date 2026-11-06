@@ -19,6 +19,7 @@ export default function WorkerViewScreen() {
     { enabled: Boolean(siteId && personId) },
   );
   const open = trpc.jp.worker.openDrawingFor.useMutation();
+  const speak = trpc.jp.assistant.speak.useMutation();
   return (
     <AuthGate>
       <Screen>
@@ -39,6 +40,7 @@ export default function WorkerViewScreen() {
             data={view.data}
             selfMode={false}
             openDrawing={(documentId) => open.mutateAsync({ siteId, personId, documentId })}
+            speak={(text, language) => speak.mutateAsync({ text, language })}
           />
         )}
       </Screen>

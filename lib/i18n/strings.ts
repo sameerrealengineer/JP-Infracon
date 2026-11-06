@@ -980,7 +980,7 @@ export const hi: Dictionary = {
     "आपका फ़ोन सुपरवाइज़र को सिर्फ़ तब बताता है जब आप काम के समय साइट पर आते या जाते हैं।",
   "Try again": "फिर कोशिश करें",
   "Could not sign in.": "लॉगिन नहीं हुआ।",
-  "Worker login": "मज़दूर लॉगिन",
+  "Worker login": "मिस्त्री / मज़दूर लॉगिन",
   "Your mobile number": "आपका मोबाइल नंबर",
   "Your 6-digit PIN": "आपका 6 अंक का PIN",
   "Staff sign in": "स्टाफ़ साइन इन",
@@ -1027,6 +1027,90 @@ export const hi: Dictionary = {
   "Advance repayment to approve": "स्वीकृति के लिए एडवांस वापसी",
   Repayment: "वापसी",
   Pending: "बाकी",
+  // Help, problem reports and connection errors
+  "Problem? Tell us": "समस्या? बताइए",
+  "Could not speak. Please read the screen or ask your supervisor.":
+    "बोल नहीं पाया। स्क्रीन पढ़ें या सुपरवाइज़र से पूछें।",
+  "Could not send. Try again.": "नहीं भेज पाया। फिर कोशिश करें।",
+  Stop: "रोकें",
+  Listen: "सुनें",
+  "Your supervisor has been told. They will call you.":
+    "सुपरवाइज़र को बता दिया है। वे आपको फ़ोन करेंगे।",
+  "What is wrong? Tap one.": "क्या गड़बड़ है? एक दबाएँ।",
+  "First write your mobile number above.": "पहले ऊपर अपना मोबाइल नंबर लिखें।",
+  "Forgot PIN? Tell supervisor": "PIN भूल गए? सुपरवाइज़र को बताएँ",
+  "Write a few words about the problem.": "समस्या के बारे में कुछ शब्द लिखें।",
+  Help: "मदद",
+  "Report a problem": "समस्या बताएँ",
+  "Your admin sees it under App problems.": "आपके एडमिन इसे 'ऐप समस्याएँ' में देखेंगे।",
+  "Sent. Thank you, your admin will look at it.": "भेज दिया। धन्यवाद, एडमिन इसे देखेंगे।",
+  "What is it about?": "यह किस बारे में है?",
+  "What happened? Which screen, what you did, what you saw.":
+    "क्या हुआ? कौन सी स्क्रीन, आपने क्या किया, क्या दिखा।",
+  "For example: the pay run total for Patia looks too low":
+    "जैसे: पटिया का पे रन टोटल बहुत कम लग रहा है",
+  Send: "भेजें",
+  "App version {version} on {platform} is sent with it.":
+    "इसके साथ ऐप वर्ज़न {version} ({platform}) भी भेजा जाता है।",
+  "Forgot PIN": "PIN भूल गए",
+  "Worker help": "मज़दूर की मदद",
+  "Staff report": "स्टाफ़ रिपोर्ट",
+  "App error": "ऐप में गड़बड़ी",
+  "Could not save.": "सेव नहीं हुआ।",
+  "App problems": "ऐप समस्याएँ",
+  "Worker requests on your sites.": "आपकी साइटों के मज़दूरों की माँगें।",
+  "Errors, worker help, forgotten PINs and staff reports.":
+    "गड़बड़ियाँ, मज़दूरों की मदद, भूले PIN और स्टाफ़ रिपोर्ट।",
+  Open: "खुला",
+  "Could not load.": "लोड नहीं हुआ।",
+  "Nothing open": "कुछ बाकी नहीं",
+  "Nothing here yet": "अभी यहाँ कुछ नहीं",
+  "No forgotten PINs, help requests or errors are waiting.":
+    "कोई भूला PIN, मदद की माँग या गड़बड़ी बाकी नहीं है।",
+  "Problems marked done show here.": "पूरी की गई समस्याएँ यहाँ दिखती हैं।",
+  "Not signed in": "साइन इन नहीं",
+  "What was done (optional)": "क्या किया गया (वैकल्पिक)",
+  "Mark done": "पूरा हुआ",
+  "Set a new PIN": "नया PIN दें",
+  "Open person": "व्यक्ति खोलें",
+  "This screen had a problem": "इस स्क्रीन में समस्या आई",
+  "Your saved work is safe. The problem has been sent to your admin. Try again, or go back to the home screen.":
+    "आपका सेव किया काम सुरक्षित है। समस्या एडमिन को भेज दी गई है। फिर कोशिश करें, या होम स्क्रीन पर जाएँ।",
+  "Go to home screen": "होम स्क्रीन पर जाएँ",
+  "The server could not be reached. Check your connection and try again.":
+    "सर्वर से जुड़ नहीं पाया। इंटरनेट जाँचें और फिर कोशिश करें।",
+  "Tell the admin what is wrong or what you need": "एडमिन को बताएँ क्या गड़बड़ है या क्या चाहिए",
+  "Errors, worker help, forgotten PINs": "गड़बड़ियाँ, मज़दूरों की मदद, भूले PIN",
+  "The server is not answering right now (error {status}). It may be restarting. Try again in a few minutes; if it keeps happening, tell your admin.":
+    "सर्वर अभी जवाब नहीं दे रहा (एरर {status})। शायद दोबारा चालू हो रहा है। कुछ मिनट बाद फिर कोशिश करें; बार-बार हो तो एडमिन को बताएँ।",
+  "Too many tries. Wait a minute and try again.":
+    "बहुत बार कोशिश हुई। एक मिनट रुककर फिर कोशिश करें।",
+  "The server had a problem (error {status}). Try again; if it keeps happening, tell your admin.":
+    "सर्वर में समस्या आई (एरर {status})। फिर कोशिश करें; बार-बार हो तो एडमिन को बताएँ।",
+  "No connection to the server. Check the internet (mobile data or Wi-Fi) and try again.":
+    "सर्वर से कनेक्शन नहीं है। इंटरनेट (मोबाइल डेटा या Wi-Fi) जाँचें और फिर कोशिश करें।",
+  "The server sent a wrong answer. It may be restarting. Try again in a few minutes.":
+    "सर्वर से गलत जवाब आया। शायद दोबारा चालू हो रहा है। कुछ मिनट बाद फिर कोशिश करें।",
+  "Money is wrong": "पैसा गलत है",
+  "Attendance is wrong": "हाज़िरी गलत है",
+  "Drawing not right": "ड्रॉइंग ठीक नहीं",
+  "App not working": "ऐप नहीं चल रहा",
+  "Something else": "कुछ और",
+  "Something is broken": "कुछ खराब है",
+  "A figure looks wrong": "कोई आँकड़ा गलत लग रहा है",
+  "Idea or request": "सुझाव या माँग",
+  "Mobile number or PIN is wrong, or this login is locked for a while. Ask your supervisor.":
+    "मोबाइल नंबर या PIN गलत है, या लॉगिन कुछ देर के लिए बंद है। सुपरवाइज़र से पूछें।",
+  "If this number has a worker login, your supervisor has been told. They will give you a new PIN.":
+    "अगर इस नंबर का लॉगिन है, तो सुपरवाइज़र को बता दिया है। वे आपको नया PIN देंगे।",
+  "Enter a 10-digit Indian mobile number.": "10 अंक का मोबाइल नंबर लिखें।",
+  "You already told us. Your supervisor will call you.":
+    "आप पहले ही बता चुके हैं। सुपरवाइज़र आपको फ़ोन करेंगे।",
+  "This is not an active worker login.": "यह चालू लॉगिन नहीं है। सुपरवाइज़र से पूछें।",
+  "Drawings are not switched on for you.": "आपके लिए ड्रॉइंग चालू नहीं है।",
+  "Asking for help in the app is not switched on for you. Call your supervisor.":
+    "ऐप में मदद माँगना आपके लिए चालू नहीं है। सुपरवाइज़र को फ़ोन करें।",
+  "🆘 Tell a problem / ask for help": "🆘 समस्या बताना / मदद माँगना",
 };
 
 export const or: Dictionary = {
@@ -1972,7 +2056,7 @@ export const or: Dictionary = {
   "Advance to return": "ଅଗ୍ରିମ ଫେରାଇବାକୁ ଅଛି",
   "Full day": "ପୂରା ଦିନ",
   "Half day": "ଅଧା ଦିନ",
-  Absent: "ଅନୁପସ୍ଥିତ",
+  Absent: "ଗରହାଜର",
   "Not checked yet": "ଏପର୍ଯ୍ୟନ୍ତ ଯାଞ୍ଚ ହୋଇନାହିଁ",
   "No attendance yet": "ଏପର୍ଯ୍ୟନ୍ତ ହାଜିରା ନାହିଁ",
   "No drawings shared yet": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଡ୍ରଇଂ ନାହିଁ",
@@ -1985,7 +2069,7 @@ export const or: Dictionary = {
     "ଆପଣଙ୍କ ଫୋନ୍ କେବଳ କାମ ସମୟରେ ସାଇଟ୍‌କୁ ଆସିଲେ ବା ଛାଡ଼ିଲେ ସୁପରଭାଇଜରଙ୍କୁ ଜଣାଏ।",
   "Try again": "ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ",
   "Could not sign in.": "ଲଗଇନ୍ ହେଲା ନାହିଁ।",
-  "Worker login": "ଶ୍ରମିକ ଲଗଇନ୍",
+  "Worker login": "ମିସ୍ତ୍ରୀ / ଶ୍ରମିକ ଲଗଇନ୍",
   "Your mobile number": "ଆପଣଙ୍କ ମୋବାଇଲ୍ ନମ୍ବର",
   "Your 6-digit PIN": "ଆପଣଙ୍କ 6 ଅଙ୍କର PIN",
   "Staff sign in": "ଷ୍ଟାଫ୍ ସାଇନ୍ ଇନ୍",
@@ -2032,6 +2116,90 @@ export const or: Dictionary = {
   "Advance repayment to approve": "ଅନୁମୋଦନ ପାଇଁ ଅଗ୍ରିମ ଫେରସ୍ତ",
   Repayment: "ଫେରସ୍ତ",
   Pending: "ବାକି",
+  // Help, problem reports and connection errors
+  "Problem? Tell us": "ସମସ୍ୟା? କୁହନ୍ତୁ",
+  "Could not speak. Please read the screen or ask your supervisor.":
+    "କହିପାରିଲା ନାହିଁ। ସ୍କ୍ରିନ୍ ପଢ଼ନ୍ତୁ ବା ସୁପରଭାଇଜରଙ୍କୁ ପଚାରନ୍ତୁ।",
+  "Could not send. Try again.": "ପଠାଇପାରିଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  Stop: "ବନ୍ଦ କରନ୍ତୁ",
+  Listen: "ଶୁଣନ୍ତୁ",
+  "Your supervisor has been told. They will call you.":
+    "ସୁପରଭାଇଜରଙ୍କୁ ଜଣାଇ ଦିଆଗଲା। ସେ ଆପଣଙ୍କୁ ଫୋନ୍ କରିବେ।",
+  "What is wrong? Tap one.": "କଣ ଭୁଲ ଅଛି? ଗୋଟିଏ ଦବାନ୍ତୁ।",
+  "First write your mobile number above.": "ପ୍ରଥମେ ଉପରେ ନିଜ ମୋବାଇଲ୍ ନମ୍ବର ଲେଖନ୍ତୁ।",
+  "Forgot PIN? Tell supervisor": "PIN ଭୁଲିଗଲେ? ସୁପରଭାଇଜରଙ୍କୁ କୁହନ୍ତୁ",
+  "Write a few words about the problem.": "ସମସ୍ୟା ବିଷୟରେ କିଛି ଶବ୍ଦ ଲେଖନ୍ତୁ।",
+  Help: "ସାହାଯ୍ୟ",
+  "Report a problem": "ସମସ୍ୟା ଜଣାନ୍ତୁ",
+  "Your admin sees it under App problems.": "ଆପଣଙ୍କ ଆଡମିନ ଏହାକୁ 'ଆପ୍ ସମସ୍ୟା'ରେ ଦେଖିବେ।",
+  "Sent. Thank you, your admin will look at it.": "ପଠାଗଲା। ଧନ୍ୟବାଦ, ଆଡମିନ ଏହାକୁ ଦେଖିବେ।",
+  "What is it about?": "ଏହା କେଉଁ ବିଷୟରେ?",
+  "What happened? Which screen, what you did, what you saw.":
+    "କଣ ହେଲା? କେଉଁ ସ୍କ୍ରିନ୍, ଆପଣ କଣ କଲେ, କଣ ଦେଖିଲେ।",
+  "For example: the pay run total for Patia looks too low":
+    "ଯେପରି: ପଟିଆର ପେ ରନ୍ ମୋଟ ବହୁତ କମ୍ ଲାଗୁଛି",
+  Send: "ପଠାନ୍ତୁ",
+  "App version {version} on {platform} is sent with it.":
+    "ଏହା ସହ ଆପ୍ ଭର୍ସନ {version} ({platform}) ମଧ୍ୟ ପଠାଯାଏ।",
+  "Forgot PIN": "PIN ଭୁଲିଗଲେ",
+  "Worker help": "ଶ୍ରମିକ ସାହାଯ୍ୟ",
+  "Staff report": "ଷ୍ଟାଫ୍ ରିପୋର୍ଟ",
+  "App error": "ଆପ୍ ତ୍ରୁଟି",
+  "Could not save.": "ସେଭ୍ ହେଲା ନାହିଁ।",
+  "App problems": "ଆପ୍ ସମସ୍ୟା",
+  "Worker requests on your sites.": "ଆପଣଙ୍କ ସାଇଟ୍‌ର ଶ୍ରମିକଙ୍କ ଅନୁରୋଧ।",
+  "Errors, worker help, forgotten PINs and staff reports.":
+    "ତ୍ରୁଟି, ଶ୍ରମିକ ସାହାଯ୍ୟ, ଭୁଲିଯାଇଥିବା PIN ଓ ଷ୍ଟାଫ୍ ରିପୋର୍ଟ।",
+  Open: "ଖୋଲା",
+  "Could not load.": "ଲୋଡ୍ ହେଲା ନାହିଁ।",
+  "Nothing open": "କିଛି ବାକି ନାହିଁ",
+  "Nothing here yet": "ଏପର୍ଯ୍ୟନ୍ତ ଏଠାରେ କିଛି ନାହିଁ",
+  "No forgotten PINs, help requests or errors are waiting.":
+    "କୌଣସି ଭୁଲିଯାଇଥିବା PIN, ସାହାଯ୍ୟ ଅନୁରୋଧ ବା ତ୍ରୁଟି ବାକି ନାହିଁ।",
+  "Problems marked done show here.": "ସମାଧାନ ହୋଇଥିବା ସମସ୍ୟା ଏଠାରେ ଦେଖାଯାଏ।",
+  "Not signed in": "ସାଇନ୍ ଇନ୍ ହୋଇନାହିଁ",
+  "What was done (optional)": "କଣ କରାଗଲା (ଇଚ୍ଛାଧୀନ)",
+  "Mark done": "ସମାଧାନ ହେଲା",
+  "Set a new PIN": "ନୂଆ PIN ଦିଅନ୍ତୁ",
+  "Open person": "ବ୍ୟକ୍ତି ଖୋଲନ୍ତୁ",
+  "This screen had a problem": "ଏହି ସ୍କ୍ରିନ୍‌ରେ ସମସ୍ୟା ହେଲା",
+  "Your saved work is safe. The problem has been sent to your admin. Try again, or go back to the home screen.":
+    "ଆପଣଙ୍କ ସେଭ୍ ହୋଇଥିବା କାମ ସୁରକ୍ଷିତ। ସମସ୍ୟା ଆଡମିନଙ୍କୁ ପଠାଯାଇଛି। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ, ବା ହୋମ୍ ସ୍କ୍ରିନ୍‌କୁ ଯାଆନ୍ତୁ।",
+  "Go to home screen": "ହୋମ୍ ସ୍କ୍ରିନ୍‌କୁ ଯାଆନ୍ତୁ",
+  "The server could not be reached. Check your connection and try again.":
+    "ସର୍ଭର ସହ ଯୋଡ଼ିହେଲା ନାହିଁ। ଇଣ୍ଟରନେଟ୍ ଯାଞ୍ଚ କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "Tell the admin what is wrong or what you need": "କଣ ଭୁଲ ଅଛି ବା କଣ ଦରକାର ଆଡମିନଙ୍କୁ କୁହନ୍ତୁ",
+  "Errors, worker help, forgotten PINs": "ତ୍ରୁଟି, ଶ୍ରମିକ ସାହାଯ୍ୟ, ଭୁଲିଯାଇଥିବା PIN",
+  "The server is not answering right now (error {status}). It may be restarting. Try again in a few minutes; if it keeps happening, tell your admin.":
+    "ସର୍ଭର ଏବେ ଉତ୍ତର ଦେଉନାହିଁ (ତ୍ରୁଟି {status})। ହୁଏତ ପୁଣି ଚାଲୁ ହେଉଛି। କିଛି ମିନିଟ୍ ପରେ ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ; ବାରମ୍ବାର ହେଲେ ଆଡମିନଙ୍କୁ କୁହନ୍ତୁ।",
+  "Too many tries. Wait a minute and try again.":
+    "ବହୁତ ଥର ଚେଷ୍ଟା ହେଲା। ଏକ ମିନିଟ୍ ଅପେକ୍ଷା କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "The server had a problem (error {status}). Try again; if it keeps happening, tell your admin.":
+    "ସର୍ଭରରେ ସମସ୍ୟା ହେଲା (ତ୍ରୁଟି {status})। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ; ବାରମ୍ବାର ହେଲେ ଆଡମିନଙ୍କୁ କୁହନ୍ତୁ।",
+  "No connection to the server. Check the internet (mobile data or Wi-Fi) and try again.":
+    "ସର୍ଭର ସହ ସଂଯୋଗ ନାହିଁ। ଇଣ୍ଟରନେଟ୍ (ମୋବାଇଲ୍ ଡାଟା ବା Wi-Fi) ଯାଞ୍ଚ କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "The server sent a wrong answer. It may be restarting. Try again in a few minutes.":
+    "ସର୍ଭରରୁ ଭୁଲ ଉତ୍ତର ଆସିଲା। ହୁଏତ ପୁଣି ଚାଲୁ ହେଉଛି। କିଛି ମିନିଟ୍ ପରେ ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "Money is wrong": "ପଇସା ଭୁଲ",
+  "Attendance is wrong": "ହାଜିରା ଭୁଲ",
+  "Drawing not right": "ଡ୍ରଇଂ ଠିକ୍ ନାହିଁ",
+  "App not working": "ଆପ୍ ଚାଲୁନାହିଁ",
+  "Something else": "ଅନ୍ୟ କିଛି",
+  "Something is broken": "କିଛି ଖରାପ ଅଛି",
+  "A figure looks wrong": "କୌଣସି ସଂଖ୍ୟା ଭୁଲ ଲାଗୁଛି",
+  "Idea or request": "ପରାମର୍ଶ ବା ଅନୁରୋଧ",
+  "Mobile number or PIN is wrong, or this login is locked for a while. Ask your supervisor.":
+    "ମୋବାଇଲ୍ ନମ୍ବର ବା PIN ଭୁଲ, ବା ଲଗଇନ୍ କିଛି ସମୟ ପାଇଁ ବନ୍ଦ। ସୁପରଭାଇଜରଙ୍କୁ ପଚାରନ୍ତୁ।",
+  "If this number has a worker login, your supervisor has been told. They will give you a new PIN.":
+    "ଯଦି ଏହି ନମ୍ବରର ଲଗଇନ୍ ଅଛି, ସୁପରଭାଇଜରଙ୍କୁ ଜଣାଇ ଦିଆଗଲା। ସେ ଆପଣଙ୍କୁ ନୂଆ PIN ଦେବେ।",
+  "Enter a 10-digit Indian mobile number.": "10 ଅଙ୍କର ମୋବାଇଲ୍ ନମ୍ବର ଲେଖନ୍ତୁ।",
+  "You already told us. Your supervisor will call you.":
+    "ଆପଣ ପୂର୍ବରୁ ଜଣାଇସାରିଛନ୍ତି। ସୁପରଭାଇଜର ଆପଣଙ୍କୁ ଫୋନ୍ କରିବେ।",
+  "This is not an active worker login.": "ଏହା ଚାଲୁ ଲଗଇନ୍ ନୁହେଁ। ସୁପରଭାଇଜରଙ୍କୁ ପଚାରନ୍ତୁ।",
+  "Drawings are not switched on for you.": "ଆପଣଙ୍କ ପାଇଁ ଡ୍ରଇଂ ଚାଲୁ ନାହିଁ।",
+  "Asking for help in the app is not switched on for you. Call your supervisor.":
+    "ଆପ୍‌ରେ ସାହାଯ୍ୟ ମାଗିବା ଆପଣଙ୍କ ପାଇଁ ଚାଲୁ ନାହିଁ। ସୁପରଭାଇଜରଙ୍କୁ ଫୋନ୍ କରନ୍ତୁ।",
+  "🆘 Tell a problem / ask for help": "🆘 ସମସ୍ୟା କହିବା / ସାହାଯ୍ୟ ମାଗିବା",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };
