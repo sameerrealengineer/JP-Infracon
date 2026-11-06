@@ -11,6 +11,7 @@ import {
   InlineError,
   LoadingBlock,
   Screen,
+  SecondaryButton,
   SectionHeader,
   Sheet,
   StatusPill,
@@ -156,6 +157,15 @@ export default function ProjectsScreen() {
                           actualTenths={projectCard(project.id)?.progress.actualTenths ?? null}
                           expectedTenths={projectCard(project.id)?.progress.expectedTenths}
                           height={6}
+                        />
+                      </View>
+                    ) : null}
+                    {project.sites.length > 0 ? (
+                      <View style={{ marginTop: 10 }}>
+                        <SecondaryButton
+                          icon="dashboard"
+                          label="Open project page"
+                          onPress={() => router.push(`/project?id=${project.id}` as never)}
                         />
                       </View>
                     ) : null}

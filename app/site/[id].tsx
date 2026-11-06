@@ -236,6 +236,13 @@ export default function SiteDetailScreen() {
                   <Text style={styles.heroMeta}>Your role here · {prettyRole(data.myRole)}</Text>
                 </View>
               </HeroCard>
+              <View style={{ marginBottom: 12 }}>
+                <SecondaryButton
+                  icon="dashboard"
+                  label={t("Open project page")}
+                  onPress={() => router.push(`/project?id=${data.project.id}` as never)}
+                />
+              </View>
 
               {data.canManage ? (
                 <View style={styles.manageRow}>

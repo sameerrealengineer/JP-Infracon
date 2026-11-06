@@ -160,6 +160,29 @@ export const hi: Dictionary = {
   "Loading…": "लोड हो रहा है…",
   "Something went wrong": "कुछ गड़बड़ हुई",
   "No access": "अनुमति नहीं है",
+  "Approved budget": "मंज़ूर बजट",
+  "Budget and spend": "बजट और खर्च",
+  "Contract value": "कॉन्ट्रैक्ट मूल्य",
+  "Go to": "यहाँ जाएँ",
+  "Latest documents": "नए दस्तावेज़",
+  "Loading project…": "प्रोजेक्ट लोड हो रहा है…",
+  "No approved budget yet. Propose one in Budget.":
+    "अभी कोई मंज़ूर बजट नहीं। Budget में प्रस्ताव दें।",
+  "No client contract set up for this project yet.":
+    "इस प्रोजेक्ट का क्लाइंट कॉन्ट्रैक्ट अभी नहीं बना।",
+  "No documents for this project yet.": "इस प्रोजेक्ट के अभी कोई दस्तावेज़ नहीं।",
+  "Spent (approved)": "खर्च (मंज़ूर)",
+  Target: "लक्ष्य",
+  "This project is not on your sites": "यह प्रोजेक्ट आपकी साइटों में नहीं है",
+  "You see a project once you are assigned to one of its sites.":
+    "प्रोजेक्ट की किसी साइट पर लगने के बाद ही प्रोजेक्ट दिखता है।",
+  "{count} sites in this project": "इस प्रोजेक्ट में {count} साइट",
+  "{share} of the contract billed": "कॉन्ट्रैक्ट का {share} बिल हुआ",
+  "{used} of the budget used": "बजट का {used} खर्च हुआ",
+  "{waiting} bills waiting for approval · {drafts} drafts":
+    "{waiting} बिल मंज़ूरी के इंतज़ार में · {drafts} ड्राफ़्ट",
+  "Open project page": "प्रोजेक्ट पेज खोलें",
+  "Project progress": "प्रोजेक्ट की प्रगति",
   "Team tracking": "टीम ट्रैकिंग",
   "Attendance, presence, reports, pay": "हाज़िरी, मौजूदगी, रिपोर्ट, वेतन",
   "Attendance, hours, site presence, reports and pay for each person, from saved records.":
@@ -1311,6 +1334,29 @@ export const or: Dictionary = {
   "Loading…": "ଲୋଡ ହେଉଛି…",
   "Something went wrong": "କିଛି ଭୁଲ ହେଲା",
   "No access": "ଅନୁମତି ନାହିଁ",
+  "Approved budget": "ଅନୁମୋଦିତ ବଜେଟ",
+  "Budget and spend": "ବଜେଟ ଓ ଖର୍ଚ୍ଚ",
+  "Contract value": "ଚୁକ୍ତି ମୂଲ୍ୟ",
+  "Go to": "ଏଠାକୁ ଯାଆନ୍ତୁ",
+  "Latest documents": "ନୂଆ ଦଲିଲ",
+  "Loading project…": "ପ୍ରୋଜେକ୍ଟ ଲୋଡ ହେଉଛି…",
+  "No approved budget yet. Propose one in Budget.":
+    "ଏପର୍ଯ୍ୟନ୍ତ ଅନୁମୋଦିତ ବଜେଟ ନାହିଁ। Budget ରେ ପ୍ରସ୍ତାବ ଦିଅନ୍ତୁ।",
+  "No client contract set up for this project yet.":
+    "ଏହି ପ୍ରୋଜେକ୍ଟର କ୍ଲାଏଣ୍ଟ ଚୁକ୍ତି ଏପର୍ଯ୍ୟନ୍ତ ହୋଇନାହିଁ।",
+  "No documents for this project yet.": "ଏହି ପ୍ରୋଜେକ୍ଟର ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଦଲିଲ ନାହିଁ।",
+  "Spent (approved)": "ଖର୍ଚ୍ଚ (ଅନୁମୋଦିତ)",
+  Target: "ଲକ୍ଷ୍ୟ",
+  "This project is not on your sites": "ଏହି ପ୍ରୋଜେକ୍ଟ ଆପଣଙ୍କ ସାଇଟରେ ନାହିଁ",
+  "You see a project once you are assigned to one of its sites.":
+    "ପ୍ରୋଜେକ୍ଟର କୌଣସି ସାଇଟରେ ଲଗାଯିବା ପରେ ହିଁ ପ୍ରୋଜେକ୍ଟ ଦେଖାଯାଏ।",
+  "{count} sites in this project": "ଏହି ପ୍ରୋଜେକ୍ଟରେ {count} ସାଇଟ",
+  "{share} of the contract billed": "ଚୁକ୍ତିର {share} ବିଲ ହେଲା",
+  "{used} of the budget used": "ବଜେଟର {used} ଖର୍ଚ୍ଚ ହେଲା",
+  "{waiting} bills waiting for approval · {drafts} drafts":
+    "{waiting} ବିଲ ଅନୁମୋଦନ ଅପେକ୍ଷାରେ · {drafts} ଡ୍ରାଫ୍ଟ",
+  "Open project page": "ପ୍ରୋଜେକ୍ଟ ପେଜ ଖୋଲନ୍ତୁ",
+  "Project progress": "ପ୍ରୋଜେକ୍ଟ ପ୍ରଗତି",
   "Team tracking": "ଟିମ ଟ୍ରାକିଂ",
   "Attendance, presence, reports, pay": "ହାଜିରା, ଉପସ୍ଥିତି, ରିପୋର୍ଟ, ମଜୁରି",
   "Attendance, hours, site presence, reports and pay for each person, from saved records.":
