@@ -21,42 +21,53 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 6 | [Inventory ledger](field.md) | Existing | existing |
 | 7 | [Supplier payment ledger](finance.md) | Existing | existing |
 | 8 | [Coding standards & tooling](platform.md) | Foundation | done |
-| 9 | [Environment separation & backups](platform.md) | Foundation | planned |
-| 10 | [Error reporting](platform.md) | Foundation | planned |
-| 11 | [Text resources for translation](platform.md) | Foundation | planned |
-| 12 | [Private file evidence](platform.md) | Foundation | planned |
+| 9 | [Environment separation & backups](platform.md) | Foundation | in-progress |
+| 10 | [Error reporting](platform.md) | Foundation | in-progress |
+| 11 | [Text resources for translation](platform.md) | Foundation | in-progress |
+| 12 | [Private file evidence](platform.md) | Foundation | in-progress |
 | 13 | [Identity & accounts](platform.md) | Slice 1 | in-progress |
 | 14 | [Daily reports (DPR/DLR)](field.md) | Slice 1 | in-progress |
-| 15 | [Report photo evidence](field.md) | Slice 1 | planned |
-| 16 | [Attendance & overtime](field.md) | Slice 1 | planned |
+| 15 | [Report photo evidence](field.md) | Slice 1 | in-progress |
+| 16 | [Attendance & overtime](field.md) | Slice 1 | in-progress |
 | 17 | [Material requests](field.md) | Slice 1 | in-progress |
 | 18 | [Approval limits & maker checker policy](finance.md) | Slice 1 | planned |
 | 19 | [Petty cash ledger](finance.md) | Slice 1 | in-progress |
 | 20 | [Supervisor reimbursements](finance.md) | Slice 1 | planned |
-| 21 | [Notification inbox](platform.md) | Slice 1 | planned |
+| 21 | [Notification inbox](platform.md) | Slice 1 | in-progress |
 | 22 | [Offline drafts & sync](platform.md) | Slice 1 | in-progress |
-| 23 | [Android release & device QA](platform.md) | Slice 1 | planned |
-| 24 | [Vendors & subcontractors](field.md) | Slice 2 | planned |
-| 25 | [Subcontract work measurements](field.md) | Slice 2 | planned |
-| 26 | [Worker payables & advances](finance.md) | Slice 2 | planned |
-| 27 | [Supervisor compensation records](finance.md) | Slice 2 | planned |
+| 23 | [Android release & device QA](platform.md) | Slice 1 | in-progress |
+| 24 | [Vendors & subcontractors](field.md) | Slice 2 | in-progress |
+| 25 | [Subcontract work measurements](field.md) | Slice 2 | in-progress |
+| 26 | [Worker payables & advances](finance.md) | Slice 2 | in-progress |
+| 27 | [Supervisor compensation records](finance.md) | Slice 2 | in-progress |
 | 28 | [Supplier invoices](finance.md) | Slice 3 | in-progress |
-| 29 | [Procurement & delivery receipts](finance.md) | Slice 3 | planned |
+| 29 | [Procurement & delivery receipts](finance.md) | Slice 3 | in-progress |
 | 30 | [Supplier advances, notes, retention & reversals](finance.md) | Slice 3 | planned |
 | 31 | [Transporter freight expenses](finance.md) | Slice 3 | planned |
 | 32 | [Stock transfers, counts & adjustments](field.md) | Slice 3 | planned |
-| 33 | [Safety, quality & constraint issues](field.md) | Slice 4 | planned |
-| 34 | [Escalations & push alerts](platform.md) | Slice 4 | planned |
+| 33 | [Safety, quality & constraint issues](field.md) | Slice 4 | in-progress |
+| 34 | [Escalations & push alerts](platform.md) | Slice 4 | in-progress |
 | 35 | [Work calendars & resource conflicts](field.md) | Slice 4 | planned |
 | 36 | [Home & director dashboards](field.md) | Slice 5 | in-progress |
-| 37 | [Exports (CSV and PDF)](field.md) | Slice 5 | planned |
-| 38 | [Hindi & Odia translations](platform.md) | Slice 6 | planned |
+| 37 | [Exports (CSV and PDF)](field.md) | Slice 5 | in-progress |
+| 38 | [Hindi & Odia translations](platform.md) | Slice 6 | in-progress |
+| 39 | [CRM & client billing](erp.md) | Built ahead | in-progress |
+| 40 | [Payroll & statutory accounts](erp.md) | Built ahead | in-progress |
+| 41 | [Mistri worker app](erp.md) | Built ahead | in-progress |
+| 42 | [Crews, task assignment & team tracking](erp.md) | Built ahead | in-progress |
+| 43 | [Project documents & smart search](erp.md) | Built ahead | in-progress |
+| 44 | [Project budgets](erp.md) | Built ahead | in-progress |
+| 45 | [Site presence & GPS alerts](erp.md) | Built ahead | in-progress |
+| 46 | [Delegation & per user access](erp.md) | Built ahead | in-progress |
+| 47 | [AI assistant, voice & WhatsApp bot](erp.md) | Built ahead | in-progress |
+| 48 | [Company admin & help](erp.md) | Built ahead | in-progress |
 
 ## Epics
 
-- [platform.md](platform.md): stack, standards, environments, errors, files, identity, notifications, offline, release, languages. 3 existing, 3 in progress, 8 planned.
-- [field.md](field.md): daily reports, attendance, materials, schedule, workforce, inventory, issues, dashboards, exports. 3 existing, 3 in progress, 8 planned.
-- [finance.md](finance.md): limits, petty cash, reimbursements, supplier invoices and payments, worker pay, procurement. 1 existing, 2 in progress, 7 planned.
+- [platform.md](platform.md): stack, standards, environments, errors, files, identity, notifications, offline, release, languages. 3 existing, 1 done, 10 in progress.
+- [field.md](field.md): daily reports, attendance, materials, schedule, workforce, inventory, issues, dashboards, exports. 3 existing, 9 in progress, 2 planned.
+- [finance.md](finance.md): limits, petty cash, reimbursements, supplier invoices and payments, worker pay, procurement. 1 existing, 5 in progress, 4 planned.
+- [erp.md](erp.md): client billing, payroll and statutory dues, worker app, crews, documents, budgets, presence, access, AI, company admin. 10 in progress.
 
 ## Phases
 
@@ -68,6 +79,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 - **Slice 4, site issues and schedule depth**: safety and quality issues, escalations, work calendars.
 - **Slice 5, reports**: complete dashboards and exports.
 - **Slice 6, languages**: Hindi and Odia.
+- **Built ahead**: ERP and admin features shipped between 2 and 6 November 2026 before the scope listed them. Each needs `/check verify` against its `Done when` line.
 
 ## Deferred
 
