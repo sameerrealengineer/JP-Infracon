@@ -149,6 +149,9 @@ const FORM_EXAMPLES: Record<FormId, string> = {
   task: "e.g. first floor slab shuttering, kal se 5 din, high priority",
   advance: "e.g. 2000 rupaye cash diye ghar ke kaam ke liye, 500 har pay run katna",
   materialItem: "e.g. OPC 53 grade cement, bag mein, 50 bag se kam ho to batana",
+  crew: "e.g. Raju ki shuttering team",
+  project: "e.g. Pakalapoli govt G+1 building, PWD Aska, 1 December se 31 March tak",
+  site: "e.g. Pakalapoli site, code PKL001, Aska, Ganjam district",
 };
 
 /**
@@ -159,10 +162,15 @@ const FORM_EXAMPLES: Record<FormId, string> = {
 export function AiFormFill({
   formId,
   siteId,
+  organizationId,
+  projectId,
   onValues,
 }: {
   formId: FormId;
   siteId?: string | null;
+  /** For project and site set-up: the company, or the project a new site goes under. */
+  organizationId?: string;
+  projectId?: string;
   onValues: (values: Partial<Record<string, string>>) => void;
 }) {
   const { t } = useT();
@@ -177,7 +185,13 @@ export function AiFormFill({
   const spec = FORM_SPECS[formId];
   const run = async (text: string) => {
     const combined = said.current ? `${said.current}\n${text}` : text;
-    const answer = await fill.mutateAsync({ formId, siteId: siteId ?? undefined, text: combined });
+    const answer = await fill.mutateAsync({
+      formId,
+      siteId: siteId ?? undefined,
+      organizationId,
+      projectId,
+      text: combined,
+    });
     said.current = combined;
     onValues(answer.values);
     setResult({
@@ -187,6 +201,7 @@ export function AiFormFill({
     });
   };
   if (spec.scope === "site" && !siteId) return null;
+  if (spec.scope === "organization" && !organizationId && !projectId) return null;
   return (
     <VoiceAssist
       siteId={siteId ?? undefined}

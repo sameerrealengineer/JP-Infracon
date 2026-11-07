@@ -6,6 +6,7 @@ import {
   auditEvents,
   materialItems,
   organizationMemberships,
+  projects,
   workTasks,
 } from "../../drizzle/schema";
 import {
@@ -22,6 +23,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { assertActiveAccount, getSiteScope } from "./access";
 import { commercialAccess } from "./commercial-access";
+import { assertSiteManager } from "./sites-admin";
 import {
   FORM_IDS,
   FORM_SPECS,
@@ -634,13 +636,33 @@ export const aiRouter = router({
       z.object({
         formId: z.enum(FORM_IDS as [string, ...string[]]),
         siteId: z.string().uuid().optional(),
+        /** For project and site set-up: the company, or the project a new site goes under. */
+        organizationId: z.string().uuid().optional(),
+        projectId: z.string().uuid().optional(),
         text: z.string().trim().min(2).max(4000),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const spec: FormSpec = FORM_SPECS[input.formId as keyof typeof FORM_SPECS];
       let scope: { organizationId: string; siteId: string | null };
-      if (spec.scope === "company") {
+      if (spec.scope === "organization") {
+        let organizationId = input.organizationId;
+        if (!organizationId && input.projectId) {
+          const db = await getDb();
+          const [project] = db
+            ? await db
+                .select({ organizationId: projects.organizationId })
+                .from(projects)
+                .where(eq(projects.id, input.projectId))
+                .limit(1)
+            : [];
+          organizationId = project?.organizationId;
+        }
+        if (!organizationId)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Choose the company first." });
+        await assertSiteManager(ctx.user, organizationId);
+        scope = { organizationId, siteId: null };
+      } else if (spec.scope === "company") {
         const access = await commercialAccess(ctx.user, spec.permission);
         scope = { organizationId: access.organizationId, siteId: null };
       } else {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { Text, View } from "react-native";
 import { ChipGroup, Field, PrimaryButton, Sheet, InlineError } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
@@ -119,6 +120,20 @@ function ProjectForm({ draft, onClose }: { draft: ProjectDraft; onClose: () => v
         />
       }
     >
+      {!editing ? (
+        <AiFormFill
+          formId="project"
+          organizationId={draft.organizationId}
+          onValues={(v) => {
+            if (v.name) setName(v.name);
+            if (v.code) setCode(v.code.toUpperCase().replace(/[^A-Z0-9-]/g, ""));
+            if (v.client) setClient(v.client);
+            if (v.type) setType(v.type);
+            if (v.start) setStart(v.start);
+            if (v.end) setEnd(v.end);
+          }}
+        />
+      ) : null}
       {error ? <InlineError message={error} title="Not saved" /> : null}
       {!editing ? (
         <Field
@@ -250,6 +265,20 @@ function SiteForm({ draft, onClose }: { draft: SiteDraft; onClose: () => void })
         />
       }
     >
+      {!editing ? (
+        <AiFormFill
+          formId="site"
+          projectId={draft.projectId}
+          onValues={(v) => {
+            if (v.name) setName(v.name);
+            if (v.code) setCode(v.code.toUpperCase().replace(/[^A-Z0-9-]/g, ""));
+            if (v.address) setAddress(v.address);
+            if (v.village) setVillage(v.village);
+            if (v.district) setDistrict(v.district);
+            if (v.state) setState(v.state);
+          }}
+        />
+      ) : null}
       {error ? <InlineError message={error} title="Not saved" /> : null}
       {!editing ? (
         <Field

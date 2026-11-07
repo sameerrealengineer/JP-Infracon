@@ -1,4 +1,5 @@
 import type { inferRouterOutputs } from "@trpc/server";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -240,6 +241,14 @@ function NewCrewSheet({ siteId, onClose }: { siteId: string; onClose: () => void
   };
   return (
     <Sheet visible title={t("New crew")} onClose={onClose}>
+      <AiFormFill
+        formId="crew"
+        siteId={siteId}
+        onValues={(v) => {
+          if (v.name) setName(v.name);
+          if (v.trade) setTrade(v.trade);
+        }}
+      />
       <Field
         label={t("Crew name")}
         placeholder={t("For example: Shuttering team 1")}

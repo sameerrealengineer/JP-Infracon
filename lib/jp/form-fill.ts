@@ -25,8 +25,11 @@ export type FormSpec = {
   title: string;
   /** One sentence for the AI: what this form records. */
   purpose: string;
-  /** "site" forms need a site the person can use; "company" forms are company-wide (CRM). */
-  scope: "site" | "company";
+  /**
+   * "site": needs a site the person can use. "company": company-wide (CRM).
+   * "organization": project and site set-up, for people who manage projects and sites.
+   */
+  scope: "site" | "company" | "organization";
   /** The permission the person needs to fill this form; the same one the save checks. */
   permission: string;
   fields: readonly FillField[];
@@ -251,6 +254,101 @@ export const FORM_SPECS = {
         max: 16,
       },
       { key: "reorderThreshold", label: "Reorder level", type: "number" },
+    ],
+  },
+  crew: {
+    id: "crew",
+    title: "New crew",
+    purpose: "Makes a trade-wise team of workers on the site.",
+    scope: "site",
+    permission: "workforce.manage",
+    fields: [
+      {
+        key: "name",
+        label: "Crew name",
+        type: "text",
+        required: true,
+        hint: "e.g. Shuttering team 1 or the leader's name",
+        max: 80,
+      },
+      {
+        key: "trade",
+        label: "Trade",
+        type: "choice",
+        required: true,
+        options: [
+          "Shuttering",
+          "Bar bending",
+          "Masonry",
+          "Concrete",
+          "Plaster",
+          "Plumbing",
+          "Electrical",
+          "Painting",
+          "Tiling",
+          "Carpentry",
+          "Welding",
+          "Excavation",
+          "Helpers",
+          "Other",
+        ],
+      },
+    ],
+  },
+  project: {
+    id: "project",
+    title: "New project",
+    purpose: "Creates a project: the work under one contract, which holds one or more sites.",
+    scope: "organization",
+    permission: "site.manage",
+    fields: [
+      { key: "name", label: "Project name", type: "text", required: true, max: 160 },
+      {
+        key: "code",
+        label: "Project code",
+        type: "text",
+        required: true,
+        hint: "2-32 capital letters, digits or hyphens made from the name, e.g. PKL-GOVT",
+        max: 32,
+      },
+      {
+        key: "client",
+        label: "Client / department",
+        type: "text",
+        hint: "e.g. PWD Odisha, R&B Division Aska",
+        max: 160,
+      },
+      {
+        key: "type",
+        label: "Project type",
+        type: "text",
+        hint: "e.g. Govt building, Road",
+        max: 80,
+      },
+      { key: "start", label: "Start date", type: "date" },
+      { key: "end", label: "Target end date", type: "date" },
+    ],
+  },
+  site: {
+    id: "site",
+    title: "New site",
+    purpose: "Creates a work site under a project.",
+    scope: "organization",
+    permission: "site.manage",
+    fields: [
+      { key: "name", label: "Site name", type: "text", required: true, max: 160 },
+      {
+        key: "code",
+        label: "Site code",
+        type: "text",
+        required: true,
+        hint: "2-32 capital letters, digits or hyphens, e.g. PKL001",
+        max: 32,
+      },
+      { key: "address", label: "Address", type: "longtext", max: 400 },
+      { key: "village", label: "Village / town", type: "text", max: 120 },
+      { key: "district", label: "District", type: "text", max: 120 },
+      { key: "state", label: "State", type: "text", hint: "usually Odisha", max: 80 },
     ],
   },
 } as const satisfies Record<string, FormSpec>;
