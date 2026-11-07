@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { and, asc, eq, ne } from "drizzle-orm";
-import { auditEvents, materialItems, workTasks } from "../../drizzle/schema";
+import {
+  auditEvents,
+  materialItems,
+  organizationMemberships,
+  workTasks,
+} from "../../drizzle/schema";
 import {
   normalizeRequestFields,
   requestJsonSchema,
@@ -15,7 +20,16 @@ import {
 } from "../../lib/jp/ai-expense-extraction";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { getSiteScope } from "./access";
+import { assertActiveAccount, getSiteScope } from "./access";
+import { commercialAccess } from "./commercial-access";
+import {
+  FORM_IDS,
+  FORM_SPECS,
+  fillJsonSchema,
+  fillPrompt,
+  normalizeFormFill,
+  type FormSpec,
+} from "../../lib/jp/form-fill";
 import {
   billJsonSchema,
   billPrompt,
@@ -357,7 +371,12 @@ export async function sarvamJson(system: string, text: string): Promise<unknown>
   return parseModelJson(json.choices?.[0]?.message?.content ?? "");
 }
 
-async function audit(organizationId: string, siteId: string, userId: number, action: string) {
+async function audit(
+  organizationId: string,
+  siteId: string | null,
+  userId: number,
+  action: string,
+) {
   const db = await getDb();
   await db
     ?.insert(auditEvents)
@@ -371,6 +390,26 @@ async function audit(organizationId: string, siteId: string, userId: number, act
       entityId: randomUUID(),
     })
     .catch(() => undefined);
+}
+
+/** The person's company when no site is chosen (company-wide forms such as CRM). */
+async function companyOf(user: Parameters<typeof assertActiveAccount>[0]) {
+  assertActiveAccount(user);
+  const db = await getDb();
+  const [row] = db
+    ? await db
+        .select({ organizationId: organizationMemberships.organizationId })
+        .from(organizationMemberships)
+        .where(
+          and(
+            eq(organizationMemberships.userId, user.id),
+            eq(organizationMemberships.status, "Active"),
+          ),
+        )
+        .limit(1)
+    : [];
+  if (!row) throw new TRPCError({ code: "FORBIDDEN", message: "Join your company first." });
+  return { organizationId: row.organizationId, siteId: null };
 }
 
 export const aiRouter = router({
@@ -413,7 +452,7 @@ export const aiRouter = router({
   transcribe: protectedProcedure
     .input(
       z.object({
-        siteId: z.string().uuid(),
+        siteId: z.string().uuid().optional(),
         audioBase64: z
           .string()
           .min(16)
@@ -423,7 +462,9 @@ export const aiRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const scope = await getSiteScope(ctx.user, input.siteId, "site.view");
+      const scope = input.siteId
+        ? await getSiteScope(ctx.user, input.siteId, "site.view")
+        : await companyOf(ctx.user);
       rateLimit(ctx.user.id);
       const bytes = Buffer.from(input.audioBase64, "base64");
       if (bytes.length > MAX_AUDIO_BYTES)
@@ -581,5 +622,46 @@ export const aiRouter = router({
       }
       await audit(scope.organizationId, scope.siteId, ctx.user.id, "ai.expense_drafted");
       return normalizeExpenseFields(raw, today);
+    }),
+
+  /**
+   * Universal form filling: what the person said or typed → values for one form described in
+   * `lib/jp/form-fill.ts`. Needs the same permission as saving that form. Nothing is saved here;
+   * the form opens filled and the person checks it. `missing` and `question` ask for the rest.
+   */
+  fillForm: protectedProcedure
+    .input(
+      z.object({
+        formId: z.enum(FORM_IDS as [string, ...string[]]),
+        siteId: z.string().uuid().optional(),
+        text: z.string().trim().min(2).max(4000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const spec: FormSpec = FORM_SPECS[input.formId as keyof typeof FORM_SPECS];
+      let scope: { organizationId: string; siteId: string | null };
+      if (spec.scope === "company") {
+        const access = await commercialAccess(ctx.user, spec.permission);
+        scope = { organizationId: access.organizationId, siteId: null };
+      } else {
+        if (!input.siteId)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Choose a site first." });
+        scope = await getSiteScope(ctx.user, input.siteId, spec.permission);
+      }
+      rateLimit(ctx.user.id);
+      const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(
+        new Date(),
+      );
+      const prompt = fillPrompt(spec, today);
+      const raw = await aiJson(
+        [{ text: `${prompt}\n\nThe person said:\n"""${input.text}"""` }],
+        fillJsonSchema(spec),
+        {
+          system: `${prompt}\nReply as JSON with keys ${[...spec.fields.map((f) => f.key), "question"].join(", ")}.`,
+          text: input.text,
+        },
+      );
+      await audit(scope.organizationId, scope.siteId, ctx.user.id, `ai.form_filled.${spec.id}`);
+      return normalizeFormFill(spec, raw);
     }),
 });

@@ -562,6 +562,12 @@ export const hi: Dictionary = {
     "आंतरिक बिल रिकॉर्ड। GST रिटर्न और ई-इनवॉइस अपने अकाउंटेंट से करवाएँ।",
   "Nobody to pay for this month yet. People appear here when their attendance for the month is approved, or when they have approved pay details (monthly salary).":
     "इस महीने देने के लिए अभी कोई नहीं। लोग यहाँ तब दिखते हैं जब उनकी इस महीने की हाज़िरी मंज़ूर हो, या उनकी वेतन जानकारी (मासिक वेतन) मंज़ूर हो।",
+  "Filled {count} fields. Still needed: {fields}": "{count} जानकारी भर दी। अभी चाहिए: {fields}",
+  "Filled {count} fields. Check them below, then save.":
+    "{count} जानकारी भर दी। नीचे जाँचें, फिर सेव करें।",
+  "Answer by mic or type below; it adds to what you said before.":
+    "माइक से बोलें या नीचे लिखें; यह पहले कही बात में जुड़ जाएगा।",
+  "Start again": "फिर से शुरू करें",
   "Add the client first": "पहले क्लाइंट जोड़ें",
   "A contract is made with a client. Add the client in Clients & leads, then come back here.":
     "कॉन्ट्रैक्ट किसी क्लाइंट के साथ बनता है। क्लाइंट और लीड में क्लाइंट जोड़ें, फिर यहाँ वापस आएँ।",
@@ -1811,6 +1817,12 @@ export const or: Dictionary = {
     "ଆଭ୍ୟନ୍ତରୀଣ ବିଲ ରେକର୍ଡ। GST ରିଟର୍ଣ୍ଣ ଓ ଇ-ଇନଭଏସ ଆପଣଙ୍କ ଆକାଉଣ୍ଟାଣ୍ଟଙ୍କ ଦ୍ୱାରା କରନ୍ତୁ।",
   "Nobody to pay for this month yet. People appear here when their attendance for the month is approved, or when they have approved pay details (monthly salary).":
     "ଏହି ମାସ ପାଇଁ ଦେବାକୁ କେହି ନାହାନ୍ତି। ମାସର ହାଜିରା ମଞ୍ଜୁର ହେଲେ, କିମ୍ବା ଦରମା ବିବରଣୀ (ମାସିକ ଦରମା) ମଞ୍ଜୁର ହେଲେ ଲୋକେ ଏଠାରେ ଦେଖାଯାନ୍ତି।",
+  "Filled {count} fields. Still needed: {fields}": "{count}ଟି ତଥ୍ୟ ଭରିଦେଲା। ଆହୁରି ଦରକାର: {fields}",
+  "Filled {count} fields. Check them below, then save.":
+    "{count}ଟି ତଥ୍ୟ ଭରିଦେଲା। ତଳେ ଯାଞ୍ଚ କରି ସେଭ୍ କରନ୍ତୁ।",
+  "Answer by mic or type below; it adds to what you said before.":
+    "ମାଇକରେ କୁହନ୍ତୁ ବା ତଳେ ଲେଖନ୍ତୁ; ଆଗରୁ କହିଥିବା କଥା ସହ ଯୋଡ଼ିହେବ।",
+  "Start again": "ପୁଣି ଆରମ୍ଭ କରନ୍ତୁ",
   "Add the client first": "ପ୍ରଥମେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ",
   "A contract is made with a client. Add the client in Clients & leads, then come back here.":
     "କଣ୍ଟ୍ରାକ୍ଟ ଜଣେ କ୍ଲାଏଣ୍ଟଙ୍କ ସହ ହୁଏ। କ୍ଲାଏଣ୍ଟ ଓ ଲିଡରେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ, ତାପରେ ଏଠାକୁ ଫେରନ୍ତୁ।",

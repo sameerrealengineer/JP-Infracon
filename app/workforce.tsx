@@ -19,6 +19,7 @@ import {
   SectionHeader,
 } from "@/components/jp/ui";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
 import { useSiteParam } from "@/hooks/use-site-param";
@@ -442,6 +443,19 @@ export default function WorkforceScreen() {
                   <Text style={[styles.cardTitle, { color: colors.foreground }]}>
                     Capture a workforce profile
                   </Text>
+                  <AiFormFill
+                    formId="worker"
+                    siteId={siteId}
+                    onValues={(v) => {
+                      if (v.fullName) setFullName(v.fullName);
+                      if (v.personType) setPersonType(v.personType as PersonType);
+                      if (v.phone) setPhone(v.phone);
+                      if (v.skillCategory)
+                        setSkillCategory(v.skillCategory as (typeof SKILL_CATEGORIES)[number]);
+                      if (v.tradeType) setTradeType(v.tradeType);
+                      resetCreateKey();
+                    }}
+                  />
                   <Field
                     label="Full name"
                     value={fullName}

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
@@ -969,6 +970,21 @@ export default function FinanceScreen() {
                   <MaterialIcons name="close" size={22} color={colors.muted} />
                 </Pressable>
               </View>
+              <AiFormFill
+                formId="supplier"
+                siteId={siteId}
+                onValues={(v) => {
+                  if (v.legalName) setLegalName(v.legalName);
+                  if (v.vendorType) setVendorType(v.vendorType as VendorType);
+                  if (v.tradeName) setTradeName(v.tradeName);
+                  if (v.contactName) setContactName(v.contactName);
+                  if (v.phone) setPhone(v.phone);
+                  if (v.email) setEmail(v.email);
+                  if (v.address) setAddress(v.address);
+                  if (v.paymentTermsDays) setPaymentTermsDays(v.paymentTermsDays);
+                  setVendorMutationId(createClientMutationId());
+                }}
+              />
               <Text style={[styles.fieldLabel, { color: colors.muted }]}>Supplier type</Text>
               <ScrollView
                 horizontal

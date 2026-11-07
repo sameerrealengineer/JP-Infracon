@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
@@ -810,6 +811,19 @@ export default function InventoryScreen() {
                   eyebrow="MATERIAL CATALOGUE"
                   title="Add a material"
                   onClose={() => setCatalogueModalVisible(false)}
+                />
+                <AiFormFill
+                  formId="materialItem"
+                  siteId={siteId}
+                  onValues={(v) => {
+                    if (v.itemName) setItemName(v.itemName);
+                    if (v.itemCode) setItemCode(v.itemCode.toUpperCase());
+                    if (v.category) setCategory(v.category);
+                    if (v.specification) setSpecification(v.specification);
+                    if (v.baseUnitCode) setBaseUnitCode(v.baseUnitCode);
+                    if (v.reorderThreshold) setReorderThreshold(v.reorderThreshold);
+                    setItemMutationId(createClientMutationId());
+                  }}
                 />
                 <Text style={[styles.inputLabel, { color: colors.muted }]}>Item code</Text>
                 <TextInput

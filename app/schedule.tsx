@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { AssignTaskSheet } from "@/components/jp/assign-task-sheet";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
@@ -387,6 +388,20 @@ export default function ScheduleScreen() {
                   <Text style={[styles.formTitle, { color: colors.foreground }]}>
                     Create planned task
                   </Text>
+                  <AiFormFill
+                    formId="task"
+                    siteId={siteId}
+                    onValues={(v) => {
+                      if (v.title) setTitle(v.title);
+                      if (v.description) setDescription(v.description);
+                      if (v.workCategory) setWorkCategory(v.workCategory);
+                      if (v.locationLabel) setLocationLabel(v.locationLabel);
+                      if (v.plannedStart) setPlannedStart(v.plannedStart);
+                      if (v.plannedEnd) setPlannedEnd(v.plannedEnd);
+                      if (v.priority) setPriority(v.priority as typeof priority);
+                      setTaskCreateMutationId(null);
+                    }}
+                  />
                   <Field
                     label="Task title"
                     value={title}

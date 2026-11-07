@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -364,6 +365,17 @@ function ClientForm({ onDone }: { onDone: () => void }) {
   };
   return (
     <Card>
+      <AiFormFill
+        formId="client"
+        onValues={(v) => {
+          if (v.name) setName(v.name);
+          if (v.clientType) setClientType(v.clientType as (typeof CLIENT_TYPES)[number]);
+          if (v.contactPerson) setContactPerson(v.contactPerson);
+          if (v.phone) setPhone(v.phone);
+          if (v.gstin) setGstin(v.gstin.toUpperCase());
+          if (v.address) setAddress(v.address);
+        }}
+      />
       <Field label={t("Client name")} value={name} onChangeText={setName} />
       <ChipGroup
         label={t("Type")}
@@ -441,6 +453,19 @@ function LeadForm({
   };
   return (
     <Card>
+      <AiFormFill
+        formId="lead"
+        onValues={(v) => {
+          if (v.title) setTitle(v.title);
+          if (v.contactName) setContactName(v.contactName);
+          if (v.phone) setPhone(v.phone);
+          if (v.location) setLocation(v.location);
+          if (v.source) setSource(v.source as (typeof LEAD_SOURCES)[number]);
+          if (v.value) setValue(v.value);
+          if (v.followUp) setFollowUp(v.followUp);
+          if (v.note) setNote(v.note);
+        }}
+      />
       <Field
         label={t("What is the work?")}
         value={title}

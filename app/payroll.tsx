@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { ScrollView, Text, View } from "react-native";
@@ -928,6 +929,20 @@ function Khaata({ siteId, colors }: { siteId: string; colors: Colors }) {
                 <Text style={[styles.title, { color: colors.foreground }]}>
                   {form.entryType === "Advance" ? t("Give advance") : t("Record repayment")}
                 </Text>
+                <AiFormFill
+                  formId="advance"
+                  siteId={siteId}
+                  onValues={(v) => {
+                    if (v.amount) setAmount(v.amount);
+                    if (v.installment && form.entryType === "Advance")
+                      setInstallment(v.installment);
+                    if (v.entryDate) setEntryDate(v.entryDate);
+                    if (v.mode) setMode(v.mode as (typeof MODES)[number]);
+                    if (v.reference) setReference(v.reference);
+                    if (v.why) setWhy(v.why);
+                    setKey(createClientMutationId());
+                  }}
+                />
                 <Field
                   label={t("Amount (₹)")}
                   value={amount}

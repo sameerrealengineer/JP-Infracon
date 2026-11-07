@@ -16,6 +16,7 @@ import type { RequestDraftFields } from "@/lib/jp/ai-request-extraction";
 import type { ExpenseDraftFields } from "@/lib/jp/ai-expense-extraction";
 import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
+import { FORM_SPECS, type FormId } from "@/lib/jp/form-fill";
 import { useT } from "@/lib/i18n";
 
 const languages = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
@@ -139,6 +140,100 @@ export function VoiceRequestAssist({
   );
 }
 
+/** Example words shown in the type box for each form. */
+const FORM_EXAMPLES: Record<FormId, string> = {
+  worker: "e.g. Ramesh Behera, mistri, mobile 98765 43210",
+  client: "e.g. PWD Aska division, government, contact Mr. Das 94370 12345",
+  lead: "e.g. Sahu ji ka G+2 ghar Aska mein, 25 lakh, referral se, Monday follow-up",
+  supplier: "e.g. Maa Tarini Traders, cement supplier, Bhubaneswar, 30 din credit",
+  task: "e.g. first floor slab shuttering, kal se 5 din, high priority",
+  advance: "e.g. 2000 rupaye cash diye ghar ke kaam ke liye, 500 har pay run katna",
+  materialItem: "e.g. OPC 53 grade cement, bag mein, 50 bag se kam ho to batana",
+};
+
+/**
+ * "Speak or type — AI fills the form" for any form in `lib/jp/form-fill.ts`. It remembers what
+ * was said, so answering its follow-up question adds to the earlier details. Only fills fields;
+ * the person checks them and saves.
+ */
+export function AiFormFill({
+  formId,
+  siteId,
+  onValues,
+}: {
+  formId: FormId;
+  siteId?: string | null;
+  onValues: (values: Partial<Record<string, string>>) => void;
+}) {
+  const { t } = useT();
+  const colors = useColors();
+  const fill = trpc.jp.ai.fillForm.useMutation();
+  const said = useRef("");
+  const [result, setResult] = useState<{
+    filled: number;
+    missing: string[];
+    question: string | null;
+  } | null>(null);
+  const spec = FORM_SPECS[formId];
+  const run = async (text: string) => {
+    const combined = said.current ? `${said.current}\n${text}` : text;
+    const answer = await fill.mutateAsync({ formId, siteId: siteId ?? undefined, text: combined });
+    said.current = combined;
+    onValues(answer.values);
+    setResult({
+      filled: Object.keys(answer.values).length,
+      missing: answer.missing,
+      question: answer.question,
+    });
+  };
+  if (spec.scope === "site" && !siteId) return null;
+  return (
+    <VoiceAssist
+      siteId={siteId ?? undefined}
+      prompt="Tap the mic and say the details"
+      textLabel={FORM_EXAMPLES[formId]}
+      filling={fill.isPending}
+      autoFill
+      onFill={run}
+    >
+      {result ? (
+        <View
+          style={[styles.result, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          <Text style={[styles.resultText, { color: colors.foreground }]}>
+            {result.missing.length
+              ? `✍️ ${t("Filled {count} fields. Still needed: {fields}", {
+                  count: result.filled,
+                  fields: result.missing.map((label) => t(label)).join(", "),
+                })}`
+              : `✅ ${t("Filled {count} fields. Check them below, then save.", { count: result.filled })}`}
+          </Text>
+          {result.question ? (
+            <Text style={[styles.question, { color: colors.primary }]}>🤖 {result.question}</Text>
+          ) : null}
+          {result.missing.length ? (
+            <Text style={[styles.hint, { color: colors.muted, textAlign: "left" }]}>
+              {t("Answer by mic or type below; it adds to what you said before.")}
+            </Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              said.current = "";
+              setResult(null);
+            }}
+            hitSlop={8}
+          >
+            <Text style={[styles.hint, { color: colors.primary, textAlign: "left" }]}>
+              {t("Start again")}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </VoiceAssist>
+  );
+}
+
 /**
  * Speak (Odia, Hindi or English) or type freely; the server transcribes with Sarvam AI and
  * an AI model fills the form. The person still reviews every field before saving.
@@ -150,10 +245,17 @@ function VoiceAssist({
   filling,
   onFill,
   initialText = "",
+  autoFill = false,
+  children,
 }: {
-  siteId: string;
+  /** Absent for company-wide forms (clients, enquiries). */
+  siteId?: string;
   prompt: string;
   textLabel: string;
+  /** Fill as soon as a voice note is read, and clear the box after each fill (for follow-ups). */
+  autoFill?: boolean;
+  /** Shown under the title, e.g. what the AI filled and what it still needs. */
+  children?: React.ReactNode;
   /** Words passed on from the assistant, ready to fill the form with one tap. */
   initialText?: string;
   filling: boolean;
@@ -186,7 +288,11 @@ function VoiceAssist({
         mimeType: "audio/mp4",
         language,
       });
-      setText((current) => (current ? `${current} ${result.transcript}` : result.transcript));
+      if (autoFill && result.transcript.trim().length >= 2) {
+        await onFill(result.transcript.trim());
+        setText("");
+      } else
+        setText((current) => (current ? `${current} ${result.transcript}` : result.transcript));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The voice note could not be read.");
     }
@@ -211,6 +317,7 @@ function VoiceAssist({
     setError(null);
     try {
       await onFill(text.trim());
+      if (autoFill) setText("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The form could not be filled.");
     }
@@ -229,6 +336,7 @@ function VoiceAssist({
           Speak or type — AI fills the form
         </Text>
       </View>
+      {children}
       {status.data?.voice ? (
         <>
           <ChipGroup
@@ -271,7 +379,7 @@ function VoiceAssist({
       <SecondaryButton
         icon="auto-fix-high"
         label={filling ? "Filling…" : "Fill the form with AI"}
-        disabled={text.trim().length < 3 || busy}
+        disabled={text.trim().length < 2 || busy}
         onPress={() => void fillForm()}
       />
     </View>
@@ -291,6 +399,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   hint: { fontSize: 12, textAlign: "center" },
+  result: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 6 },
+  resultText: { fontSize: 14, fontWeight: "700" },
+  question: { fontSize: 15, fontWeight: "800" },
   input: {
     borderWidth: 1,
     borderRadius: 14,
