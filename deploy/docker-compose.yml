@@ -46,6 +46,8 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
+      # Web app files (scripts/deploy-web.sh); kept outside the code folder so deploys keep it.
+      - ${WEB_DIR:-../../jp-web}:/srv/web:ro
 
   # Optional WhatsApp alerts with WAHA (open source). Start with: --profile whatsapp
   waha:

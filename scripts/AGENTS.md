@@ -23,6 +23,7 @@ Scripts for running the production server on the Azure VM (deploy, watchdog, Wha
 
 ```bash
 bash scripts/deploy-azure.sh    # deploy the committed HEAD to production
+bash scripts/deploy-web.sh      # build the web app (iPhone/computer) and put it on the server
 bash scripts/check-ai.sh        # check AI keys and providers on the live server
 pnpm demo:server                # online demo on :3100
 pnpm audit:app [url] [outDir]   # screen audit against the demo server

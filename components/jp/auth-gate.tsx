@@ -638,7 +638,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 }}
               />
             ) : null
-          ) : (
+          ) : Platform.OS === "web" ? null : (
+            // The web app is served by the server itself, so it never needs an address.
             <ServerAddress
               onChanged={() => {
                 void utils.auth.me.invalidate();

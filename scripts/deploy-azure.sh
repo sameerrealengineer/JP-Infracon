@@ -22,7 +22,7 @@ echo "== 2/4 Copy code ($(git log --oneline -1)) =="
 git archive HEAD | ssh "$HOST" 'cd ~/jp-infracon && tar -x'
 
 echo "== 3/4 Build and restart (5-10 minutes) =="
-ssh "$HOST" 'cd ~/jp-infracon/deploy && docker compose --env-file .env up -d --build && sleep 20 && \
+ssh "$HOST" 'mkdir -p ~/jp-web && cd ~/jp-infracon/deploy && docker compose --env-file .env up -d --build && sleep 20 && \
   docker compose logs --tail 40 api | grep -v -i -E "key|secret|password|token"'
 
 echo "== 4/4 Checks =="
