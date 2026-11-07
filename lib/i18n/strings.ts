@@ -560,6 +560,12 @@ export const hi: Dictionary = {
   Due: "बकाया",
   "Internal billing records. File GST returns and e-invoices through your accountant.":
     "आंतरिक बिल रिकॉर्ड। GST रिटर्न और ई-इनवॉइस अपने अकाउंटेंट से करवाएँ।",
+  "Nobody to pay for this month yet. People appear here when their attendance for the month is approved, or when they have approved pay details (monthly salary).":
+    "इस महीने देने के लिए अभी कोई नहीं। लोग यहाँ तब दिखते हैं जब उनकी इस महीने की हाज़िरी मंज़ूर हो, या उनकी वेतन जानकारी (मासिक वेतन) मंज़ूर हो।",
+  "Add the client first": "पहले क्लाइंट जोड़ें",
+  "A contract is made with a client. Add the client in Clients & leads, then come back here.":
+    "कॉन्ट्रैक्ट किसी क्लाइंट के साथ बनता है। क्लाइंट और लीड में क्लाइंट जोड़ें, फिर यहाँ वापस आएँ।",
+  "Open Clients & leads": "क्लाइंट और लीड खोलें",
   "Add the client in Clients & leads first.": "पहले क्लाइंट और लीड में क्लाइंट जोड़ें।",
   Client: "क्लाइंट",
   "Contract / work order no.": "कॉन्ट्रैक्ट / वर्क ऑर्डर नं.",
@@ -1803,6 +1809,12 @@ export const or: Dictionary = {
   Due: "ବାକି",
   "Internal billing records. File GST returns and e-invoices through your accountant.":
     "ଆଭ୍ୟନ୍ତରୀଣ ବିଲ ରେକର୍ଡ। GST ରିଟର୍ଣ୍ଣ ଓ ଇ-ଇନଭଏସ ଆପଣଙ୍କ ଆକାଉଣ୍ଟାଣ୍ଟଙ୍କ ଦ୍ୱାରା କରନ୍ତୁ।",
+  "Nobody to pay for this month yet. People appear here when their attendance for the month is approved, or when they have approved pay details (monthly salary).":
+    "ଏହି ମାସ ପାଇଁ ଦେବାକୁ କେହି ନାହାନ୍ତି। ମାସର ହାଜିରା ମଞ୍ଜୁର ହେଲେ, କିମ୍ବା ଦରମା ବିବରଣୀ (ମାସିକ ଦରମା) ମଞ୍ଜୁର ହେଲେ ଲୋକେ ଏଠାରେ ଦେଖାଯାନ୍ତି।",
+  "Add the client first": "ପ୍ରଥମେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ",
+  "A contract is made with a client. Add the client in Clients & leads, then come back here.":
+    "କଣ୍ଟ୍ରାକ୍ଟ ଜଣେ କ୍ଲାଏଣ୍ଟଙ୍କ ସହ ହୁଏ। କ୍ଲାଏଣ୍ଟ ଓ ଲିଡରେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ, ତାପରେ ଏଠାକୁ ଫେରନ୍ତୁ।",
+  "Open Clients & leads": "କ୍ଲାଏଣ୍ଟ ଓ ଲିଡ ଖୋଲନ୍ତୁ",
   "Add the client in Clients & leads first.": "ପ୍ରଥମେ କ୍ଲାଏଣ୍ଟ ଓ ଲିଡରେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ।",
   Client: "କ୍ଲାଏଣ୍ଟ",
   "Contract / work order no.": "ଚୁକ୍ତି / ୱାର୍କ ଅର୍ଡର ନଂ.",

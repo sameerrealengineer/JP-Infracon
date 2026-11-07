@@ -186,6 +186,13 @@ function Runs({ siteId, colors }: { siteId: string; colors: Colors }) {
                 label={t("Cost to company")}
                 value={formatMinorAsRupees(preview.data.costMinor)}
               />
+              {preview.data.lineCount === 0 ? (
+                <Text style={[styles.meta, { color: colors.muted }]}>
+                  {t(
+                    "Nobody to pay for this month yet. People appear here when their attendance for the month is approved, or when they have approved pay details (monthly salary).",
+                  )}
+                </Text>
+              ) : null}
               {preview.data.unapproved > 0 ? (
                 <Text style={[styles.meta, { color: colors.warning }]}>
                   {t(

@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, like, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -125,18 +125,44 @@ export async function placeCards(user: Parameters<typeof getAccessibleSites>[0])
     db,
     taskRows.map((task) => task.id),
   );
+  // A site with no chosen cover shows its newest photo, so a photo uploaded by anyone on the
+  // site (or before covers existed) still appears on the card.
+  const uncovered = siteRows.filter((row) => !row.cover).map((row) => row.id);
+  const latestPhoto = new Map<string, string>();
+  if (uncovered.length) {
+    const photos = await db
+      .select({ id: attachments.id, siteId: attachments.entityId })
+      .from(attachments)
+      .where(
+        and(
+          eq(attachments.entityType, "site"),
+          inArray(attachments.entityId, uncovered),
+          like(attachments.contentType, "image/%"),
+          eq(attachments.accessClassification, "Private"),
+          ne(attachments.scanStatus, "Rejected"),
+        ),
+      )
+      .orderBy(desc(attachments.uploadedAt))
+      .limit(2_000);
+    for (const photo of photos)
+      if (!latestPhoto.has(photo.siteId)) latestPhoto.set(photo.siteId, photo.id);
+  }
   const covers = await coverUrls(
     db,
-    [...siteRows.map((row) => row.cover), ...projectRows.map((row) => row.cover)].filter(
-      (id): id is string => Boolean(id),
-    ),
+    [
+      ...siteRows.map((row) => row.cover),
+      ...projectRows.map((row) => row.cover),
+      ...latestPhoto.values(),
+    ].filter((id): id is string => Boolean(id)),
   );
   const today = todayIn();
   const tasksFor = (ids: Set<string>) =>
     taskRows
       .filter((task) => ids.has(task.siteId))
       .map((task) => ({ ...task, reportedPercent: percents.get(task.id) ?? null }));
-  const siteCovers = new Map(siteRows.map((row) => [row.id, row.cover]));
+  const siteCovers = new Map(
+    siteRows.map((row) => [row.id, row.cover ?? latestPhoto.get(row.id) ?? null]),
+  );
   return {
     today,
     sites: accessible.map((site) => {

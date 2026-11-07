@@ -320,6 +320,7 @@ function HeroMini({ label, value }: { label: string; value: string }) {
 
 function ContractSetup({ projectId, onDone }: { projectId: string; onDone: () => void }) {
   const { t } = useT();
+  const router = useRouter();
   const clients = trpc.jp.crm.clients.list.useQuery({ query: "" });
   const save = trpc.jp.billing.contract.save.useMutation();
   const [clientId, setClientId] = useState<string | null>(null);
@@ -345,19 +346,31 @@ function ContractSetup({ projectId, onDone }: { projectId: string; onDone: () =>
       setError(cause instanceof Error ? cause.message : "Not saved.");
     }
   };
+  // A contract needs a client. No client yet is a normal first step, not an error.
+  if (clients.isLoading) return <LoadingBlock />;
+  if (clients.error)
+    return <InlineError message={clients.error.message} onRetry={() => void clients.refetch()} />;
+  if ((clients.data?.length ?? 0) === 0)
+    return (
+      <EmptyState
+        icon="person-add"
+        title={t("Add the client first")}
+        detail={t(
+          "A contract is made with a client. Add the client in Clients & leads, then come back here.",
+        )}
+        action={t("Open Clients & leads")}
+        onPress={() => router.push("/crm" as never)}
+      />
+    );
   return (
     <Card>
-      {(clients.data?.length ?? 0) === 0 ? (
-        <InlineError message={t("Add the client in Clients & leads first.")} />
-      ) : (
-        <ChipGroup
-          label={t("Client")}
-          options={(clients.data ?? []).map((c) => c.id)}
-          value={clientId}
-          onChange={setClientId}
-          format={(id) => clients.data?.find((c) => c.id === id)?.name ?? id}
-        />
-      )}
+      <ChipGroup
+        label={t("Client")}
+        options={(clients.data ?? []).map((c) => c.id)}
+        value={clientId}
+        onChange={setClientId}
+        format={(id) => clients.data?.find((c) => c.id === id)?.name ?? id}
+      />
       <Field
         label={t("Contract / work order no.")}
         value={contractNumber}

@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { markSignedOut } from "@/lib/jp/session-expiry";
 import { useRouter } from "expo-router";
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import * as Speech from "expo-speech";
@@ -465,7 +466,6 @@ function WorkerFooter() {
   const { t } = useT();
   const auth = useAuth({ autoFetch: false });
   const queryClient = useQueryClient();
-  const utils = trpc.useUtils();
   const router = useRouter();
   const serverLogout = trpc.auth.logout.useMutation();
   const fences = trpc.jp.presence.myFences.useQuery(undefined, { enabled: Platform.OS !== "web" });
@@ -535,7 +535,7 @@ function WorkerFooter() {
             await auth.logout();
             // Nothing of this worker stays cached for the next person on the phone.
             queryClient.clear();
-            await utils.auth.me.invalidate();
+            markSignedOut(queryClient);
             router.replace("/" as never);
           })();
         }}

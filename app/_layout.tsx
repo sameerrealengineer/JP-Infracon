@@ -1,6 +1,7 @@
 import "@/global.css";
 import "@/lib/geofence-task";
-import { QueryClient, focusManager } from "@tanstack/react-query";
+import { QueryCache, QueryClient, focusManager } from "@tanstack/react-query";
+import { isSignedOutError, markSignedOut } from "@/lib/jp/session-expiry";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -158,24 +159,31 @@ export default function RootLayout() {
   }, [handleSafeAreaUpdate]);
 
   // Create clients once and reuse them
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // Refresh when the app comes back to the foreground (wired to AppState below), so a
-            // change made by someone else (an approval, a payment) shows up.
-            refetchOnWindowFocus: true,
-            // Retry failed requests once
-            retry: 1,
-            // Keep previously loaded records for offline viewing (restored from device storage).
-            gcTime: 7 * 24 * 60 * 60 * 1000,
-            // Short: screens refetch when opened, so they show what others just changed.
-            staleTime: 5_000,
-          },
+  const [queryClient] = useState(() => {
+    const client: QueryClient = new QueryClient({
+      // A request refused because the session ended (sign out, revoked, expired) sends the
+      // person to the sign-in screen instead of a "Please login" error on every card.
+      queryCache: new QueryCache({
+        onError: (error) => {
+          if (isSignedOutError(error)) markSignedOut(client);
         },
       }),
-  );
+      defaultOptions: {
+        queries: {
+          // Refresh when the app comes back to the foreground (wired to AppState below), so a
+          // change made by someone else (an approval, a payment) shows up.
+          refetchOnWindowFocus: true,
+          // Keep previously loaded records for offline viewing (restored from device storage).
+          gcTime: 7 * 24 * 60 * 60 * 1000,
+          // Short: screens refetch when opened, so they show what others just changed.
+          staleTime: 5_000,
+          // Never retry a signed-out refusal; it will not change.
+          retry: (count, error) => !isSignedOutError(error) && count < 1,
+        },
+      },
+    });
+    return client;
+  });
   const [trpcClient] = useState(() => createTRPCClient());
   // The saved server address must be known before the first request.
   const [addressReady, setAddressReady] = useState(false);

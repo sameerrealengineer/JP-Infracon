@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useT } from "@/lib/i18n";
@@ -9,11 +9,10 @@ type LoginResult = Awaited<
   ReturnType<ReturnType<typeof trpc.auth.workerLogin.useMutation>["mutateAsync"]>
 >;
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✓"] as const;
-
 /**
- * Worker sign-in: mobile number, then the 6-digit PIN on big number keys. Signs in by itself
- * when the sixth digit is pressed.
+ * Worker sign-in: mobile number, then the 6-digit PIN typed on the phone's own number keyboard
+ * (one keyboard only). Signs in by itself when the sixth digit is typed. Saved-password
+ * suggestions are switched off so staff logins never show up here.
  */
 export function WorkerSignIn({
   onSignedIn,
@@ -56,11 +55,10 @@ export function WorkerSignIn({
       setError(cause instanceof Error ? t(cause.message) : t("Could not send. Try again."));
     }
   };
-  const press = (key: (typeof KEYS)[number]) => {
+  const pinInput = useRef<TextInput>(null);
+  const typePin = (value: string) => {
     if (login.isPending) return;
-    if (key === "⌫") return setPin((value) => value.slice(0, -1));
-    if (key === "✓") return pin.length === 6 ? void submit(pin) : undefined;
-    const next = (pin + key).slice(0, 6);
+    const next = value.replace(/\D/g, "").slice(0, 6);
     setPin(next);
     if (next.length === 6) void submit(next);
   };
@@ -74,6 +72,11 @@ export function WorkerSignIn({
         value={mobile}
         onChangeText={(value) => setMobile(value.replace(/[^\d+]/g, ""))}
         keyboardType="phone-pad"
+        autoComplete="off"
+        importantForAutofill="no"
+        textContentType="none"
+        returnKeyType="next"
+        onSubmitEditing={() => pinInput.current?.focus()}
         maxLength={13}
         placeholder="98765 43210"
         placeholderTextColor={colors.muted}
@@ -87,7 +90,12 @@ export function WorkerSignIn({
         ]}
       />
       <Text style={[styles.label, { color: colors.muted }]}>🔑 {t("Your 6-digit PIN")}</Text>
-      <View style={styles.dots} accessibilityLabel={`${pin.length} of 6 digits entered`}>
+      {/* The dots are the PIN box: tapping them opens the phone's number keyboard. */}
+      <Pressable
+        accessibilityLabel={`PIN, ${pin.length} of 6 digits entered`}
+        onPress={() => pinInput.current?.focus()}
+        style={styles.dots}
+      >
         {Array.from({ length: 6 }, (_, index) => (
           <View
             key={index}
@@ -100,29 +108,22 @@ export function WorkerSignIn({
             ]}
           />
         ))}
-      </View>
-      <View style={styles.pad}>
-        {KEYS.map((key) => (
-          <Pressable
-            key={key}
-            accessibilityRole="button"
-            accessibilityLabel={key === "⌫" ? "Delete" : key === "✓" ? "Sign in" : key}
-            onPress={() => press(key)}
-            style={({ pressed }) => [
-              styles.key,
-              {
-                backgroundColor:
-                  key === "✓" ? colors.success : pressed ? colors.primary : colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Text style={[styles.keyText, { color: key === "✓" ? "#fff" : colors.foreground }]}>
-              {key}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      </Pressable>
+      <TextInput
+        ref={pinInput}
+        accessibilityLabel="6-digit PIN"
+        value={pin}
+        onChangeText={typePin}
+        keyboardType="number-pad"
+        secureTextEntry
+        maxLength={6}
+        autoComplete="off"
+        importantForAutofill="no"
+        textContentType="oneTimeCode"
+        editable={!login.isPending}
+        caretHidden
+        style={styles.hiddenPin}
+      />
       {login.isPending ? <ActivityIndicator color={colors.primary} size="large" /> : null}
       {error ? (
         <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
@@ -179,18 +180,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1,
   },
-  dots: { flexDirection: "row", justifyContent: "center", gap: 14, marginVertical: 4 },
   dot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2 },
-  pad: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 10 },
-  key: {
-    width: "31%",
-    height: 64,
-    borderRadius: 18,
-    borderWidth: 1,
-    alignItems: "center",
+  dots: {
+    flexDirection: "row",
     justifyContent: "center",
+    gap: 14,
+    paddingVertical: 14,
   },
-  keyText: { fontSize: 28, fontWeight: "900" },
+  // Kept on screen (not display:none) so Android still opens the keyboard for it.
+  hiddenPin: { position: "absolute", width: 1, height: 1, opacity: 0 },
   error: { fontSize: 16, fontWeight: "700", textAlign: "center" },
   notice: { fontSize: 16, fontWeight: "700", textAlign: "center" },
   forgot: { borderWidth: 1, borderRadius: 16, padding: 14, alignItems: "center" },

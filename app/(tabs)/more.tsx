@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { markSignedOut } from "@/lib/jp/session-expiry";
 import { useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
@@ -323,6 +324,7 @@ export default function MoreScreen() {
       await auth.logout();
       // Remove every cached record so the next person on this phone sees nothing of yours.
       queryClient.clear();
+      markSignedOut(queryClient);
       router.replace("/" as never);
     } finally {
       setSigningOut(false);
