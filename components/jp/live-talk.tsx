@@ -13,7 +13,6 @@ import { audioFileFromBase64, readBase64 } from "@/lib/device-files";
 import type { AssistantAction } from "@/lib/jp/assistant-catalog";
 import {
   nextVoiceTurn,
-  replyLanguage,
   startVoiceTurn,
   type SpokenLanguage,
   type VoiceTurnState,
@@ -51,8 +50,7 @@ export function LiveTalk({
 }) {
   const { t } = useT();
   const recorder = useAudioRecorder(RECORDING);
-  const transcribe = trpc.jp.ai.transcribe.useMutation();
-  const ask = trpc.jp.assistant.ask.useMutation();
+  const talk = trpc.jp.assistant.talk.useMutation();
   const speak = trpc.jp.assistant.speak.useMutation();
   const [phase, setPhase] = useState<Phase>("paused");
   const [heard, setHeard] = useState("");
@@ -63,6 +61,8 @@ export function LiveTalk({
   const player = useRef<AudioPlayer | null>(null);
   const active = useRef(false);
   const conversation = useRef<Turn[]>([]);
+  /** Bumped when listening starts again, so a reply still on its way never plays over it. */
+  const epoch = useRef(0);
 
   const stopTimer = () => {
     if (timer.current) clearInterval(timer.current);
@@ -92,6 +92,7 @@ export function LiveTalk({
 
   const listen = async () => {
     if (!active.current) return;
+    epoch.current += 1;
     setError(null);
     try {
       player.current?.remove();
@@ -135,48 +136,65 @@ export function LiveTalk({
     try {
       await recorder.stop();
       const uri = recorder.uri;
-      if (!uri || !siteId) throw new Error("No recording was captured.");
-      const result = await transcribe.mutateAsync({
-        siteId,
+      if (!uri) throw new Error("No recording was captured.");
+      // One round trip: words, answer and the first sentence's audio come back together.
+      const result = await talk.mutateAsync({
         audioBase64: await readBase64(uri),
         mimeType: "audio/mp4",
-        language: "unknown",
-      });
-      const text = result.transcript.trim();
-      if (!text) {
-        void listen();
-        return;
-      }
-      setHeard(text);
-      const answer = await ask.mutateAsync({
-        text,
+        language,
         history: [...history, ...conversation.current].slice(-8),
         siteId,
       });
-      conversation.current = [
-        ...conversation.current,
-        { role: "user" as const, text },
-        { role: "assistant" as const, text: answer.reply },
-      ].slice(-8);
-      setSaid(answer.reply);
-      onTurn(text, answer.reply, answer.action);
       if (!active.current) return;
-      if (answer.action.type !== "none") {
-        // An action (open a screen, start a draft) needs the person's eyes: stop here.
-        await sayAloud(answer.reply, replyLanguage(result.language, language), false);
+      if (!result.heard) {
+        void listen();
         return;
       }
-      await sayAloud(answer.reply, replyLanguage(result.language, language), true);
+      setHeard(result.heard);
+      conversation.current = [
+        ...conversation.current,
+        { role: "user" as const, text: result.heard },
+        { role: "assistant" as const, text: result.reply },
+      ].slice(-8);
+      setSaid(result.reply);
+      if (result.action) onTurn(result.heard, result.reply, result.action);
+      // An action (open a screen, start a draft) needs the person's eyes: stop after speaking.
+      const thenListen = !result.action || result.action.type === "none";
+      // Make the rest of the answer while the first sentence plays.
+      const rest = result.rest
+        ? speak.mutateAsync({ text: result.rest.slice(0, 1200), language: result.language })
+        : null;
+      rest?.catch(() => null);
+      await playQueue(
+        [result.audio ? Promise.resolve(result.audio) : null, rest],
+        thenListen,
+        epoch.current,
+      );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "That did not work. Tap to try again.");
       setPhase("paused");
     }
   };
 
-  const sayAloud = async (text: string, spoken: SpokenLanguage, thenListen: boolean) => {
+  type Clip = { audioBase64: string; mimeType: string };
+
+  /** Plays the clips in order (each may still be on its way), then listens or pauses. */
+  const playQueue = async (
+    clips: (Promise<Clip> | null)[],
+    thenListen: boolean,
+    turnId: number,
+  ): Promise<void> => {
+    const [head, ...tail] = clips;
+    if (head === undefined) {
+      if (thenListen) void listen();
+      else setPhase("paused");
+      return;
+    }
+    const audio = head ? await head.catch(() => null) : null;
+    // Closed, or the person tapped to talk again while this was on its way.
+    if (!active.current || epoch.current !== turnId) return;
+    if (!audio) return playQueue(tail, thenListen, turnId);
     try {
-      const audio = await speak.mutateAsync({ text: text.slice(0, 1200), language: spoken });
-      if (!active.current) return;
       await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false });
       const next = createAudioPlayer({
         uri: audioFileFromBase64(audio.audioBase64, audio.mimeType),
@@ -184,15 +202,15 @@ export function LiveTalk({
       player.current = next;
       next.addListener("playbackStatusUpdate", (status) => {
         if (!status.didJustFinish || player.current !== next) return;
-        if (thenListen) void listen();
-        else setPhase("paused");
+        next.remove();
+        player.current = null;
+        void playQueue(tail, thenListen, turnId);
       });
       setPhase("speaking");
       next.play();
     } catch {
-      // The written answer is on screen; carry on listening.
-      if (thenListen) void listen();
-      else setPhase("paused");
+      // The written answer is on screen; carry on.
+      void playQueue(tail, thenListen, turnId);
     }
   };
 

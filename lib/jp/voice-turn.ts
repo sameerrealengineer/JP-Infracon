@@ -20,7 +20,7 @@ export type VoiceTurnConfig = {
 export const DEFAULT_VOICE_TURN: VoiceTurnConfig = {
   speechDb: -42,
   minSpeechMs: 250,
-  endSilenceMs: 1300,
+  endSilenceMs: 900,
   idleMs: 9000,
   maxTurnMs: 28_000,
 };
@@ -80,4 +80,19 @@ export type SpokenLanguage = (typeof SPOKEN)[number];
 export function replyLanguage(detected: string | null | undefined, chosen: SpokenLanguage) {
   if (detected === "or-IN") return "od-IN";
   return SPOKEN.includes(detected as SpokenLanguage) ? (detected as SpokenLanguage) : chosen;
+}
+
+/**
+ * Splits a reply so the first sentence can be spoken while the rest is still being made.
+ * The first part is one sentence (two when the first is very short), at most ~220 characters.
+ */
+export function splitForSpeech(text: string): { first: string; rest: string } {
+  const clean = text.replace(/\s+/g, " ").trim();
+  const ends = [...clean.matchAll(/[.?!।॥](?=\s|$)/g)].map((m) => (m.index ?? 0) + 1);
+  let cut = ends.find((end) => end >= 25) ?? ends.at(-1) ?? clean.length;
+  if (cut > 220) {
+    const space = clean.lastIndexOf(" ", 220);
+    cut = space > 40 ? space : clean.length;
+  }
+  return { first: clean.slice(0, cut).trim(), rest: clean.slice(cut).trim() };
 }

@@ -5,7 +5,16 @@ import { auditEvents, type User } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites } from "./access";
-import { aiJson, geminiKey, rateLimit, sarvamKey, sarvamSpeak } from "./ai";
+import { replyLanguage, splitForSpeech } from "../../lib/jp/voice-turn";
+import {
+  MAX_AUDIO_BYTES,
+  aiJson,
+  geminiKey,
+  rateLimit,
+  sarvamKey,
+  sarvamSpeak,
+  sarvamTranscribe,
+} from "./ai";
 import { siteCapabilities } from "./capabilities";
 import { buildInbox } from "./inbox";
 import { placeCards } from "./places";
@@ -81,7 +90,7 @@ export type AssistantQuestion = {
   siteId?: string | null;
   files: { name: string; base64: string }[];
   /** Where the answer is shown; WhatsApp replies cannot open app screens. */
-  channel?: "app" | "whatsapp";
+  channel?: "app" | "whatsapp" | "voice";
 };
 
 /**
@@ -162,7 +171,7 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
   const prompt =
     "You are the helper inside JP Infracon, a construction site app used in Odisha, India. " +
     "Answer in the same language and script the person used (Odia, Hindi, English or Hinglish), " +
-    `in at most ${files.length ? "eight" : "three"} short sentences, simply, for busy site staff. Use only the facts below; ` +
+    `in at most ${files.length ? "eight" : input.channel === "voice" ? "two" : "three"} short sentences, simply, for busy site staff. Use only the facts below; ` +
     "if you do not know, say so and point to the right screen. Never say you saved, submitted, " +
     "approved or paid anything: you can only open a screen or start a draft that the person " +
     "checks and saves.\n" +
@@ -170,6 +179,10 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
       ? "This chat is on WhatsApp: you cannot open screens or start drafts here. When they " +
         "want to record or change something, tell them which screen to use in the JP " +
         "Infracon app and set action type 'none'. Use plain text, no markdown.\n"
+      : "") +
+    (input.channel === "voice"
+      ? "This is a spoken conversation: the reply is read aloud. No lists, symbols or " +
+        "markdown; say numbers the way people speak them.\n"
       : "") +
     "Actions: 'open' a screen by its key (with siteId when it is about one site); " +
     "'draft_report' when they describe today's work or labour (put their words in text, " +
@@ -273,6 +286,57 @@ export const assistantRouter = router({
       }),
     )
     .mutation(({ ctx, input }) => answerQuestion(ctx.user, input)),
+
+  /**
+   * One spoken turn in a single round trip: the person's voice → their words → the answer →
+   * the first sentence as audio (the rest comes from `speak` while that plays). Same access
+   * rules as `ask`; nothing is saved.
+   */
+  talk: protectedProcedure
+    .input(
+      z.object({
+        audioBase64: z
+          .string()
+          .min(16)
+          .max(Math.ceil((MAX_AUDIO_BYTES * 4) / 3) + 16),
+        mimeType: z.string().regex(/^audio\/[\w.+-]+$/),
+        language: z.enum(LANGUAGES),
+        history: z
+          .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().max(2000) }))
+          .max(10)
+          .default([]),
+        siteId: z.string().uuid().nullish(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      rateLimit(ctx.user.id, 80);
+      const bytes = Buffer.from(input.audioBase64, "base64");
+      if (bytes.length > MAX_AUDIO_BYTES)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Keep each turn under 30 seconds." });
+      const heard = await sarvamTranscribe(bytes, input.mimeType, "unknown");
+      const text = heard.transcript.trim().slice(0, 2000);
+      if (!text)
+        return {
+          heard: "",
+          reply: "",
+          action: null,
+          audio: null,
+          rest: "",
+          language: input.language,
+        };
+      const answer = await answerQuestion(ctx.user, {
+        text,
+        history: input.history,
+        siteId: input.siteId,
+        files: [],
+        channel: "voice",
+      });
+      const language = replyLanguage(heard.language, input.language);
+      const { first, rest } = splitForSpeech(answer.reply);
+      // Without audio the written answer still shows; the app carries on listening.
+      const audio = first ? await sarvamSpeak(first, language).catch(() => null) : null;
+      return { heard: text, reply: answer.reply, action: answer.action, audio, rest, language };
+    }),
 
   /** Speaks a reply aloud (Sarvam Bulbul), returned as MP3 for the app to play. */
   speak: protectedProcedure

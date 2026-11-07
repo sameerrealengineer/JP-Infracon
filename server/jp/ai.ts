@@ -49,7 +49,7 @@ import {
 } from "../../lib/jp/ai-report-extraction";
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
-const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
+export const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
 /** Up to 50 terms of up to 64 characters each (Sarvam speech-to-text limits). */
 const SITE_KEYTERMS = [
   "DPR",

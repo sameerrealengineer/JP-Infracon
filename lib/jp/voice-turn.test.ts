@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { nextVoiceTurn, replyLanguage, startVoiceTurn, type VoiceTurnDecision } from "./voice-turn";
+import {
+  nextVoiceTurn,
+  replyLanguage,
+  startVoiceTurn,
+  type VoiceTurnDecision,
+  splitForSpeech,
+} from "./voice-turn";
 
 /** Runs a list of [ms since start, dB] samples and returns each decision. */
 function run(samples: [number, number | null][]) {
@@ -29,7 +35,7 @@ describe("voice turn", () => {
     expect(decisions).toContain("speaking");
     expect(decisions.at(-1)).toBe("done");
     // Not before the pause is long enough.
-    expect(run([...span(0, 1500, -25), ...span(1650, 2400, -70)]).at(-1)).toBe("speaking");
+    expect(run([...span(0, 1500, -25), ...span(1650, 2100, -70)]).at(-1)).toBe("speaking");
   });
 
   it("ignores a short click and goes idle when nobody speaks", () => {
@@ -53,5 +59,30 @@ describe("voice turn", () => {
     expect(replyLanguage("or-IN", "en-IN")).toBe("od-IN");
     expect(replyLanguage("ta-IN", "hi-IN")).toBe("hi-IN");
     expect(replyLanguage(null, "en-IN")).toBe("en-IN");
+  });
+});
+
+describe("splitForSpeech", () => {
+  it("speaks the first full sentence first", () => {
+    expect(
+      splitForSpeech("Pakalapoli site is 42% done. Plan says 50%. Two tasks are late."),
+    ).toEqual({
+      first: "Pakalapoli site is 42% done.",
+      rest: "Plan says 50%. Two tasks are late.",
+    });
+  });
+  it("handles Hindi and Odia full stops", () => {
+    const split = splitForSpeech("आज 12 लोग हाज़िर हैं, कल से दो ज़्यादा। बाकी सब ठीक है।");
+    expect(split.first).toBe("आज 12 लोग हाज़िर हैं, कल से दो ज़्यादा।");
+    expect(split.rest).toBe("बाकी सब ठीक है।");
+  });
+  it("keeps a short reply whole", () => {
+    expect(splitForSpeech("Haan.")).toEqual({ first: "Haan.", rest: "" });
+  });
+  it("cuts a very long sentence at a space", () => {
+    const long = "word ".repeat(80).trim();
+    const split = splitForSpeech(long);
+    expect(split.first.length).toBeLessThanOrEqual(220);
+    expect(`${split.first} ${split.rest}`).toBe(long);
   });
 });
