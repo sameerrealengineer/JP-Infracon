@@ -5,6 +5,7 @@ import {
   startVoiceTurn,
   type VoiceTurnDecision,
   splitForSpeech,
+  rmsDb,
 } from "./voice-turn";
 
 /** Runs a list of [ms since start, dB] samples and returns each decision. */
@@ -84,5 +85,19 @@ describe("splitForSpeech", () => {
     const split = splitForSpeech(long);
     expect(split.first.length).toBeLessThanOrEqual(220);
     expect(`${split.first} ${split.rest}`).toBe(long);
+  });
+});
+
+describe("rmsDb", () => {
+  it("gives -160 for silence and about 0 dB for a full-scale signal", () => {
+    expect(rmsDb([])).toBe(-160);
+    expect(rmsDb([0, 0, 0])).toBe(-160);
+    expect(rmsDb([1, -1, 1, -1])).toBeCloseTo(0, 5);
+  });
+  it("speech-level samples land above the speech threshold, room noise below", () => {
+    expect(rmsDb(Array.from({ length: 512 }, (_, i) => 0.1 * Math.sin(i / 3)))).toBeGreaterThan(
+      -42,
+    );
+    expect(rmsDb(Array.from({ length: 512 }, (_, i) => 0.002 * Math.sin(i / 3)))).toBeLessThan(-42);
   });
 });

@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ChipGroup, InlineError, SecondaryButton } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { compressPhoto, readBase64 } from "@/lib/device-files";
+import { compressPhoto, readRecording } from "@/lib/device-files";
 import type { IssueDraftFields } from "@/lib/jp/ai-extraction";
 import type { ReportDraftFields } from "@/lib/jp/ai-report-extraction";
 import type { RequestDraftFields } from "@/lib/jp/ai-request-extraction";
@@ -328,11 +328,10 @@ function VoiceAssist({
       await recorder.stop();
       const uri = recorder.uri;
       if (!uri) throw new Error("No recording was captured.");
-      const audioBase64 = await readBase64(uri);
+      const audio = await readRecording(uri);
       const result = await transcribe.mutateAsync({
         siteId,
-        audioBase64,
-        mimeType: "audio/mp4",
+        ...audio,
         language,
       });
       if (autoFill && result.transcript.trim().length >= 2) {

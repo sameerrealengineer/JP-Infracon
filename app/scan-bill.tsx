@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -194,17 +194,15 @@ export default function ScanBillScreen() {
                 Lay the bill flat, in good light, whole page in frame.
               </Text>
               <View style={styles.heroButtons}>
-                {Platform.OS !== "web" ? (
-                  <View style={{ flex: 1 }}>
-                    <PrimaryButton
-                      icon="photo-camera"
-                      tone="gold"
-                      label="Camera"
-                      loading={scan.isPending}
-                      onPress={() => void pick(true)}
-                    />
-                  </View>
-                ) : null}
+                <View style={{ flex: 1 }}>
+                  <PrimaryButton
+                    icon="photo-camera"
+                    tone="gold"
+                    label="Camera"
+                    loading={scan.isPending}
+                    onPress={() => void pick(true)}
+                  />
+                </View>
                 <View style={{ flex: 1 }}>
                   <PrimaryButton
                     icon="collections"

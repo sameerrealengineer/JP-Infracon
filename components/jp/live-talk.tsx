@@ -8,8 +8,8 @@ import {
   type AudioPlayer,
 } from "expo-audio";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import { audioFileFromBase64, readBase64 } from "@/lib/device-files";
+import { Animated, Easing, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { audioFileFromBase64, readRecording } from "@/lib/device-files";
 import type { AssistantAction } from "@/lib/jp/assistant-catalog";
 import {
   nextVoiceTurn,
@@ -19,6 +19,7 @@ import {
 } from "@/lib/jp/voice-turn";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
+import { startWebMicLevel, type MicLevel } from "@/lib/web-mic-level";
 
 type Phase = "listening" | "hearing" | "thinking" | "speaking" | "paused";
 type Turn = { role: "user" | "assistant"; text: string };
@@ -58,6 +59,8 @@ export function LiveTalk({
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const turn = useRef<VoiceTurnState | null>(null);
+  /** In a browser the recorder has no meter, so a second listener measures loudness. */
+  const webLevel = useRef<MicLevel | null>(null);
   const player = useRef<AudioPlayer | null>(null);
   const active = useRef(false);
   const conversation = useRef<Turn[]>([]);
@@ -71,6 +74,8 @@ export function LiveTalk({
 
   const stopAll = async () => {
     active.current = false;
+    webLevel.current?.stop();
+    webLevel.current = null;
     stopTimer();
     player.current?.remove();
     player.current = null;
@@ -100,12 +105,14 @@ export function LiveTalk({
       await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
+      if (Platform.OS === "web" && !webLevel.current)
+        webLevel.current = await startWebMicLevel().catch(() => null);
       turn.current = startVoiceTurn(clock());
       setPhase("listening");
       stopTimer();
       timer.current = setInterval(() => {
         if (!turn.current) return;
-        const level = recorder.getStatus().metering;
+        const level = recorder.getStatus().metering ?? webLevel.current?.read();
         const result = nextVoiceTurn(turn.current, level, clock());
         turn.current = result.state;
         if (result.decision === "speaking") setPhase("hearing");
@@ -139,8 +146,7 @@ export function LiveTalk({
       if (!uri) throw new Error("No recording was captured.");
       // One round trip: words, answer and the first sentence's audio come back together.
       const result = await talk.mutateAsync({
-        audioBase64: await readBase64(uri),
-        mimeType: "audio/mp4",
+        ...(await readRecording(uri)),
         language,
         history: [...history, ...conversation.current].slice(-8),
         siteId,

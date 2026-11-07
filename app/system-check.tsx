@@ -6,7 +6,7 @@ import {
   useAudioRecorder,
 } from "expo-audio";
 import { useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
   AppHeader,
@@ -19,7 +19,7 @@ import {
   formatDateTime,
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { readBase64 } from "@/lib/device-files";
+import { readRecording } from "@/lib/device-files";
 import { getApiBaseUrl } from "@/constants/api";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
@@ -67,8 +67,7 @@ export default function SystemCheckScreen() {
       setRecording(false);
       if (!recorder.uri) throw new Error("The phone did not save a recording.");
       const heard = await voice.mutateAsync({
-        audioBase64: await readBase64(recorder.uri),
-        mimeType: "audio/mp4",
+        ...(await readRecording(recorder.uri)),
       });
       setVoiceResult({
         key: "mic",
@@ -115,14 +114,12 @@ export default function SystemCheckScreen() {
               loading={run.isPending}
               onPress={() => void start()}
             />
-            {Platform.OS !== "web" ? (
-              <SecondaryButton
-                icon="mic"
-                label={recording ? t("Speak now… (4 seconds)") : t("Test this phone's microphone")}
-                disabled={recording || voice.isPending}
-                onPress={() => void testMic()}
-              />
-            ) : null}
+            <SecondaryButton
+              icon="mic"
+              label={recording ? t("Speak now… (4 seconds)") : t("Test this phone's microphone")}
+              disabled={recording || voice.isPending}
+              onPress={() => void testMic()}
+            />
           </Card>
           {error ? <InlineError message={error} /> : null}
           {rows.length ? (

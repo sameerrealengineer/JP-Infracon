@@ -4,7 +4,6 @@ import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -169,16 +168,14 @@ export default function ProfileScreen() {
         </ScrollView>
         {photoMenu && data ? (
           <Sheet visible title={t("Profile photo")} onClose={() => setPhotoMenu(false)}>
-            {Platform.OS !== "web" ? (
-              <MenuRow
-                icon="photo-camera"
-                label={t("Take photo")}
-                onPress={() => {
-                  setPhotoMenu(false);
-                  void choosePhoto("camera");
-                }}
-              />
-            ) : null}
+            <MenuRow
+              icon="photo-camera"
+              label={t("Take photo")}
+              onPress={() => {
+                setPhotoMenu(false);
+                void choosePhoto("camera");
+              }}
+            />
             <MenuRow
               icon="collections"
               label={t("Choose from gallery")}

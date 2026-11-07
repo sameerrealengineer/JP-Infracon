@@ -96,3 +96,12 @@ export function splitForSpeech(text: string): { first: string; rest: string } {
   }
   return { first: clean.slice(0, cut).trim(), rest: clean.slice(cut).trim() };
 }
+
+/** Loudness in dBFS of raw samples (-1…1), as the phone's meter reports it; -160 for silence. */
+export function rmsDb(samples: ArrayLike<number>): number {
+  if (!samples.length) return -160;
+  let sum = 0;
+  for (let index = 0; index < samples.length; index += 1) sum += samples[index] * samples[index];
+  const rms = Math.sqrt(sum / samples.length);
+  return rms > 0 ? Math.max(-160, 20 * Math.log10(rms)) : -160;
+}

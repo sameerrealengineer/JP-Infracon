@@ -6,15 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Linking,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { InlineError, SecondaryButton, formatDateTime } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import {
@@ -316,16 +308,14 @@ export function AttachmentStrip({
       ))}
       {canUpload ? (
         <View style={styles.actions}>
-          {Platform.OS !== "web" ? (
-            <View style={{ flex: 1 }}>
-              <SecondaryButton
-                icon="photo-camera"
-                label={busy === "camera" ? "Uploading…" : t("Camera")}
-                disabled={Boolean(busy)}
-                onPress={() => void takePhoto()}
-              />
-            </View>
-          ) : null}
+          <View style={{ flex: 1 }}>
+            <SecondaryButton
+              icon="photo-camera"
+              label={busy === "camera" ? "Uploading…" : t("Camera")}
+              disabled={Boolean(busy)}
+              onPress={() => void takePhoto()}
+            />
+          </View>
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="collections"
@@ -357,16 +347,14 @@ export function AttachmentStrip({
       ) : null}
       {canUpload && allowVideo ? (
         <View style={styles.actions}>
-          {Platform.OS !== "web" ? (
-            <View style={{ flex: 1 }}>
-              <SecondaryButton
-                icon="videocam"
-                label={busy === "video" ? "Uploading…" : t("Record video")}
-                disabled={Boolean(busy)}
-                onPress={() => void pickVideo(true)}
-              />
-            </View>
-          ) : null}
+          <View style={{ flex: 1 }}>
+            <SecondaryButton
+              icon="videocam"
+              label={busy === "video" ? "Uploading…" : t("Record video")}
+              disabled={Boolean(busy)}
+              onPress={() => void pickVideo(true)}
+            />
+          </View>
           <View style={{ flex: 1 }}>
             <SecondaryButton
               icon="video-library"

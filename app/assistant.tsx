@@ -29,7 +29,7 @@ import { AuthGate } from "@/components/jp/auth-gate";
 import { LiveTalk } from "@/components/jp/live-talk";
 import { AppHeader, ChipGroup, EmptyState, InlineError, Screen } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { audioFileFromBase64, compressPhoto, readBase64 } from "@/lib/device-files";
+import { audioFileFromBase64, compressPhoto, readBase64, readRecording } from "@/lib/device-files";
 import {
   ASSISTANT_PICKER_TYPES,
   MAX_ASSISTANT_FILES,
@@ -205,8 +205,7 @@ export default function AssistantScreen() {
       if (!uri || !siteId) throw new Error("No recording was captured.");
       const result = await transcribe.mutateAsync({
         siteId,
-        audioBase64: await readBase64(uri),
-        mimeType: "audio/mp4",
+        ...(await readRecording(uri)),
         language,
       });
       if (result.transcript) await send(result.transcript);
@@ -269,7 +268,7 @@ export default function AssistantScreen() {
               onChange={setLanguage}
               format={(key) => LANGUAGES[key]}
             />
-            {status.data?.voice && status.data.speech && Platform.OS !== "web" && siteId ? (
+            {status.data?.voice && status.data.speech && siteId ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("Live talk")}
@@ -440,9 +439,7 @@ export default function AssistantScreen() {
                 <View style={styles.menu}>
                   {(
                     [
-                      ...(Platform.OS !== "web"
-                        ? ([["camera", "photo-camera", "Camera"]] as const)
-                        : []),
+                      ["camera", "photo-camera", "Camera"],
                       ["gallery", "photo-library", "Gallery"],
                       ["file", "upload-file", "PDF, drawing, Word, Excel"],
                     ] as const
@@ -518,7 +515,7 @@ export default function AssistantScreen() {
                 >
                   <MaterialIcons name="send" size={22} color={colors.background} />
                 </Pressable>
-              ) : status.data?.voice && Platform.OS !== "web" ? (
+              ) : status.data?.voice ? (
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={recording ? "Stop and send" : "Speak"}
