@@ -15,9 +15,13 @@ Let admins configure per action, per period, category, and vendor limits, eviden
 - [ ] Design it (spec): `/architect approval limits & maker checker policy`
 
 ### 19. Petty cash ledger · in-progress · GA
-Site funds with custodian acknowledgement, funding, expense, and linked cash return movements, derived balances, limits, and audit exist (migrations 0010 and 0011, not yet applied to the shared database). Still open: physical cash count reconciliation with approved variances, and receipt files using feature 12.
+Site funds with custodian acknowledgement, funding, expense and linked cash return movements, derived balances, limits, receipts through feature 12, AI expense fill, and audit (migrations 0010 and 0011, now on production). Still open: physical cash count reconciliation with approved variances.
 **Done when:** a custodian counts cash against the ledger, each variance needs a reason and approval, receipts attach privately or carry a reason when missing, and the PRD example (50,000 minus 15,000, 8,000, 2,000 equals 25,000) reconciles.
-- [ ] Design it (spec): `/architect petty cash ledger`
+- [x] Build the first version (shipped before a spec; see `TODO.md` increments 2 to 6 November)
+- [ ] Verify it: `/check verify petty cash ledger`
+- [ ] Design the open items (spec): `/architect petty cash ledger`
+- [ ] Test it: `/test petty cash ledger`
+- [ ] Review and document it: `/check review petty cash ledger`, then `/document`
 code in `server/jp/petty-cash.ts`, `lib/jp/petty-cash-policy.ts`, `components/jp/petty-cash-ledger.tsx`
 
 ### 20. Supervisor reimbursements · needs a decision · GA
@@ -27,28 +31,46 @@ When a supervisor pays from their own pocket, record a separately reviewed reimb
 
 ## Slice 2: Worker pay
 
-### 26. Worker payables & advances · needs a decision · GA
-Derive what each worker is owed from approved attendance and measurements, effective rate snapshots, posted payments, and approved adjustments. No typed balance is ever authoritative.
+### 26. Worker payables & advances · in-progress · GA
+Worker khaata: advances and repayments with maker checker, recovered once through pay runs (installment suggested and capped), and paid, due and advance per person from approved attendance. Still open: disputed amounts, and measurements feeding worker pay.
 **Done when:** earned, paid, outstanding, advance, and disputed amounts show separately, and the PRD example (3,000 earned, 1,500 advance, 1,500 outstanding) holds with the advance counted once.
-- [ ] Design it (spec): `/architect worker payables & advances`
+- [x] Build the first version (shipped before a spec; see `TODO.md` increment 5 November (b))
+- [ ] Verify it: `/check verify worker payables & advances`
+- [ ] Design the open items (spec): `/architect worker payables & advances`
+- [ ] Test it: `/test worker payables & advances`
+- [ ] Review and document it: `/check review worker payables & advances`, then `/document`
+code in `server/jp/advances.ts`, `lib/jp/advance-domain.ts`, `app/khaata.tsx`
 
-### 27. Supervisor compensation records · needs a decision · GA
-Supervisor salary, benefits, and facilities in restricted, effective dated records, not generic user fields.
+### 27. Supervisor compensation records · in-progress · GA
+Payroll profiles hold monthly salary and PF/ESI/PT membership, approved by a different person, behind `payroll.*` permissions (feature 40). Still open: benefits and facilities, and a check that only finance roles can see them.
 **Done when:** only authorised finance roles can view or change a supervisor's compensation, and every change keeps its effective date and audit history.
-- [ ] Design it (spec): `/architect supervisor compensation records`
+- [x] Build the first version (shipped before a spec; see `TODO.md` increment 5 November)
+- [ ] Verify it: `/check verify supervisor compensation records`
+- [ ] Design the open items (spec): `/architect supervisor compensation records`
+- [ ] Test it: `/test supervisor compensation records`
+- [ ] Review and document it: `/check review supervisor compensation records`, then `/document`
+code in `server/jp/payroll.ts`, `app/payroll.tsx`
 
 ## Slice 3: Supplier and stock depth
 
 ### 28. Supplier invoices · in-progress · GA
-Supplier records and site invoices with server derived paise totals and reviewed states exist (migration 0007). Still open: correcting or cancelling a draft, and private invoice files using feature 12.
+Supplier records and invoices with server derived paise totals, reviewed states, private invoice files, AI bill scan into an editable draft, and matching to purchase receipts. Still open: correcting or cancelling a draft with an audit trail.
 **Done when:** a creator can correct or cancel a draft with an audit trail, invoice files attach privately, and approved files are never silently replaced.
-- [ ] Design it (spec): `/architect supplier invoices`
-code in `server/jp/finance.ts`, `lib/jp/finance-domain.ts`, `app/finance.tsx`
+- [x] Build the first version (shipped before a spec; see `TODO.md` increments 2 November (b) and (c))
+- [ ] Verify it: `/check verify supplier invoices`
+- [ ] Design the open items (spec): `/architect supplier invoices`
+- [ ] Test it: `/test supplier invoices`
+- [ ] Review and document it: `/check review supplier invoices`, then `/document`
+code in `server/jp/finance.ts`, `lib/jp/finance-domain.ts`, `app/finance.tsx`, `app/scan-bill.tsx`
 
-### 29. Procurement & delivery receipts · needs a decision
-Purchase and receipt records that invoices and stock inward link to, replacing today's free text references. Receiving goods never approves or pays an invoice by itself.
+### 29. Procurement & delivery receipts · in-progress
+Purchase orders with competing quotes, maker checker approval, goods receipts with rejection reasons that post only accepted material to stock, and three way matching against supplier bills. Still open: check that receiving never approves or pays an invoice by itself.
 **Done when:** an invoice links to a real purchase and receipt, and a receipt with rejected quantities does not raise payable or stock.
-- [ ] Design it (spec): `/architect procurement & delivery receipts`
+- [x] Build the first version (shipped before a spec; see `TODO.md` ERP slice 2)
+- [ ] Verify it: `/check verify procurement & delivery receipts`
+- [ ] Design the open items (spec): `/architect procurement & delivery receipts`
+- [ ] Test it: `/test procurement & delivery receipts`
+code in `server/jp/purchase.ts`, `lib/jp/purchase-domain.ts`, `app/purchase.tsx`
 
 ### 30. Supplier advances, notes, retention & reversals · needs a decision · GA
 Supplier advances, credit and debit notes, retention, and reversals as linked compensating entries. Posted rows are never deleted.
