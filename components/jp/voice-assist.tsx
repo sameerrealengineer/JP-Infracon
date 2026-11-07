@@ -152,6 +152,10 @@ const FORM_EXAMPLES: Record<FormId, string> = {
   crew: "e.g. Raju ki shuttering team",
   project: "e.g. Pakalapoli govt G+1 building, PWD Aska, 1 December se 31 March tak",
   site: "e.g. Pakalapoli site, code PKL001, Aska, Ganjam district",
+  purchaseOrder: "e.g. Maa Tarini se 100 bag cement 380 rupaye, 2 ton saria 62000, Friday tak",
+  workOrder: "e.g. Raju ko ground floor plaster, 450 sqm 120 rupaye, 15 din mein",
+  quotation: "e.g. School boundary wall, 120 rmt wall 2800 rupaye, 2 gate 18000",
+  raBill: "e.g. October ka bill, item 2.1 mein 35 cum, PCC 12 cum",
 };
 
 /**
@@ -165,6 +169,7 @@ export function AiFormFill({
   organizationId,
   projectId,
   onValues,
+  onLines,
 }: {
   formId: FormId;
   siteId?: string | null;
@@ -172,6 +177,8 @@ export function AiFormFill({
   organizationId?: string;
   projectId?: string;
   onValues: (values: Partial<Record<string, string>>) => void;
+  /** For forms with items: the rows the AI heard, replacing the form's rows. */
+  onLines?: (lines: Partial<Record<string, string>>[]) => void;
 }) {
   const { t } = useT();
   const colors = useColors();
@@ -194,8 +201,9 @@ export function AiFormFill({
     });
     said.current = combined;
     onValues(answer.values);
+    if (onLines && answer.lines.length) onLines(answer.lines);
     setResult({
-      filled: Object.keys(answer.values).length,
+      filled: Object.keys(answer.values).length + answer.lines.length,
       missing: answer.missing,
       question: answer.question,
     });

@@ -20,6 +20,8 @@ import { useColors } from "@/hooks/use-colors";
 import { lineAmountMinor, parseQuantity } from "@/lib/jp/billing-domain";
 import { formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
+import { AiFormFill } from "@/components/jp/voice-assist";
+import { bestNameMatch } from "@/lib/jp/form-fill";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -136,6 +138,31 @@ export default function WorkOrderEditorScreen() {
             />
           ) : (
             <>
+              <AiFormFill
+                formId="workOrder"
+                siteId={siteId}
+                onValues={(values) => {
+                  const vendor = bestNameMatch(values.subcontractor, data);
+                  if (vendor) setVendorId(vendor.id);
+                  if (values.title) setTitle(values.title);
+                  if (values.scope) setScope(values.scope);
+                  if (values.startDate) setStartDate(values.startDate);
+                  if (values.endDate) setEndDate(values.endDate);
+                  if (values.advanceRupees) setAdvance(values.advanceRupees);
+                }}
+                onLines={(rows) =>
+                  setItems(
+                    rows.map((row, index) => ({
+                      key: index + 1,
+                      itemCode: String(index + 1),
+                      description: row.description ?? "",
+                      unit: row.unit || "nos",
+                      quantity: row.quantity ?? "",
+                      rateRupees: row.rateRupees ?? "",
+                    })),
+                  )
+                }
+              />
               <Card>
                 <ChipGroup
                   label={t("Subcontractor")}

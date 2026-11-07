@@ -33,10 +33,14 @@ export type FormSpec = {
   /** The permission the person needs to fill this form; the same one the save checks. */
   permission: string;
   fields: readonly FillField[];
+  /** Repeating rows (items of an order or bill), when the form has them. */
+  lines?: { label: string; max: number; fields: readonly FillField[] };
 };
 
 export type FormFill = {
   values: Record<string, string>;
+  /** Filled rows, in the order said; empty when the form has no rows or none were said. */
+  lines: Record<string, string>[];
   /** Labels of needed fields the person has not given yet. */
   missing: string[];
   /** One short follow-up question for what is still missing, or null when nothing is. */
@@ -351,6 +355,169 @@ export const FORM_SPECS = {
       { key: "state", label: "State", type: "text", hint: "usually Odisha", max: 80 },
     ],
   },
+  purchaseOrder: {
+    id: "purchaseOrder",
+    title: "Purchase order",
+    purpose: "Orders material from a supplier for a site: the items, quantities and rates.",
+    scope: "site",
+    permission: "purchase.create",
+    fields: [
+      {
+        key: "supplier",
+        label: "Supplier",
+        type: "text",
+        hint: "the supplier's name as said, e.g. Maa Tarini Traders",
+        max: 160,
+      },
+      { key: "expectedDate", label: "Delivery by", type: "date" },
+      {
+        key: "terms",
+        label: "Terms",
+        type: "longtext",
+        hint: "only if the person said terms",
+        max: 1000,
+      },
+    ],
+    lines: {
+      label: "Items",
+      max: 30,
+      fields: [
+        {
+          key: "description",
+          label: "Item",
+          type: "text",
+          required: true,
+          hint: "e.g. OPC cement 53 grade",
+          max: 200,
+        },
+        { key: "quantity", label: "Qty", type: "number", required: true },
+        {
+          key: "unitCode",
+          label: "Unit",
+          type: "text",
+          hint: "bag, ton, kg, cum, sqft, nos, ltr, m",
+          max: 12,
+        },
+        {
+          key: "rateRupees",
+          label: "Rate ₹",
+          type: "money",
+          hint: "price of one unit, before GST",
+        },
+        { key: "gstPercent", label: "GST %", type: "number", hint: "only if said, e.g. 18 or 28" },
+      ],
+    },
+  },
+  workOrder: {
+    id: "workOrder",
+    title: "Work order",
+    purpose:
+      "Gives a piece of work to a subcontractor at a site: the scope, items, quantities and rates.",
+    scope: "site",
+    permission: "subcontract.create",
+    fields: [
+      {
+        key: "subcontractor",
+        label: "Subcontractor",
+        type: "text",
+        hint: "the subcontractor's name as said",
+        max: 160,
+      },
+      {
+        key: "title",
+        label: "Work title",
+        type: "text",
+        required: true,
+        hint: "e.g. Plastering ground floor",
+        max: 200,
+      },
+      { key: "scope", label: "Scope of work", type: "longtext", max: 4000 },
+      { key: "startDate", label: "Start date", type: "date" },
+      { key: "endDate", label: "Finish by", type: "date" },
+      { key: "advanceRupees", label: "Advance ₹", type: "money" },
+    ],
+    lines: {
+      label: "Work items",
+      max: 50,
+      fields: [
+        {
+          key: "description",
+          label: "Work item",
+          type: "text",
+          required: true,
+          hint: "e.g. 12mm cement plaster 1:6",
+          max: 300,
+        },
+        { key: "quantity", label: "Qty", type: "number", required: true },
+        { key: "unit", label: "Unit", type: "text", hint: "sqm, sqft, cum, rmt, nos", max: 12 },
+        { key: "rateRupees", label: "Rate ₹", type: "money", hint: "price of one unit" },
+      ],
+    },
+  },
+  quotation: {
+    id: "quotation",
+    title: "Quotation",
+    purpose: "Prices work for a client: a title, the items, quantities and rates.",
+    scope: "company",
+    permission: "crm.manage",
+    fields: [
+      {
+        key: "title",
+        label: "Quotation title",
+        type: "text",
+        required: true,
+        hint: "e.g. Boundary wall for school",
+        max: 200,
+      },
+      { key: "validUntil", label: "Valid until", type: "date" },
+      { key: "gstPercent", label: "GST %", type: "number", hint: "only if said" },
+      {
+        key: "terms",
+        label: "Terms",
+        type: "longtext",
+        hint: "only if the person said terms",
+        max: 2000,
+      },
+    ],
+    lines: {
+      label: "Items",
+      max: 50,
+      fields: [
+        { key: "description", label: "Item", type: "text", required: true, max: 300 },
+        { key: "quantity", label: "Qty", type: "number", required: true },
+        { key: "unit", label: "Unit", type: "text", hint: "sqm, cum, rmt, nos", max: 12 },
+        { key: "rateRupees", label: "Rate ₹", type: "money" },
+      ],
+    },
+  },
+  raBill: {
+    id: "raBill",
+    title: "RA bill",
+    purpose: "A running bill to the client: the quantity of each contract item done in this bill.",
+    scope: "company",
+    permission: "billing.create",
+    fields: [
+      { key: "periodFrom", label: "Work from", type: "date" },
+      { key: "periodTo", label: "Work to", type: "date" },
+      { key: "otherDeductionRupees", label: "Other deduction ₹", type: "money" },
+      { key: "otherDeductionNote", label: "Deduction note", type: "text", max: 300 },
+    ],
+    lines: {
+      label: "Quantities done",
+      max: 100,
+      fields: [
+        {
+          key: "item",
+          label: "Contract item",
+          type: "text",
+          required: true,
+          hint: "the item code or name as said, e.g. 2.1 or PCC",
+          max: 200,
+        },
+        { key: "quantity", label: "Qty done", type: "number", required: true },
+      ],
+    },
+  },
 } as const satisfies Record<string, FormSpec>;
 
 export type FormId = keyof typeof FORM_SPECS;
@@ -362,33 +529,55 @@ export function fillJsonSchema(spec: FormSpec) {
   // (Gemini refuses some enum shapes, such as an empty value).
   const properties: Record<string, { type: "string" }> = {};
   for (const field of spec.fields) properties[field.key] = { type: "string" };
-  properties.question = { type: "string" };
-  return { type: "object", properties, required: [...spec.fields.map((f) => f.key), "question"] };
+  const schema: Record<string, unknown> = { ...properties };
+  const required = [...spec.fields.map((f) => f.key)];
+  if (spec.lines) {
+    const row: Record<string, { type: "string" }> = {};
+    for (const field of spec.lines.fields) row[field.key] = { type: "string" };
+    schema.lines = {
+      type: "array",
+      items: { type: "object", properties: row, required: spec.lines.fields.map((f) => f.key) },
+    };
+    required.push("lines");
+  }
+  schema.question = { type: "string" };
+  required.push("question");
+  return { type: "object", properties: schema, required };
 }
 
 /** Instructions for the AI for one form. */
+function describeField(field: FillField) {
+  const kind =
+    field.type === "choice"
+      ? `one of: ${field.options!.join(" | ")}`
+      : field.type === "money"
+        ? "rupees as digits, e.g. 2500 or 2500.50"
+        : field.type === "date"
+          ? "YYYY-MM-DD"
+          : field.type === "phone"
+            ? "10-digit Indian mobile"
+            : field.type === "number"
+              ? "digits only"
+              : "text";
+  return `- ${field.key} (${field.label}${field.required ? ", needed" : ""}): ${kind}${field.hint ? `. ${field.hint}` : ""}`;
+}
+
 export function fillPrompt(spec: FormSpec, today: string) {
-  const lines = spec.fields.map((field) => {
-    const kind =
-      field.type === "choice"
-        ? `one of: ${field.options!.join(" | ")}`
-        : field.type === "money"
-          ? "rupees as digits, e.g. 2500 or 2500.50"
-          : field.type === "date"
-            ? "YYYY-MM-DD"
-            : field.type === "phone"
-              ? "10-digit Indian mobile"
-              : field.type === "number"
-                ? "digits only"
-                : "text";
-    return `- ${field.key} (${field.label}${field.required ? ", needed" : ""}): ${kind}${field.hint ? `. ${field.hint}` : ""}`;
-  });
+  const lines = spec.fields.map(describeField);
+  const rows = spec.lines
+    ? [
+        `lines: a list of ${spec.lines.label}, one entry per item the person named (at most ${spec.lines.max}), in the order said. Each entry has:`,
+        ...spec.lines.fields.map((field) => `  ${describeField(field)}`),
+        'Split "50 bag cement aur 2 ton saria" into two entries. An empty list when no item was said.',
+      ]
+    : [];
   return [
     `You fill the "${spec.title}" form of a construction company app. ${spec.purpose}`,
     `Today is ${today} (India). Turn relative dates like "kal", "tomorrow", "next Monday" into dates.`,
     "The person may speak Odia, Hindi, English or a mix. Write names and text in English letters.",
     "Fill only what the person said or clearly meant. Never invent names, numbers, phones or dates; leave a field as an empty string when it was not said.",
     `Fields:\n${lines.join("\n")}`,
+    ...rows,
     "question: if a needed field is still empty, ask for it in one short friendly sentence in the person's language; otherwise an empty string.",
   ].join("\n");
 }
@@ -441,6 +630,57 @@ export function normalizeFormFill(spec: FormSpec, raw: unknown): FormFill {
   const missing = spec.fields
     .filter((field) => field.required && !values[field.key])
     .map((field) => field.label);
+  const lines: Record<string, string>[] = [];
+  if (spec.lines && Array.isArray(source.lines)) {
+    for (const entry of source.lines.slice(0, spec.lines.max)) {
+      const row = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
+      const filled: Record<string, string> = {};
+      for (const field of spec.lines.fields) {
+        const value = normalizeValue(field, row[field.key]);
+        if (value) filled[field.key] = value;
+      }
+      // A row without its needed fields (such as what the item is) is not a row.
+      if (spec.lines.fields.every((field) => !field.required || filled[field.key])) {
+        lines.push(filled);
+      }
+    }
+  }
+  if (spec.lines && !lines.length) missing.push(spec.lines.label);
   const question = missing.length ? clean(source.question).slice(0, 300) || null : null;
-  return { values, missing, question };
+  return { values, lines, missing, question };
+}
+
+const words = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9.\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 1 || /\d/.test(word));
+
+/**
+ * Find the record the person named ("maa tarini" → "Maa Tarini Traders", "2.1" → item code 2.1).
+ * Exact code or name first, then the most shared words; null when nothing shares a word.
+ */
+export function bestNameMatch<T extends { name: string; code?: string | null }>(
+  said: string | undefined,
+  rows: readonly T[],
+): T | null {
+  const query = (said ?? "").trim().toLowerCase();
+  if (!query) return null;
+  const exact = rows.find(
+    (row) => row.code?.toLowerCase() === query || row.name.toLowerCase() === query,
+  );
+  if (exact) return exact;
+  const asked = new Set(words(query));
+  let best: T | null = null;
+  let bestScore = 0;
+  for (const row of rows) {
+    const have = words(`${row.code ?? ""} ${row.name}`);
+    const score = have.filter((word) => asked.has(word)).length / Math.max(asked.size, 1);
+    if (score > bestScore) {
+      best = row;
+      bestScore = score;
+    }
+  }
+  return bestScore >= 0.5 ? best : null;
 }

@@ -18,6 +18,8 @@ import { useColors } from "@/hooks/use-colors";
 import { billTotals, formatPercent, formatQuantity, parseQuantity } from "@/lib/jp/billing-domain";
 import { formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
+import { AiFormFill } from "@/components/jp/voice-assist";
+import { bestNameMatch } from "@/lib/jp/form-fill";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -121,6 +123,28 @@ export default function BillEditorScreen() {
             />
           ) : (
             <>
+              <AiFormFill
+                formId="raBill"
+                onValues={(values) => {
+                  if (values.periodFrom) setPeriodFrom(values.periodFrom);
+                  if (values.periodTo) setPeriodTo(values.periodTo);
+                  if (values.otherDeductionRupees) setOther(values.otherDeductionRupees);
+                  if (values.otherDeductionNote) setOtherNote(values.otherDeductionNote);
+                }}
+                onLines={(rows) => {
+                  const choices = data.items.map((item) => ({
+                    id: item.id,
+                    code: item.itemCode,
+                    name: item.description,
+                  }));
+                  const heard: Record<string, string> = {};
+                  for (const row of rows) {
+                    const match = bestNameMatch(row.item, choices);
+                    if (match && row.quantity) heard[match.id] = row.quantity;
+                  }
+                  setQuantities((prev) => ({ ...prev, ...heard }));
+                }}
+              />
               <Card>
                 <Field
                   label={t("Bill date (YYYY-MM-DD)")}

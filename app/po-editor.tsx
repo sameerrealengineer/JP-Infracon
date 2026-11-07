@@ -21,6 +21,8 @@ import { parsePercentBps, parseQuantity } from "@/lib/jp/billing-domain";
 import { formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { poTotals } from "@/lib/jp/purchase-domain";
+import { AiFormFill } from "@/components/jp/voice-assist";
+import { bestNameMatch } from "@/lib/jp/form-fill";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -188,6 +190,32 @@ export default function PoEditorScreen() {
             />
           ) : (
             <>
+              <AiFormFill
+                formId="purchaseOrder"
+                siteId={siteId}
+                onValues={(values) => {
+                  const vendor = bestNameMatch(values.supplier, data.vendors);
+                  if (vendor) setVendorId(vendor.id);
+                  if (values.expectedDate) setExpectedDate(values.expectedDate);
+                  if (values.terms) setTerms(values.terms);
+                }}
+                onLines={(rows) =>
+                  setLines(
+                    rows.map((row, index) => {
+                      const item = bestNameMatch(row.description, data.items);
+                      return {
+                        key: index + 1,
+                        materialItemId: item?.id ?? null,
+                        description: item?.name ?? row.description ?? "",
+                        unitCode: row.unitCode || item?.unitCode || "nos",
+                        quantity: row.quantity ?? "",
+                        rateRupees: row.rateRupees ?? "",
+                        gstPercent: row.gstPercent || "18",
+                      };
+                    }),
+                  )
+                }
+              />
               <Card>
                 <ChipGroup
                   label={t("Supplier")}

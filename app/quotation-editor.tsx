@@ -22,6 +22,7 @@ import {
 } from "@/lib/jp/billing-domain";
 import { formatMinorAsRupees, parseRupeesToMinor } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
+import { AiFormFill } from "@/components/jp/voice-assist";
 import { useT } from "@/lib/i18n";
 import { trpc } from "@/lib/trpc";
 
@@ -140,6 +141,27 @@ export default function QuotationEditorScreen() {
             subtitle={t("Item-wise rates with GST. The number and totals are set when you save.")}
           />
           {!clientId ? <InlineError message="Open this from a client or an enquiry." /> : null}
+          <AiFormFill
+            formId="quotation"
+            onValues={(values) => {
+              if (values.title) setTitle(values.title);
+              if (values.validUntil) setValidUntil(values.validUntil);
+              if (values.gstPercent) setGst(values.gstPercent);
+              if (values.terms) setTerms(values.terms);
+            }}
+            onLines={(rows) =>
+              setLines(
+                rows.map((row, index) => ({
+                  key: index + 1,
+                  itemCode: String(index + 1),
+                  description: row.description ?? "",
+                  unit: row.unit || "nos",
+                  quantity: row.quantity ?? "",
+                  rateRupees: row.rateRupees ?? "",
+                })),
+              )
+            }
+          />
           <Card>
             <Field label={t("Title")} value={title} onChangeText={setTitle} />
             <Field
