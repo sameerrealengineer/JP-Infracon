@@ -174,6 +174,7 @@ export default function PoEditorScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            manual="po"
             eyebrow={t("New purchase order")}
             title={t("Purchase order")}
             subtitle={t("Saved as a draft; submit it for approval from the order page.")}

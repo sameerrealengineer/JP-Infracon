@@ -132,6 +132,7 @@ function IssueForm({
   return (
     <Sheet
       visible
+      manual="issue"
       title={t("Report an issue")}
       subtitle="Safety, quality, material, access or any problem holding up work."
       onClose={onClose}

@@ -49,6 +49,13 @@ export default function HelpScreen() {
             )}
           />
 
+          <View style={{ marginBottom: 14 }}>
+            <SecondaryButton
+              icon="auto-stories"
+              label={t("Open the user manual")}
+              onPress={() => router.push("/manual" as never)}
+            />
+          </View>
           {!ready ? <LoadingBlock label={t("Loading…")} /> : null}
           {ready ? (
             <>

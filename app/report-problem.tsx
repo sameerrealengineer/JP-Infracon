@@ -53,6 +53,7 @@ export default function ReportProblemScreen() {
       <Screen>
         <ScrollView contentContainerStyle={{ paddingBottom: 36, gap: 14 }}>
           <AppHeader
+            manual="report-problem"
             eyebrow={t("Help")}
             title={t("Report a problem")}
             subtitle={t("Your admin sees it under App problems.")}

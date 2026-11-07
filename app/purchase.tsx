@@ -55,6 +55,7 @@ export default function PurchaseScreen() {
           }
         >
           <AppHeader
+            manual="po"
             right={<HelpButton topicKey="purchase" />}
             eyebrow={t("Materials & stock")}
             title={t("Purchase orders")}

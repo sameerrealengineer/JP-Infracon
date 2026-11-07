@@ -105,6 +105,7 @@ export default function BillEditorScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            manual="ra-bill"
             eyebrow={t("New RA bill")}
             title={data?.project.name ?? t("Running bill")}
             subtitle={

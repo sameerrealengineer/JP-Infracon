@@ -90,6 +90,7 @@ export default function ProjectBudgetScreen() {
           }
         >
           <AppHeader
+            manual="budget"
             right={<HelpButton topicKey="budget" />}
             eyebrow="Money"
             title="Project budget"
@@ -485,7 +486,12 @@ function BudgetSheet({
   };
 
   return (
-    <Sheet visible title={current ? "Propose a revision" : "Set the budget"} onClose={onClose}>
+    <Sheet
+      visible
+      manual="budget"
+      title={current ? "Propose a revision" : "Set the budget"}
+      onClose={onClose}
+    >
       <Field
         label="Contract value (₹, optional)"
         value={contract}

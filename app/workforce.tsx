@@ -312,6 +312,7 @@ export default function WorkforceScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            manual="worker"
             right={<HelpButton topicKey="workforce" />}
             eyebrow="People & compensation"
             title="Workforce"

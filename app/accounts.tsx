@@ -63,6 +63,7 @@ export default function AccountsScreen() {
           }
         >
           <AppHeader
+            manual="deposit"
             right={<HelpButton topicKey="accounts" />}
             eyebrow={t("Accounts")}
             title={t("Dues, GST and profit")}

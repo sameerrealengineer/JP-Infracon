@@ -32,6 +32,7 @@ export default function AlertSettingsScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <AppHeader
+            manual="alerts"
             eyebrow="Alerts"
             title="How we reach you"
             subtitle="Critical safety issues, stop-work flags, assignments and delegated authority — by app notification, WhatsApp or SMS."

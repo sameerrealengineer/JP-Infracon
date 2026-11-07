@@ -219,7 +219,7 @@ export default function PayRunScreen() {
             <LoadingBlock label="Loading pay run…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Pay run")} title={t("Not available")} />
+              <AppHeader manual="pay-run" eyebrow={t("Pay run")} title={t("Not available")} />
               <InlineError
                 message={detail.error?.message ?? "This pay run could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -228,6 +228,7 @@ export default function PayRunScreen() {
           ) : (
             <>
               <AppHeader
+                manual="pay-run"
                 eyebrow={t("Pay run")}
                 title={data.run.runNumber}
                 subtitle={`${data.siteName} · ${data.run.month}`}

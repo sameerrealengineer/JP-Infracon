@@ -96,6 +96,7 @@ export default function DocumentsScreen() {
           }
         >
           <AppHeader
+            manual="document"
             right={<HelpButton topicKey="documents" />}
             eyebrow="Records"
             title="Project documents"
@@ -380,7 +381,7 @@ function UploadSheet({
   };
 
   return (
-    <Sheet visible title="Upload a document" onClose={onClose}>
+    <Sheet visible title="Upload a document" onClose={onClose} manual="document">
       <SecondaryButton
         icon="attach-file"
         label={file ? `Chosen: ${file.name}` : "Choose file (PDF, photo, Word, Excel, CSV)"}

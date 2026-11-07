@@ -363,6 +363,7 @@ function ActionSheet({
   return (
     <Sheet
       visible
+      manual="issue-update"
       title={actionButtonLabel(action)}
       subtitle={
         action === "close" && (severity === "High" || severity === "Critical")
@@ -456,6 +457,7 @@ function AssignSheet({
   return (
     <Sheet
       visible
+      manual="issue-update"
       title="Assign owner"
       subtitle="The owner is responsible for fixing the issue by the target date."
       onClose={onClose}

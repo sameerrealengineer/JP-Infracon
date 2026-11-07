@@ -289,6 +289,7 @@ export default function UserAccountsScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            manual="account"
             right={<HelpButton topicKey="users" />}
             eyebrow="Administration"
             title="Team accounts"

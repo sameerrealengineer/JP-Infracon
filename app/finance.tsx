@@ -430,6 +430,7 @@ export default function FinanceScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            manual="invoice"
             right={<HelpButton topicKey="finance" />}
             eyebrow="Commercial records"
             title="Finance"

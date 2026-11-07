@@ -82,6 +82,7 @@ export default function PayrollScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            manual="pay-run"
             right={<HelpButton topicKey="payroll" />}
             eyebrow={t("Payroll")}
             title={t("Wages and salaries")}

@@ -74,6 +74,7 @@ export default function AttendanceScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <AppHeader
+            manual="attendance"
             right={<HelpButton topicKey="attendance" />}
             eyebrow="Workforce"
             title={t("Attendance")}

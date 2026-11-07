@@ -64,6 +64,7 @@ export default function CrmScreen() {
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
             <AppHeader
+              manual="lead"
               right={<HelpButton topicKey="crm" />}
               eyebrow={t("Business")}
               title={t("Clients & leads")}
@@ -90,6 +91,7 @@ export default function CrmScreen() {
           }
         >
           <AppHeader
+            manual="lead"
             right={<HelpButton topicKey="crm" />}
             eyebrow={t("Business")}
             title={t("Clients & leads")}

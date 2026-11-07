@@ -5,7 +5,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SecondaryButton, Sheet } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { topicByKey, type HelpTopic } from "@/lib/jp/help-content";
+import { manualModuleForSegments } from "@/lib/jp/manual-content";
 import { useT } from "@/lib/i18n";
+
+/** Help topics use screen names; the manual groups them by module. */
+function manualModuleForHelp(key: string) {
+  return manualModuleForSegments([key === "budget" ? "project-budget" : key]) ?? "start";
+}
 
 /** The guide for one module: what it is, who uses it, first step, what next, who approves. */
 export function HelpDetail({ topic }: { topic: HelpTopic }) {
@@ -60,6 +66,15 @@ export function HelpButton({ topicKey }: { topicKey: string }) {
             onPress={() => {
               setOpen(false);
               router.push("/help" as never);
+            }}
+          />
+          <View style={{ height: 8 }} />
+          <SecondaryButton
+            icon="auto-stories"
+            label={t("Open the user manual")}
+            onPress={() => {
+              setOpen(false);
+              router.push(`/manual?module=${manualModuleForHelp(topic.key)}` as never);
             }}
           />
         </View>

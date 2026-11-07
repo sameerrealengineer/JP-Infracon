@@ -136,6 +136,7 @@ export default function QuotationEditorScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            manual="quotation"
             eyebrow={t("New quotation")}
             title={client?.name ?? t("Quotation")}
             subtitle={t("Item-wise rates with GST. The number and totals are set when you save.")}

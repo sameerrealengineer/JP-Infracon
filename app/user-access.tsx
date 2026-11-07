@@ -80,6 +80,7 @@ export default function UserAccessScreen() {
           }
         >
           <AppHeader
+            manual="user-access"
             eyebrow={t("Access")}
             title={data?.user.name ?? t("User access")}
             subtitle={t(

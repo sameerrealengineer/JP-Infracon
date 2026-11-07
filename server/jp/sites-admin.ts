@@ -67,11 +67,13 @@ function fail(error: PolicyError | null) {
   if (error) throw new TRPCError({ code: error.code, message: error.message });
 }
 
-function isDuplicate(error: unknown) {
-  const text =
-    String((error as { code?: string; message?: string })?.code ?? "") +
-    String((error as { message?: string })?.message ?? "");
-  return /ER_DUP_ENTRY|Duplicate entry/i.test(text);
+function isDuplicate(error: unknown): boolean {
+  const err = error as { code?: string; message?: string; cause?: unknown } | null;
+  const text = String(err?.code ?? "") + String(err?.message ?? "");
+  // MySQL says ER_DUP_ENTRY; the offline demo (SQLite) says UNIQUE constraint failed, inside
+  // the query error's cause.
+  if (/ER_DUP_ENTRY|Duplicate entry|UNIQUE constraint failed/i.test(text)) return true;
+  return err?.cause ? isDuplicate(err.cause) : false;
 }
 
 /** Owner/Director/Admin (or a matching org-scoped grant) and the platform Super Admin manage projects and sites. */

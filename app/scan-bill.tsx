@@ -160,6 +160,7 @@ export default function ScanBillScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <AppHeader
+            manual="scan-bill"
             eyebrow="AI assistant"
             title="Scan a bill"
             subtitle="Photograph a supplier bill. The AI reads supplier, items, tax and total — you check it, then save an invoice draft or download Excel/CSV."

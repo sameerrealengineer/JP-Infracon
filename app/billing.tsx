@@ -60,6 +60,7 @@ export default function BillingScreen() {
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
             <AppHeader
+              manual="contract"
               right={<HelpButton topicKey="billing" />}
               eyebrow={t("Business")}
               title={t("Client billing")}
@@ -89,6 +90,7 @@ export default function BillingScreen() {
           }
         >
           <AppHeader
+            manual="contract"
             right={<HelpButton topicKey="billing" />}
             eyebrow={t("Business")}
             title={t("Client billing")}

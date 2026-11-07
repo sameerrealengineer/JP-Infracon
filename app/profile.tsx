@@ -92,7 +92,7 @@ export default function ProfileScreen() {
             />
           }
         >
-          <AppHeader eyebrow="Account" title={t("My profile")} />
+          <AppHeader manual="profile" eyebrow="Account" title={t("My profile")} />
           {profile.error ? (
             <InlineError message={profile.error.message} onRetry={() => void profile.refetch()} />
           ) : null}
@@ -316,7 +316,7 @@ function EditSheet({
   };
 
   return (
-    <Sheet visible title={t("Edit profile")} onClose={onClose}>
+    <Sheet visible manual="profile" title={t("Edit profile")} onClose={onClose}>
       <Field
         label="Full name"
         value={form.name}

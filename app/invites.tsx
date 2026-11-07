@@ -64,6 +64,7 @@ export default function InvitesScreen() {
           }
         >
           <AppHeader
+            manual="invite"
             eyebrow="Team accounts"
             title="Invite codes"
             subtitle="Give a person a secret one-time code. They create their own login with it — the role and site are fixed by you."
@@ -233,6 +234,7 @@ function InviteSheet({
   return (
     <Sheet
       visible
+      manual="invite"
       title="Create invite code"
       subtitle="The person chooses their own password; you never see it."
       onClose={onClose}

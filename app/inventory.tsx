@@ -320,6 +320,7 @@ export default function InventoryScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            manual="stock-movement"
             right={<HelpButton topicKey="inventory" />}
             eyebrow="Stock control"
             title="Inventory"

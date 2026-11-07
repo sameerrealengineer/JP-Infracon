@@ -59,7 +59,7 @@ export default function CrewsScreen() {
       <AuthGate>
         <Screen>
           <ScrollView contentContainerStyle={styles.content}>
-            <AppHeader eyebrow={t("People")} title={t("Crews")} />
+            <AppHeader manual="crew" eyebrow={t("People")} title={t("Crews")} />
             <NoAccess area={t("Crews")} message={list.error?.message} />
           </ScrollView>
         </Screen>
@@ -83,6 +83,7 @@ export default function CrewsScreen() {
           }
         >
           <AppHeader
+            manual="crew"
             eyebrow={t("People")}
             title={t("Crews")}
             subtitle={t("Trade-wise teams on a site: members, daily work and labour cost.")}
@@ -240,7 +241,7 @@ function NewCrewSheet({ siteId, onClose }: { siteId: string; onClose: () => void
     }
   };
   return (
-    <Sheet visible title={t("New crew")} onClose={onClose}>
+    <Sheet visible title={t("New crew")} onClose={onClose} manual="crew">
       <AiFormFill
         formId="crew"
         siteId={siteId}
@@ -307,7 +308,7 @@ function CrewSheet({ crew, data, onClose }: { crew: Crew; data: CrewList; onClos
 
   const taskOptions = ["none", ...data.tasks.map((task) => task.id)];
   return (
-    <Sheet visible title={crew.name} subtitle={t(crew.trade)} onClose={onClose}>
+    <Sheet visible title={crew.name} subtitle={t(crew.trade)} onClose={onClose} manual="crew">
       <ScrollView style={{ maxHeight: 560 }} keyboardShouldPersistTaps="handled">
         {error ? <InlineError message={error} /> : null}
 

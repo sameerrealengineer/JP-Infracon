@@ -1,4 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { ManualButton } from "@/components/jp/manual-button";
+import { manualModuleForSegments } from "@/lib/jp/manual-content";
 import { Image as PhotoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useSegments } from "expo-router";
@@ -160,6 +162,7 @@ export function AppHeader({
   notificationCount,
   userInitials,
   right,
+  manual,
 }: {
   eyebrow?: string;
   title: string;
@@ -167,6 +170,8 @@ export function AppHeader({
   notificationCount?: number;
   userInitials?: string;
   right?: ReactNode;
+  /** The manual page for the form on this screen; without it the book opens this module. */
+  manual?: string;
 }) {
   const router = useRouter();
   const colors = useColors();
@@ -204,6 +209,9 @@ export function AppHeader({
         )}
         <View style={styles.headerActions}>
           {right}
+          {segments[0] !== "manual" ? (
+            <ManualButton form={manual} module={manualModuleForSegments(segments)} />
+          ) : null}
           {assistant.data?.available && segments[0] !== "assistant" ? (
             <IconButton
               icon="auto-awesome"
@@ -971,6 +979,7 @@ export function Sheet({
   onClose,
   children,
   footer,
+  manual,
 }: {
   visible: boolean;
   title: string;
@@ -978,6 +987,8 @@ export function Sheet({
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  /** Manual page for this form: shows a book icon that opens it. */
+  manual?: string;
 }) {
   const colors = useColors();
   return (
@@ -993,6 +1004,7 @@ export function Sheet({
                 <Text style={[styles.sheetSubtitle, { color: colors.muted }]}>{subtitle}</Text>
               ) : null}
             </View>
+            {manual ? <ManualButton form={manual} /> : null}
             <IconButton icon="close" label="Close" onPress={onClose} />
           </View>
           <ScrollView

@@ -241,6 +241,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
     <Screen inTabs={inTabs}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppHeader
+          manual="material-request"
           right={<HelpButton topicKey="requests" />}
           eyebrow="Material control"
           title="Requests"

@@ -445,7 +445,12 @@ export default function SiteDetailScreen() {
         />
         <RemoveMemberSheet member={removing} onClose={() => setRemoving(null)} />
         {photo === "1" && !photoSheetClosed && loadedSite ? (
-          <Sheet visible title={t("Add site photo")} onClose={() => setPhotoSheetClosed(true)}>
+          <Sheet
+            visible
+            manual="site"
+            title={t("Add site photo")}
+            onClose={() => setPhotoSheetClosed(true)}
+          >
             <AttachmentStrip
               entityType="site"
               entityId={siteId}

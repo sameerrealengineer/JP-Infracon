@@ -17,6 +17,7 @@ import type { ExpenseDraftFields } from "@/lib/jp/ai-expense-extraction";
 import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
 import { FORM_SPECS, type FormId } from "@/lib/jp/form-fill";
+import { ManualButton } from "@/components/jp/manual-button";
 import { useT } from "@/lib/i18n";
 
 const languages = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
@@ -140,6 +141,24 @@ export function VoiceRequestAssist({
   );
 }
 
+/** The manual page for each AI-filled form. */
+const FORM_MANUAL: Record<FormId, string> = {
+  worker: "worker",
+  client: "client",
+  lead: "lead",
+  supplier: "supplier",
+  task: "task",
+  advance: "advance",
+  materialItem: "material-item",
+  crew: "crew",
+  project: "project",
+  site: "site",
+  purchaseOrder: "po",
+  workOrder: "wo",
+  quotation: "quotation",
+  raBill: "ra-bill",
+};
+
 /** Example words shown in the type box for each form. */
 const FORM_EXAMPLES: Record<FormId, string> = {
   worker: "e.g. Ramesh Behera, mistri, mobile 98765 43210",
@@ -215,6 +234,7 @@ export function AiFormFill({
       siteId={siteId ?? undefined}
       prompt="Tap the mic and say the details"
       textLabel={FORM_EXAMPLES[formId]}
+      manual={FORM_MANUAL[formId]}
       filling={fill.isPending}
       autoFill
       onFill={run}
@@ -270,7 +290,10 @@ function VoiceAssist({
   initialText = "",
   autoFill = false,
   children,
+  manual,
 }: {
+  /** Manual page for this form, opened by the book icon. */
+  manual?: string;
   /** Absent for company-wide forms (clients, enquiries). */
   siteId?: string;
   prompt: string;
@@ -362,6 +385,7 @@ function VoiceAssist({
         <Text style={[styles.title, { color: colors.foreground }]}>
           {t("Speak or type — AI fills the form")}
         </Text>
+        {manual ? <ManualButton form={manual} size={32} /> : null}
       </View>
       {children}
       <View style={styles.row}>

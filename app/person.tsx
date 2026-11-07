@@ -159,7 +159,11 @@ export default function PersonScreen() {
             <LoadingBlock label="Loading profile…" />
           ) : history.error || !data ? (
             <>
-              <AppHeader eyebrow={t("People directory")} title={t("Profile")} />
+              <AppHeader
+                manual="worker-login"
+                eyebrow={t("People directory")}
+                title={t("Profile")}
+              />
               <InlineError
                 message={history.error?.message ?? "This profile could not be opened."}
                 onRetry={() => void history.refetch()}
@@ -167,7 +171,11 @@ export default function PersonScreen() {
             </>
           ) : (
             <>
-              <AppHeader eyebrow={t("People directory")} title={data.person.fullName} />
+              <AppHeader
+                manual="worker-login"
+                eyebrow={t("People directory")}
+                title={data.person.fullName}
+              />
               <Card>
                 <View style={styles.headRow}>
                   <Avatar name={data.person.fullName} size={58} tone="gold" />

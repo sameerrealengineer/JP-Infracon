@@ -113,6 +113,7 @@ export default function ExportsScreen() {
           contentContainerStyle={{ paddingBottom: 40 }}
         >
           <AppHeader
+            manual="export"
             eyebrow="Reports"
             title="Export data"
             subtitle="Download a CSV for Excel or Google Sheets — only the sites and records you are allowed to see."

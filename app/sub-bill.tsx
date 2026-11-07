@@ -79,7 +79,11 @@ export default function SubcontractBillScreen() {
             <LoadingBlock label="Loading bill…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Subcontractor bill")} title={t("Not available")} />
+              <AppHeader
+                manual="sub-bill"
+                eyebrow={t("Subcontractor bill")}
+                title={t("Not available")}
+              />
               <InlineError
                 message={detail.error?.message ?? "This bill could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -88,6 +92,7 @@ export default function SubcontractBillScreen() {
           ) : (
             <>
               <AppHeader
+                manual="sub-bill"
                 eyebrow={t("Subcontractor bill")}
                 title={data.bill.billNumber}
                 subtitle={`${data.vendorName ?? ""} · ${data.order.title}`}

@@ -180,6 +180,7 @@ function ReportView({ data }: { data: ReportDetail }) {
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <AppHeader
+        manual="dpr"
         eyebrow={report.reportKind === "DPR" ? "Daily progress report" : "Daily labour report"}
         title={report.title}
         subtitle={`${report.siteName} · ${report.reportDate} · ${report.status}`}
@@ -500,7 +501,7 @@ function ReportForm({
   if (mode === "create" && siteOptions.length === 0)
     return (
       <ScrollView contentContainerStyle={styles.content}>
-        <AppHeader eyebrow="Field records" title="New report" />
+        <AppHeader manual="dpr" eyebrow="Field records" title="New report" />
         <EmptyState
           icon="lock-outline"
           title="No site to report on"
@@ -523,6 +524,7 @@ function ReportForm({
         contentContainerStyle={styles.content}
       >
         <AppHeader
+          manual="dpr"
           eyebrow={mode === "edit" ? "Correct report" : "New field record"}
           title={kind === "DPR" ? "Daily progress report" : "Daily labour report"}
           subtitle={

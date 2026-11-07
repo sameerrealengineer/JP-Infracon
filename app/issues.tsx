@@ -78,6 +78,7 @@ export default function IssuesScreen() {
           }
         >
           <AppHeader
+            manual="issue"
             right={<HelpButton topicKey="issues" />}
             eyebrow={t("Safety & quality")}
             title={t("Site issues")}

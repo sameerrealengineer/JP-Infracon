@@ -269,6 +269,7 @@ export default function ScheduleScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            manual="task"
             right={<HelpButton topicKey="schedule" />}
             eyebrow="Site operations"
             title="Schedule"

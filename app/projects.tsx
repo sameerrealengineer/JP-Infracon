@@ -67,6 +67,7 @@ export default function ProjectsScreen() {
           }
         >
           <AppHeader
+            manual="project"
             right={<HelpButton topicKey="projects" />}
             eyebrow="Administration"
             title="Projects & sites"

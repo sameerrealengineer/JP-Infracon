@@ -103,6 +103,7 @@ function ProjectForm({ draft, onClose }: { draft: ProjectDraft; onClose: () => v
   return (
     <Sheet
       visible
+      manual="project"
       title={editing ? "Edit project" : "New project"}
       subtitle={
         editing
@@ -252,6 +253,7 @@ function SiteForm({ draft, onClose }: { draft: SiteDraft; onClose: () => void })
   return (
     <Sheet
       visible
+      manual="site"
       title={editing ? "Edit site" : "New site"}
       subtitle={draft.projectName ? `Project · ${draft.projectName}` : undefined}
       onClose={onClose}
@@ -364,6 +366,7 @@ function StatusForm({ target, onClose }: { target: StatusTarget; onClose: () => 
   return (
     <Sheet
       visible
+      manual="site-status"
       title="Change status"
       subtitle={`${target.name} is currently ${target.status}.`}
       onClose={onClose}
@@ -433,6 +436,7 @@ function AssignForm({ siteId, onClose }: { siteId: string; onClose: () => void }
   return (
     <Sheet
       visible
+      manual="site-team"
       title="Assign to site"
       subtitle="Only active organisation members without organisation-wide access are listed."
       onClose={onClose}
@@ -525,6 +529,7 @@ function RemoveForm({
   return (
     <Sheet
       visible
+      manual="site-team"
       title="Remove from site"
       subtitle={`${member.name ?? "This person"} will lose access to this site immediately. Their past records stay.`}
       onClose={onClose}

@@ -50,6 +50,7 @@ export default function KhaataScreen() {
           ) : !data ? (
             <>
               <AppHeader
+                manual="advance"
                 right={<HelpButton topicKey="khaata" />}
                 eyebrow={t("Khaata")}
                 title={t("Not available")}
@@ -62,6 +63,7 @@ export default function KhaataScreen() {
           ) : (
             <>
               <AppHeader
+                manual="advance"
                 right={<HelpButton topicKey="khaata" />}
                 eyebrow={t("Khaata")}
                 title={data.person.name}

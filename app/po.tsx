@@ -148,7 +148,7 @@ export default function PurchaseOrderScreen() {
             <LoadingBlock label="Loading order…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Purchase order")} title={t("Not available")} />
+              <AppHeader manual="grn" eyebrow={t("Purchase order")} title={t("Not available")} />
               <InlineError
                 message={detail.error?.message ?? "This order could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -157,6 +157,7 @@ export default function PurchaseOrderScreen() {
           ) : (
             <>
               <AppHeader
+                manual="grn"
                 eyebrow={t("Purchase order")}
                 title={data.order.poNumber}
                 subtitle={`${data.vendor?.legalName ?? ""} · ${String(data.order.orderDate)}${

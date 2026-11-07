@@ -112,7 +112,7 @@ export default function LeadScreen() {
             <LoadingBlock label="Loading enquiry…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Enquiry")} title={t("Not available")} />
+              <AppHeader manual="followup" eyebrow={t("Enquiry")} title={t("Not available")} />
               <InlineError
                 message={detail.error?.message ?? "This enquiry could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -120,7 +120,7 @@ export default function LeadScreen() {
             </>
           ) : (
             <>
-              <AppHeader eyebrow={t("Enquiry")} title={data.lead.title} />
+              <AppHeader manual="followup" eyebrow={t("Enquiry")} title={data.lead.title} />
               <Card accent={STAGE_TONE[data.lead.stage as LeadStage] ?? "info"}>
                 <View style={styles.row}>
                   <StatusPill

@@ -122,6 +122,7 @@ export default function WorkOrderEditorScreen() {
           contentContainerStyle={styles.content}
         >
           <AppHeader
+            manual="wo"
             eyebrow={t("New work order")}
             title={t("Work order")}
             subtitle={t("Saved as a draft; submit it for approval from the work order page.")}

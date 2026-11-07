@@ -231,7 +231,11 @@ export default function WorkOrderScreen() {
             <LoadingBlock label="Loading work order…" />
           ) : !data ? (
             <>
-              <AppHeader eyebrow={t("Work order")} title={t("Not available")} />
+              <AppHeader
+                manual="measurement"
+                eyebrow={t("Work order")}
+                title={t("Not available")}
+              />
               <InlineError
                 message={detail.error?.message ?? "This work order could not be opened."}
                 onRetry={() => void detail.refetch()}
@@ -240,6 +244,7 @@ export default function WorkOrderScreen() {
           ) : (
             <>
               <AppHeader
+                manual="measurement"
                 eyebrow={t("Work order")}
                 title={data.order.woNumber}
                 subtitle={`${data.order.title} · ${data.vendor?.legalName ?? ""}`}

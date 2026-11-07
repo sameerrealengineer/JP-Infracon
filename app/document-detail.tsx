@@ -282,6 +282,7 @@ function VersionSheet(props: {
   return (
     <Sheet
       visible
+      manual="document"
       title="New version"
       subtitle="Earlier versions are kept."
       onClose={props.onClose}
@@ -351,7 +352,7 @@ function EditSheet({
   const [description, setDescription] = useState(document.description ?? "");
   const [error, setError] = useState<string | null>(null);
   return (
-    <Sheet visible title="Edit details" onClose={onClose}>
+    <Sheet visible manual="document" title="Edit details" onClose={onClose}>
       <Field label="Title" value={title} onChangeText={setTitle} maxLength={200} />
       <ChipGroup
         label="Category"

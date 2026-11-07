@@ -56,6 +56,7 @@ export default function SubcontractScreen() {
           }
         >
           <AppHeader
+            manual="wo"
             right={<HelpButton topicKey="subcontract" />}
             eyebrow={t("Subcontractors")}
             title={t("Work orders")}

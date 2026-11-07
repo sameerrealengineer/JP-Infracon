@@ -130,6 +130,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "auto-stories",
+      title: "User manual",
+      detail: "Every form, step by step, with examples",
+      tone: "accent",
+      route: "/manual",
+      show: true,
+    },
+    {
       icon: "diversity-3",
       title: "Crews",
       detail: "Trade teams, daily work, cost",

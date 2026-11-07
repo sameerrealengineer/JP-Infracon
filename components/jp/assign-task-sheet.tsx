@@ -53,7 +53,13 @@ export function AssignTaskSheet({
   };
 
   return (
-    <Sheet visible title={t("Assign task")} subtitle={task.title} onClose={onClose}>
+    <Sheet
+      visible
+      manual="task-assign"
+      title={t("Assign task")}
+      subtitle={task.title}
+      onClose={onClose}
+    >
       {detail.isLoading ? <LoadingBlock /> : null}
       {detail.data ? (
         <ChipGroup

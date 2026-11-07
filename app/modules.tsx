@@ -104,6 +104,7 @@ export default function ModulesScreen() {
           }
         >
           <AppHeader
+            manual="modules"
             eyebrow="Settings"
             title={t("Modules")}
             subtitle="Use only what your company needs. A module turned off is hidden for everyone; its records stay safe and come back when you turn it on."

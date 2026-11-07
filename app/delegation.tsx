@@ -61,6 +61,7 @@ export default function DelegationScreen() {
           }
         >
           <AppHeader
+            manual="delegation"
             eyebrow="Administration"
             title="Delegate authority"
             subtitle="Busy? Hand a site engineer or supervisor your approval powers for an hour, a week or a whole project — it ends on its own."
@@ -220,6 +221,7 @@ function DelegateSheet({
   return (
     <Sheet
       visible
+      manual="delegation"
       title="Delegate authority"
       subtitle="The person can act — and approve — without waiting for you, only where and while you allow."
       onClose={onClose}
@@ -320,6 +322,7 @@ function RevokeSheet({ delegationId, onClose }: { delegationId: string; onClose:
   return (
     <Sheet
       visible
+      manual="delegation"
       title="Revoke authority"
       subtitle="Takes effect immediately on the server."
       onClose={onClose}
