@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -12,6 +12,7 @@ import {
   siteAssignments,
   userContactPreferences,
   users,
+  webPushSubscriptions,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
@@ -40,6 +41,9 @@ import {
   type AlertRule,
 } from "../../lib/jp/alert-rules";
 import { disabledModulesFor } from "./module-settings";
+import { sendWebPush, webPushPublicKey } from "../web-push-send";
+
+const endpointHash = (endpoint: string) => createHash("sha256").update(endpoint).digest("hex");
 
 /** Gateway settings come only from server environment variables; nothing is configured in the app. */
 export function whatsappConfig(env = process.env): WhatsAppConfig | null {
@@ -137,11 +141,21 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
     const db = await getDb();
     if (!db || !event.recipientUserIds.length) return;
     const userIds = [...new Set(event.recipientUserIds)];
-    const [devices, prefs, rules, mutes, roles, disabledModules] = await Promise.all([
+    const [devices, browsers, prefs, rules, mutes, roles, disabledModules] = await Promise.all([
       db
         .select({ userId: pushDevices.userId, token: pushDevices.expoPushToken })
         .from(pushDevices)
         .where(and(inArray(pushDevices.userId, userIds), eq(pushDevices.status, "Active"))),
+      db
+        .select()
+        .from(webPushSubscriptions)
+        .where(
+          and(
+            inArray(webPushSubscriptions.userId, userIds),
+            eq(webPushSubscriptions.status, "Active"),
+          ),
+        )
+        .catch(() => []),
       db
         .select()
         .from(userContactPreferences)
@@ -219,6 +233,23 @@ export async function dispatchAlert(event: AlertEvent): Promise<void> {
       );
       for (const userId of new Set(pushTargets.map((device) => device.userId)))
         await log(userId, "push", result.ok ? "Sent" : "Failed", result.detail);
+    }
+
+    // Browser push for the web app (iPhone home screen, computers).
+    for (const browser of browsers) {
+      if (!decisions.get(browser.userId)?.push) continue;
+      const result = await sendWebPush(browser, {
+        title: "JP Infracon",
+        body: event.title,
+        route: event.route ?? "/notifications",
+      });
+      if (result.gone)
+        await db
+          .update(webPushSubscriptions)
+          .set({ status: "Disabled" })
+          .where(eq(webPushSubscriptions.id, browser.id))
+          .catch(() => undefined);
+      await log(browser.userId, "push", result.ok ? "Sent" : "Failed", result.detail);
     }
 
     const fullText = alertText({
@@ -408,6 +439,59 @@ export const notificationsRouter = router({
         .set({ status: "Disabled" })
         .where(
           and(eq(pushDevices.expoPushToken, input.token), eq(pushDevices.userId, ctx.user.id)),
+        );
+      return { ok: true };
+    }),
+
+  /** The public key a browser needs to subscribe; null when web push is not set up. */
+  webPushKey: protectedProcedure.query(() => ({ publicKey: webPushPublicKey() })),
+
+  /** Saves this browser's push subscription for the signed-in person. */
+  registerWebPush: protectedProcedure
+    .input(
+      z.object({
+        endpoint: z.string().url().max(2000).startsWith("https://"),
+        keys: z.object({ p256dh: z.string().min(10).max(255), auth: z.string().min(8).max(255) }),
+        userAgent: z.string().max(255).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      await db
+        .insert(webPushSubscriptions)
+        .values({
+          id: randomUUID(),
+          userId: ctx.user.id,
+          endpointHash: endpointHash(input.endpoint),
+          endpoint: input.endpoint,
+          p256dh: input.keys.p256dh,
+          auth: input.keys.auth,
+          userAgent: input.userAgent?.slice(0, 255) ?? null,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            userId: ctx.user.id,
+            p256dh: input.keys.p256dh,
+            auth: input.keys.auth,
+            status: "Active",
+            lastSeenAt: new Date(),
+          },
+        });
+      return { ok: true };
+    }),
+
+  unregisterWebPush: protectedProcedure
+    .input(z.object({ endpoint: z.string().max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = requireDb(await getDb());
+      await db
+        .update(webPushSubscriptions)
+        .set({ status: "Disabled" })
+        .where(
+          and(
+            eq(webPushSubscriptions.endpointHash, endpointHash(input.endpoint)),
+            eq(webPushSubscriptions.userId, ctx.user.id),
+          ),
         );
       return { ok: true };
     }),

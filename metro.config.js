@@ -23,6 +23,7 @@ function withOfflineDemo(metroConfig) {
     [at("server/db.ts"), at("lib/demo/server/db.ts")],
     [at("server/_core/sdk.ts"), at("lib/demo/server/sdk.ts")],
     [at("server/storage.ts"), at("lib/demo/server/storage.ts")],
+    [at("server/web-push-send.ts"), at("lib/demo/server/web-push-send.ts")],
     [at("lib/demo/link.ts"), at("lib/demo/backend.ts")],
   ]);
   const upstream = metroConfig.resolver.resolveRequest;

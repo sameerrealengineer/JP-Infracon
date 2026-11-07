@@ -17,6 +17,12 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
+import {
+  subscribeWebPush,
+  unsubscribeWebPush,
+  webPushState,
+  type WebPushState,
+} from "@/lib/web-push-client";
 import { siteAlertsEnabled, startSiteAlerts, stopSiteAlerts } from "@/lib/geofence-task";
 
 type Draft = { phone: string; whatsappOptIn: boolean; smsOptIn: boolean; pushOptIn: boolean };
@@ -47,6 +53,7 @@ export default function AlertSettingsScreen() {
           <MyCategories />
           <CompanyRules />
           <DeliveryLog />
+          <BrowserPush />
           <SiteArrivalAlerts />
         </ScrollView>
       </Screen>
@@ -430,6 +437,85 @@ function DeliveryLog() {
           </View>
         ))}
       </Card>
+    </>
+  );
+}
+
+/** Web app only: turn on notifications for this browser (iPhone: after Add to Home Screen). */
+function BrowserPush() {
+  const colors = useColors();
+  const key = trpc.jp.notifications.webPushKey.useQuery(undefined, {
+    enabled: Platform.OS === "web",
+  });
+  const register = trpc.jp.notifications.registerWebPush.useMutation();
+  const unregister = trpc.jp.notifications.unregisterWebPush.useMutation();
+  const [state, setState] = useState<WebPushState | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    let active = true;
+    void webPushState()
+      .then((value) => {
+        if (active) setState(value);
+      })
+      .catch(() => {
+        if (active) setState("unsupported");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  if (Platform.OS !== "web") return null;
+  const publicKey = key.data?.publicKey ?? null;
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      if (state === "on") {
+        const endpoint = await unsubscribeWebPush();
+        if (endpoint) await unregister.mutateAsync({ endpoint });
+        setState("off");
+      } else if (publicKey) {
+        await register.mutateAsync(await subscribeWebPush(publicKey));
+        setState("on");
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not change notifications.");
+      setState(await webPushState().catch(() => "unsupported" as const));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const detail =
+    state === "needs-home-screen"
+      ? "On iPhone: open this page in Safari → Share → Add to Home Screen, then open JP Infracon from the home screen and turn this on."
+      : state === "blocked"
+        ? "Notifications are blocked for this site. Allow them in the browser or iPhone Settings → Notifications → JP Infracon."
+        : state === "unsupported"
+          ? "This browser cannot show notifications. Use Safari on iPhone (from the home screen) or Chrome."
+          : !publicKey && !key.isLoading
+            ? "Browser notifications are not set up on the server yet. Ask your administrator."
+            : "Alerts appear on this phone or computer even when the app is closed.";
+  return (
+    <>
+      <SectionHeader
+        title="Notifications on this browser"
+        caption="Web app · iPhone and computers"
+      />
+      <Toggle
+        checked={state === "on"}
+        onToggle={() => void toggle()}
+        title={busy ? "Updating…" : "Show JP Infracon alerts on this device"}
+        detail={detail}
+        available={!busy && (state === "on" || (state === "off" && Boolean(publicKey)))}
+      />
+      {error ? <InlineError message={error} title="Notifications" /> : null}
+      {state === "on" ? (
+        <Text style={[styles.meta, { color: colors.success }]}>
+          On — alerts come to this device.
+        </Text>
+      ) : null}
     </>
   );
 }

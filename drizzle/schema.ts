@@ -1588,6 +1588,31 @@ export const pushDevices = mysqlTable(
   }),
 );
 
+/**
+ * Browser push subscriptions (the web app on iPhone or a computer). The endpoint URL is long,
+ * so it is stored as text and kept unique through its SHA-256 hash.
+ */
+export const webPushSubscriptions = mysqlTable(
+  "web_push_subscriptions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    endpointHash: varchar("endpointHash", { length: 64 }).notNull().unique(),
+    endpoint: text("endpoint").notNull(),
+    p256dh: varchar("p256dh", { length: 255 }).notNull(),
+    auth: varchar("auth", { length: 255 }).notNull(),
+    userAgent: varchar("userAgent", { length: 255 }),
+    status: mysqlEnum("status", ["Active", "Disabled"]).default("Active").notNull(),
+    lastSeenAt: timestamp("lastSeenAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    webPushUserIndex: index("web_push_user_idx").on(table.userId, table.status),
+  }),
+);
+
 /** Delivery log for push/WhatsApp/SMS alerts. Message bodies are not stored. */
 export const notificationDeliveries = mysqlTable(
   "notification_deliveries",

@@ -13,6 +13,7 @@ Scripts for running the production server on the Azure VM (deploy, watchdog, Wha
 | `watchdog.sh` | Cron every 2 minutes on the VM: health check, restart after 2 failures, WhatsApp alert to `WATCHDOG_ALERT_PHONE`, disk and backup age warnings |
 | `setup-openwa.sh` | Starts OpenWA (compose profile `openwa`), links the sending WhatsApp number by pairing code, writes `OPENWA_*` into `deploy/.env` |
 | `setup-whatsapp-bot.sh` | Turns the WhatsApp bot on or off (webhook secret, `WHATSAPP_BOT=on`); run after `setup-openwa.sh` |
+| `setup-web-push.sh` | Creates the VAPID keys for browser push once (never printed) in `deploy/.env` and restarts the API |
 | `check-ai.sh` | Checks AI, voice, bill scan and document upload dependencies on the live server |
 | `selfhost-smoke.mts` | End to end check of a fresh self hosted server; it creates records |
 | `demo-server.ts`, `build-demo-server.mjs` | Online demo: real API over SQLite sample data plus the web app (`pnpm demo:server`), with server modules swapped for `lib/demo` versions |
