@@ -26,6 +26,8 @@ A build for showing the app with no server: `EXPO_PUBLIC_JP_DEMO=1`. The app ans
 pnpm vitest run lib/demo                # backend tests on Node's built in SQLite
 EXPO_PUBLIC_JP_DEMO=1 npx expo export --platform android --output-dir /tmp/jp-demo   # bundle check
 pnpm build:demo-apk                     # APK on EAS (profile demo)
+pnpm demo:server                        # online demo: same backend + sample data over HTTP with the web app (PORT=3100, DEMO_DB_FILE, WEB_DIR=dist-web)
+pnpm audit:app [url] [outDir]           # walk every screen as each demo role; records server errors, crashes, error text
 ```
 
 ## Conventions

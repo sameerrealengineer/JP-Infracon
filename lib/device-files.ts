@@ -40,3 +40,17 @@ export async function deliverTextFile(fileName: string, content: string, mimeTyp
   if (await Sharing.isAvailableAsync())
     await Sharing.shareAsync(file.uri, { mimeType, dialogTitle: fileName });
 }
+
+/** Saves base64 audio (an assistant reply) to a cache file and returns a playable address. */
+export function audioFileFromBase64(base64: string, mimeType: string): string {
+  if (Platform.OS === "web") return `data:${mimeType};base64,${base64}`;
+  const binary = globalThis.atob
+    ? globalThis.atob(base64)
+    : Buffer.from(base64, "base64").toString("binary");
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  const file = new FsFile(Paths.cache, `assistant-${Date.now()}.mp3`);
+  file.create();
+  file.write(bytes);
+  return file.uri;
+}

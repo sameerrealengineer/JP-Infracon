@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
@@ -19,6 +20,8 @@ import { getApiBaseUrl } from "@/constants/api";
 import { languageNames, useT, type Language } from "@/lib/i18n";
 import * as Auth from "@/lib/_core/auth";
 import { DEMO_ACCOUNTS, DEMO_MODE, DEMO_PASSWORD } from "@/lib/demo/config";
+import { WorkerSelf } from "@/components/jp/worker-home";
+import { WorkerSignIn } from "@/components/jp/worker-sign-in";
 
 const companyLogo = require("../../assets/images/icon.png");
 
@@ -33,6 +36,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     staleTime: 0,
   });
   const loginMutation = trpc.auth.login.useMutation();
+  const queryClient = useQueryClient();
   const bootstrapMutation = trpc.auth.bootstrapFirstSuperAdmin.useMutation();
   const changePasswordMutation = trpc.auth.changePassword.useMutation();
   const [username, setUsername] = useState("");
@@ -43,6 +47,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registering, setRegistering] = useState(false);
+  const [workerMode, setWorkerMode] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const registerMutation = trpc.auth.registerWithInvite.useMutation();
   const [submitting, setSubmitting] = useState(false);
@@ -59,6 +64,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     };
     sessionToken: string | null;
   }) => {
+    // A new sign-in never shows records cached for whoever used this phone before.
+    queryClient.clear();
     if (result.sessionToken) await Auth.setSessionToken(result.sessionToken);
     await Auth.setUserInfo({
       id: result.user.id,
@@ -169,7 +176,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   const mustChangePassword =
     me.data?.accountStatus === "Active" && Boolean(me.data.mustChangePassword);
-  if (me.data?.accountStatus === "Active" && !mustChangePassword) return <>{children}</>;
+  if (me.data?.accountStatus === "Active" && !mustChangePassword)
+    // A worker login sees only the worker screen, whatever route was opened.
+    return me.data.loginMethod === "worker_pin" ? <WorkerSelf /> : <>{children}</>;
   if (setup.isLoading && !setup.isError)
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>
@@ -239,353 +248,385 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </View>
           <Text style={styles.title}>JP INFRACON</Text>
           <Text style={styles.tagline}>BUILDING TODAY. SHAPING TOMORROW.</Text>
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              {mustChangePassword
-                ? "Set a new password"
-                : firstRun
-                  ? "Create the Super Admin"
-                  : registering
-                    ? t("Create your account")
-                    : t("Welcome back")}
-            </Text>
-            {mustChangePassword ? (
-              <>
-                <Text style={[styles.detail, { color: colors.muted }]}>
-                  Change the temporary password before continuing. Your prior sessions will be
-                  revoked.
-                </Text>
-                <TextInput
-                  accessibilityLabel="Temporary password"
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                  placeholder="Temporary password"
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="password"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="New password"
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                  placeholder="New password (12+ characters)"
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Confirm new password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm new password"
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-              </>
-            ) : firstRun ? (
-              <>
-                <Text style={[styles.detail, { color: colors.muted }]}>
-                  Create the first Super Admin account. Use this app’s configured one-time setup
-                  key—not your login password. Leading and trailing spaces are ignored.
-                </Text>
-                <TextInput
-                  accessibilityLabel="Super Admin display name"
-                  value={displayName}
-                  onChangeText={setDisplayName}
-                  placeholder="Full name"
-                  placeholderTextColor={colors.muted}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Choose username"
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="Choose username"
-                  placeholderTextColor={colors.muted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="username"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Choose password"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Choose password (12+ characters)"
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="One-time Super Admin setup key"
-                  value={bootstrapSecret}
-                  onChangeText={setBootstrapSecret}
-                  placeholder="One-time setup key"
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="off"
-                  spellCheck={false}
-                  textContentType="none"
-                  maxLength={512}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-              </>
-            ) : registering ? (
-              <>
-                <Text style={[styles.detail, { color: colors.muted }]}>
-                  {t(
-                    "Enter the invite code your director or administrator gave you, then choose your own username and password.",
-                  )}
-                </Text>
-                <TextInput
-                  accessibilityLabel="Invite code"
-                  value={inviteCode}
-                  onChangeText={setInviteCode}
-                  placeholder={t("Invite code (e.g. ABCDE-FGH23)")}
-                  placeholderTextColor={colors.muted}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  autoComplete="off"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Choose username"
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder={t("Choose a username")}
-                  placeholderTextColor={colors.muted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="username"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Choose password"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder={t("Password (12+ characters)")}
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Confirm password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder={t("Confirm password")}
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="newPassword"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-              </>
-            ) : (
-              <>
-                <Text style={[styles.detail, { color: colors.muted }]}>
-                  {t("Sign in with the username and password your administrator gave you.")}
-                </Text>
-                <TextInput
-                  accessibilityLabel="Username"
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder={t("Username")}
-                  placeholderTextColor={colors.muted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="username"
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-                <TextInput
-                  accessibilityLabel="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder={t("Password")}
-                  placeholderTextColor={colors.muted}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  textContentType="password"
-                  returnKeyType="go"
-                  onSubmitEditing={() => {
-                    void signIn();
-                  }}
-                  style={[
-                    styles.input,
-                    {
-                      color: colors.foreground,
-                      backgroundColor: colors.background,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                />
-              </>
-            )}
-            {setup.isError ? (
-              <Text style={[styles.error, { color: colors.error }]}>
-                Account setup status could not be reached. Check your connection and retry.
+          {workerMode && !firstRun && !mustChangePassword ? (
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <WorkerSignIn onSignedIn={completeSignIn} onBack={() => setWorkerMode(false)} />
+            </View>
+          ) : (
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                {mustChangePassword
+                  ? "Set a new password"
+                  : firstRun
+                    ? "Create the Super Admin"
+                    : registering
+                      ? t("Create your account")
+                      : t("Welcome back")}
               </Text>
-            ) : null}
-            {formError ? (
-              <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
-                {formError}
-              </Text>
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              disabled={disabled}
-              onPress={() => {
-                void submit();
-              }}
-              style={({ pressed }) => [
-                styles.loginButton,
-                {
-                  backgroundColor: disabled ? colors.border : colors.primary,
-                  opacity: pressed && !disabled ? 0.82 : 1,
-                },
-              ]}
-            >
-              {submitting ? (
-                <ActivityIndicator color={colors.background} />
+              {mustChangePassword ? (
+                <>
+                  <Text style={[styles.detail, { color: colors.muted }]}>
+                    Change the temporary password before continuing. Your prior sessions will be
+                    revoked.
+                  </Text>
+                  <TextInput
+                    accessibilityLabel="Temporary password"
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    placeholder="Temporary password"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="password"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="New password"
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    placeholder="New password (12+ characters)"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Confirm new password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm new password"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                </>
+              ) : firstRun ? (
+                <>
+                  <Text style={[styles.detail, { color: colors.muted }]}>
+                    Create the first Super Admin account. Use this app’s configured one-time setup
+                    key—not your login password. Leading and trailing spaces are ignored.
+                  </Text>
+                  <TextInput
+                    accessibilityLabel="Super Admin display name"
+                    value={displayName}
+                    onChangeText={setDisplayName}
+                    placeholder="Full name"
+                    placeholderTextColor={colors.muted}
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Choose username"
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder="Choose username"
+                    placeholderTextColor={colors.muted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="username"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Choose password"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Choose password (12+ characters)"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="One-time Super Admin setup key"
+                    value={bootstrapSecret}
+                    onChangeText={setBootstrapSecret}
+                    placeholder="One-time setup key"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="off"
+                    spellCheck={false}
+                    textContentType="none"
+                    maxLength={512}
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                </>
+              ) : registering ? (
+                <>
+                  <Text style={[styles.detail, { color: colors.muted }]}>
+                    {t(
+                      "Enter the invite code your director or administrator gave you, then choose your own username and password.",
+                    )}
+                  </Text>
+                  <TextInput
+                    accessibilityLabel="Invite code"
+                    value={inviteCode}
+                    onChangeText={setInviteCode}
+                    placeholder={t("Invite code (e.g. ABCDE-FGH23)")}
+                    placeholderTextColor={colors.muted}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    autoComplete="off"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Choose username"
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder={t("Choose a username")}
+                    placeholderTextColor={colors.muted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="username"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Choose password"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={t("Password (12+ characters)")}
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Confirm password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder={t("Confirm password")}
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="newPassword"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                </>
               ) : (
-                <Text style={[styles.loginText, { color: colors.background }]}>
-                  {mustChangePassword
-                    ? "Update password"
-                    : firstRun
-                      ? "Create Super Admin account"
-                      : registering
-                        ? t("Create account")
-                        : t("Sign in")}
-                </Text>
+                <>
+                  <Text style={[styles.detail, { color: colors.muted }]}>
+                    {t("Sign in with the username and password your administrator gave you.")}
+                  </Text>
+                  <TextInput
+                    accessibilityLabel="Username"
+                    value={username}
+                    onChangeText={setUsername}
+                    placeholder={t("Username")}
+                    placeholderTextColor={colors.muted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="username"
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                  <TextInput
+                    accessibilityLabel="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={t("Password")}
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType="password"
+                    returnKeyType="go"
+                    onSubmitEditing={() => {
+                      void signIn();
+                    }}
+                    style={[
+                      styles.input,
+                      {
+                        color: colors.foreground,
+                        backgroundColor: colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  />
+                </>
               )}
-            </Pressable>
-            {!mustChangePassword && !firstRun ? (
+              {setup.isError ? (
+                <View style={{ gap: 6 }}>
+                  <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
+                    {setup.error?.message ||
+                      t("The server could not be reached. Check your connection and try again.")}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => void setup.refetch()}
+                    hitSlop={8}
+                  >
+                    <Text style={[styles.error, { color: colors.primary }]}>
+                      🔄 {t("Try again")}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
+              {formError ? (
+                <Text accessibilityRole="alert" style={[styles.error, { color: colors.error }]}>
+                  {formError}
+                </Text>
+              ) : null}
               <Pressable
                 accessibilityRole="button"
+                disabled={disabled}
                 onPress={() => {
-                  setRegistering((value) => !value);
-                  setFormError(null);
-                  setPassword("");
-                  setConfirmPassword("");
+                  void submit();
                 }}
-                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.loginButton,
+                  {
+                    backgroundColor: disabled ? colors.border : colors.primary,
+                    opacity: pressed && !disabled ? 0.82 : 1,
+                  },
+                ]}
               >
-                <Text style={[styles.switchLink, { color: colors.primary }]}>
-                  {registering
-                    ? t("Already have an account? Sign in")
-                    : t("Have an invite code? Create account")}
-                </Text>
+                {submitting ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <Text style={[styles.loginText, { color: colors.background }]}>
+                    {mustChangePassword
+                      ? "Update password"
+                      : firstRun
+                        ? "Create Super Admin account"
+                        : registering
+                          ? t("Create account")
+                          : t("Sign in")}
+                  </Text>
+                )}
               </Pressable>
-            ) : null}
-            <Text style={[styles.privacy, { color: colors.muted }]}>
-              {t("Individual accounts only. Never share your password.")}
-            </Text>
-          </View>
+              {!mustChangePassword && !firstRun ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setRegistering((value) => !value);
+                    setFormError(null);
+                    setPassword("");
+                    setConfirmPassword("");
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.switchLink, { color: colors.primary }]}>
+                    {registering
+                      ? t("Already have an account? Sign in")
+                      : t("Have an invite code? Create account")}
+                  </Text>
+                </Pressable>
+              ) : null}
+              <Text style={[styles.privacy, { color: colors.muted }]}>
+                {t("Individual accounts only. Never share your password.")}
+              </Text>
+            </View>
+          )}
+          {!workerMode && !firstRun && !mustChangePassword && !registering ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setWorkerMode(true);
+                setFormError(null);
+              }}
+              style={[styles.workerButton, { backgroundColor: colors.surface }]}
+            >
+              <Text style={[styles.workerButtonText, { color: colors.foreground }]}>
+                👷 {t("Mistri / worker login (mobile + PIN)")}
+              </Text>
+            </Pressable>
+          ) : null}
           {DEMO_MODE ? (
             !mustChangePassword && !registering ? (
               <DemoAccounts
@@ -616,6 +657,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
 const styles = StyleSheet.create({
   state: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
+  workerButton: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  workerButtonText: { fontSize: 18, fontWeight: "900", textAlign: "center" },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",

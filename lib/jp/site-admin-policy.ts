@@ -95,7 +95,15 @@ export type InboxItem = {
     | "task.overdue"
     | "issue.critical"
     | "issue.assigned"
-    | "issue.verify";
+    | "issue.verify"
+    | "purchase.review"
+    | "subcontract.review"
+    | "subcontract.check"
+    | "payroll.review"
+    | "payroll.profile"
+    | "payroll.advance"
+    | "accounts.due"
+    | "worker.help";
   title: string;
   detail: string;
   siteId: string;

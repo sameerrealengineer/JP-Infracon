@@ -6,6 +6,38 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-06 — access fixes, photos, faster AI, team tracking, project page, help, crews
+
+Delivered in source and deployed to the Azure server (typecheck, lint 0 errors, 492 unit/server tests including demo-backend flows for billing access, tracking and crews; browser checks on the demo server for each screen; APKs 1.5.1–1.5.4 built). Migration 0029 (new tables only: crews, crew_members, crew_deployments) applied on the server at deploy after a backup.
+
+- Billing/CRM/Accounts tiles now follow the company role the server checks, so a tile never opens to an error; permission refusals show "No access" in plain words instead of "Something went wrong".
+- Home "Add photo" opens the site's camera/gallery sheet; up to 10 photos at once with progress; the first photo becomes the cover.
+- Gemini calls have one deadline (45 s text, 90 s files), less thinking, and timing in the logs. Not yet measured on the live server.
+- Team tracking (leaders: all sites; project managers: their sites): monthly attendance, hours, overtime, site presence, reports, and wages/advances for people with payroll rights.
+- Project page: progress, sites, budget vs spend, client billing, documents and links, each part shown only with the right permission.
+- Help & guide plus a "?" on 21 screens; long guide text is English only for now.
+- Crews (trade-wise teams): members with history, daily work per task, labour cost from approved attendance.
+- Open: tasks have no assignee yet (no per-person task completion), help text in Hindi/Odia, AI latency measurement on the server, device testing of the new APKs.
+
+## Increment 2026-11-05 (b) — worker khaata, ECR/ESIC, per-user access, GPS alert rules, mistri app
+
+Delivered in source (typecheck, 445 unit/server tests including demo-backend flows for advances, user access, GPS rules and the worker app; live Playwright on the demo server). Migrations 0025–0027 add new tables only and are not applied anywhere yet. Sized for one company with 5–50 users.
+
+- Worker khaata: advances and repayments with maker-checker, recovered once through pay runs (installment suggested and capped), paid / due / advance per person.
+- PF ECR 2.0 text and ESIC contribution CSV from approved pay runs (ESIC still has to be pasted into the portal's .xls template).
+- Per-user access: authorised people switch any module or action On/Off per user, for all sites or one site, enforced by the server.
+- GPS alerts: per-site working hours/days (IST) and recipients; leaving the site in working hours alerts them (WhatsApp needs the recipient's opt-in); tracking on/off per person visible to site managers. Tracking cannot be forced on a phone.
+- Mistri app: mobile + 6-digit PIN login (lock after 5 wrong), simple big-tile screen with only switched-on features (money, attendance, drawings, call supervisor), also shown on a supervisor's phone for workers without a smartphone.
+- Open: read-aloud (voice) on the worker screen, OTP/forgot-PIN by WhatsApp, native-speaker review of the new Hindi/Odia text, field test with real workers.
+
+## Increment 2026-11-05 — ERP slice 4: Payroll and Accounts
+
+Delivered in source (typecheck, 413 unit/server tests incl. 8 payroll/accounts flows over the demo SQLite backend, 15 live Playwright flows on the demo server; not run against the shared database or a real bank). Migration 0024 (new tables only) is not applied anywhere yet.
+
+- Payroll per site: company statutory rates with an effective date (defaults: EPF ceiling ₹25,000 from 17 Sep 2026, ESI to ₹21,000, Odisha PT repealed from Apr 2026, overtime 2×, 50% wages rule), payroll profiles approved by a different person, monthly pay runs from approved attendance and salary (submit blocked while the month has unapproved attendance), manual TDS/advance/other deduction per line, maker-checker, "paid" as a ledger record only, payslip PDFs.
+- Accounts (company level): PF/ESI/PT/salary TDS dues from approved pay runs and contractor TDS from approved subcontract bills against recorded challans (reversible with a reason), due dates and overdue alerts in the inbox, GST by month (estimate; GSTR-2B decides credit), receivables/payables, project profit.
+- Open: a separate worker advance/loan ledger (advances are deducted per run only), salary TDS computation (entered by hand), ECR/ESIC/Form 24Q file export, ESI contribution-period locking (month-based with a warning), and CA review of the rates before the first real pay run.
+
 ## Increment 2026-11-02 (c) — delegation, invite sign-up, alerts, AI, GPS, PDF, premium motion
 
 Delivered in source (typecheck, lint with 0 errors, 176 unit tests, API build, web export and 16 Playwright flows pass; not exercised against the shared database, real gateways/AI keys, or an Android device). **Needs additive migration 0013 applied** (plus 0010–0012 if still pending).

@@ -23,10 +23,12 @@ export function IssueFormSheet({
   online,
   onClose,
   onSaved,
+  aiText,
 }: {
   visible: boolean;
   sites: { id: string; name: string }[];
   defaultSiteId?: string;
+  aiText?: string;
   online: boolean | null;
   onClose: () => void;
   onSaved: (result: { id?: string; offline: boolean }) => void;
@@ -38,6 +40,7 @@ export function IssueFormSheet({
       online={online}
       onClose={onClose}
       onSaved={onSaved}
+      aiText={aiText}
     />
   ) : null;
 }
@@ -48,9 +51,11 @@ function IssueForm({
   online,
   onClose,
   onSaved,
+  aiText,
 }: {
   sites: { id: string; name: string }[];
   defaultSiteId?: string;
+  aiText?: string;
   online: boolean | null;
   onClose: () => void;
   onSaved: (result: { id?: string; offline: boolean }) => void;
@@ -145,6 +150,7 @@ function IssueForm({
       {siteId && online !== false ? (
         <VoiceIssueAssist
           siteId={siteId}
+          initialText={aiText}
           onFields={(fields) => {
             if (fields.category) setCategory(fields.category);
             if (fields.severity) setSeverity(fields.severity);

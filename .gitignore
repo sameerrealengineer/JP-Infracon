@@ -75,3 +75,6 @@ playwright-report/
 .env
 dist-server
 deploy/.env
+dist-demo/
+demo.db
+audit-out/

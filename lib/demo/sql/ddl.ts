@@ -88,6 +88,29 @@ export function createSchemaStatements(): string[] {
   return statements;
 }
 
+/**
+ * ALTER statements for columns added to the schema after a phone's demo database was created.
+ * Only nullable columns (or ones with a constant default) can be added this way, which is all
+ * that later migrations add to existing tables.
+ */
+export function addMissingColumnStatements(existing: Record<string, Set<string>>): string[] {
+  const statements: string[] = [];
+  for (const table of schemaTables()) {
+    const config = getTableConfig(table);
+    const present = existing[config.name];
+    if (!present) continue;
+    for (const column of config.columns) {
+      if (present.has(column.name)) continue;
+      const nowDefault = column.hasDefault && is(column.default, SQL);
+      if (column.notNull && (!column.hasDefault || nowDefault)) continue;
+      statements.push(
+        `ALTER TABLE ${quote(config.name)} ADD COLUMN ${quote(column.name)} ${sqliteType(column)}${column.notNull ? " NOT NULL" : ""}${defaultClause(column)}`,
+      );
+    }
+  }
+  return statements;
+}
+
 /** Columns declared with `.onUpdateNow()`, which MySQL refreshes on every update. */
 export function onUpdateNowColumns(): TableColumns {
   const result: TableColumns = {};

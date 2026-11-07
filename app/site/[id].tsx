@@ -24,9 +24,9 @@ import {
   Screen,
   SecondaryButton,
   SectionHeader,
+  Sheet,
   StatusPill,
   formatDateTime,
-  initialsOf,
   type IconName,
   type Tone,
 } from "@/components/jp/ui";
@@ -39,21 +39,36 @@ import {
   type StatusTarget,
 } from "@/components/jp/site-admin-forms";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { useT } from "@/lib/i18n";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { Avatar } from "@/components/jp/avatar";
+import { CoverPhoto, ProgressCard } from "@/components/jp/place-visual";
 import { useColors } from "@/hooks/use-colors";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
+import { siteScopedRoute } from "@/lib/jp/site-route";
 import { trpc } from "@/lib/trpc";
 import { currentPosition } from "@/lib/geofence-task";
 import { mapsLink } from "@/lib/jp/geo";
 
 export default function SiteDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { t } = useT();
+  const { id, photo } = useLocalSearchParams<{ id: string; photo?: string }>();
   const siteId = typeof id === "string" ? id : "";
+  // "Add photo" on the home card opens this page with ?photo=1: show the camera/gallery sheet.
+  const [photoSheetClosed, setPhotoSheetClosed] = useState(false);
   const colors = useColors();
   const router = useRouter();
   const { sitesWith } = useWorkspace();
   const detail = trpc.jp.sitesAdmin.siteDetail.useQuery({ siteId }, { enabled: Boolean(siteId) });
+  const cards = trpc.jp.places.cards.useQuery();
+  const setCover = trpc.jp.places.setCover.useMutation();
+  const utils = trpc.useUtils();
+  const card = cards.data?.sites.find((row) => row.siteId === siteId);
+  const team = trpc.jp.profile.team.useQuery(undefined, { staleTime: 5 * 60_000 });
+  const photoOf = (userId: number) =>
+    team.data?.find((row) => row.userId === userId)?.photoUrl ?? null;
   const [editDraft, setEditDraft] = useState<SiteDraft | null>(null);
   const [statusTarget, setStatusTarget] = useState<StatusTarget | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -62,6 +77,27 @@ export default function SiteDetailScreen() {
   );
 
   const has = (key: string) => sitesWith(key).includes(siteId);
+  const loadedSite = detail.data?.site;
+  const canUploadPhotos = Boolean(
+    loadedSite &&
+    loadedSite.status === "Active" &&
+    (detail.data?.canManage || has("dpr.create") || has("issue.create")),
+  );
+  const setSiteCover = async (attachmentId: string) => {
+    await setCover.mutateAsync({ entityType: "site", entityId: siteId, attachmentId });
+    await Promise.all([
+      utils.jp.places.cards.invalidate(),
+      utils.jp.sitesAdmin.siteDetail.invalidate({ siteId }),
+    ]);
+  };
+  const coverChoice = detail.data?.canManage
+    ? { currentId: loadedSite?.coverAttachmentId ?? null, onSet: setSiteCover }
+    : undefined;
+  // The first photo of a site with no cover becomes its cover, so the home card shows it.
+  const coverFirstPhoto = async (attachmentId: string, isImage: boolean) => {
+    if (isImage && detail.data?.canManage && !loadedSite?.coverAttachmentId)
+      await setSiteCover(attachmentId);
+  };
   const modules: { icon: IconName; title: string; tone: Tone; route: string; show: boolean }[] = [
     {
       icon: "assignment",
@@ -120,6 +156,20 @@ export default function SiteDetailScreen() {
       show: has("finance.invoice.view") || has("finance.cash.view"),
     },
     {
+      icon: "folder-copy",
+      title: "Documents",
+      tone: "info",
+      route: "/documents",
+      show: has("document.view"),
+    },
+    {
+      icon: "account-balance-wallet",
+      title: "Budget",
+      tone: "accent",
+      route: "/project-budget",
+      show: has("budget.view"),
+    },
+    {
       icon: "history",
       title: "Audit trail",
       tone: "info",
@@ -156,6 +206,11 @@ export default function SiteDetailScreen() {
           {detail.isLoading ? <LoadingBlock label="Loading site…" /> : null}
           {data && site ? (
             <>
+              {card?.coverUrl ? (
+                <View style={{ marginBottom: 14 }}>
+                  <CoverPhoto uri={card.coverUrl} height={180} label={site.name} />
+                </View>
+              ) : null}
               <HeroCard>
                 <View style={styles.heroTop}>
                   <View style={{ flex: 1 }}>
@@ -181,6 +236,13 @@ export default function SiteDetailScreen() {
                   <Text style={styles.heroMeta}>Your role here · {prettyRole(data.myRole)}</Text>
                 </View>
               </HeroCard>
+              <View style={{ marginBottom: 12 }}>
+                <SecondaryButton
+                  icon="dashboard"
+                  label={t("Open project page")}
+                  onPress={() => router.push(`/project?id=${data.project.id}` as never)}
+                />
+              </View>
 
               {data.canManage ? (
                 <View style={styles.manageRow}>
@@ -220,6 +282,12 @@ export default function SiteDetailScreen() {
                 </View>
               ) : null}
 
+              {card ? (
+                <View style={{ marginBottom: 18 }}>
+                  <ProgressCard summary={card.progress} title="Site progress" />
+                </View>
+              ) : null}
+
               <GeofenceCard siteId={site.id} geofence={data.geofence} canManage={data.canManage} />
               {site.status !== "Active" ? (
                 <Card
@@ -248,12 +316,35 @@ export default function SiteDetailScreen() {
                           icon={module.icon}
                           title={module.title}
                           tone={module.tone}
-                          onPress={() => router.push(module.route as never)}
+                          onPress={() =>
+                            router.push(siteScopedRoute(module.route, siteId) as never)
+                          }
                         />
                       ))}
                   </View>
                 </>
               ) : null}
+
+              <SectionHeader
+                title={t("Site photos & videos")}
+                caption="Progress photos, walk-through videos and drawings for this site"
+              />
+              <Card style={{ marginBottom: 18 }}>
+                <AttachmentStrip
+                  entityType="site"
+                  entityId={site.id}
+                  title="Gallery"
+                  allowVideo
+                  canUpload={canUploadPhotos}
+                  noUploadReason={
+                    site.status !== "Active"
+                      ? t("Photos can be added only while the site is Active.")
+                      : t("Adding photos needs site management or daily report rights.")
+                  }
+                  cover={coverChoice}
+                  onUploaded={coverFirstPhoto}
+                />
+              </Card>
 
               <SectionHeader
                 title="Site team"
@@ -280,6 +371,9 @@ export default function SiteDetailScreen() {
                       {index > 0 ? <Divider /> : null}
                       <ListRow
                         icon="person"
+                        leading={
+                          <Avatar uri={photoOf(member.userId)} name={member.name} size={38} />
+                        }
                         title={member.name ?? "Unnamed account"}
                         detail={`${prettyRole(member.role)} · since ${formatDateTime(member.since)}`}
                         trailing={
@@ -320,11 +414,7 @@ export default function SiteDetailScreen() {
                           { backgroundColor: colors.surface, borderColor: colors.border },
                         ]}
                       >
-                        <View style={[styles.leaderAvatar, { backgroundColor: colors.primary }]}>
-                          <Text style={[styles.leaderInitials, { color: colors.background }]}>
-                            {initialsOf(leader.name)}
-                          </Text>
-                        </View>
+                        <Avatar uri={photoOf(leader.userId)} name={leader.name} size={36} />
                         <View>
                           <Text style={[styles.leaderName, { color: colors.foreground }]}>
                             {leader.name ?? "Unnamed"}
@@ -354,6 +444,23 @@ export default function SiteDetailScreen() {
           onClose={() => setAssignOpen(false)}
         />
         <RemoveMemberSheet member={removing} onClose={() => setRemoving(null)} />
+        {photo === "1" && !photoSheetClosed && loadedSite ? (
+          <Sheet visible title={t("Add site photo")} onClose={() => setPhotoSheetClosed(true)}>
+            <AttachmentStrip
+              entityType="site"
+              entityId={siteId}
+              title={t("Take a photo or choose from the gallery")}
+              canUpload={canUploadPhotos}
+              noUploadReason={
+                loadedSite.status !== "Active"
+                  ? t("Photos can be added only while the site is Active.")
+                  : t("Adding photos needs site management or daily report rights.")
+              }
+              cover={coverChoice}
+              onUploaded={coverFirstPhoto}
+            />
+          </Sheet>
+        ) : null}
       </Screen>
     </AuthGate>
   );
@@ -386,14 +493,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 10,
   },
-  leaderAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  leaderInitials: { fontSize: 12, fontWeight: "800" },
   leaderName: { fontSize: 13, fontWeight: "800" },
   leaderRole: { fontSize: 11, marginTop: 2 },
   footnote: { fontSize: 11, marginBottom: 8 },
@@ -409,6 +508,7 @@ function GeofenceCard({
   canManage: boolean;
 }) {
   const colors = useColors();
+  const router = useRouter();
   const utils = trpc.useUtils();
   const setFence = trpc.jp.sitesAdmin.setGeofence.useMutation();
   const [radius, setRadius] = useState<"100" | "200" | "500" | "1000">(
@@ -468,6 +568,11 @@ function GeofenceCard({
                     : "Set to my current location"
               }
               onPress={() => void save()}
+            />
+            <SecondaryButton
+              icon="share-location"
+              label="GPS alerts: working hours and who is told"
+              onPress={() => router.push(`/site-presence?siteId=${siteId}` as never)}
             />
           </>
         ) : null}

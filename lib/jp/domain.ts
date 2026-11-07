@@ -48,6 +48,11 @@ export type FieldReport = {
   lineSummary: string;
   clientMutationId?: string;
   remarks?: string;
+  nextDayPlan?: string;
+  weatherCode?: string;
+  overallStatus?: string;
+  /** DPR work lines as typed; the server checks them again when the draft syncs. */
+  items?: import("./dpr-domain").DprItemInput[];
 };
 
 export type MaterialRequest = {

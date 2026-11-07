@@ -6,6 +6,14 @@ import {
   materialRequests,
   pettyCashFunds,
   pettyCashMovements,
+  purchaseOrders,
+  subcontractBills,
+  workMeasurements,
+  payrollProfiles,
+  workerAdvances,
+  payrollRuns,
+  people,
+  workOrders,
   siteIssues,
   sites,
   supplierInvoices,
@@ -16,6 +24,9 @@ import {
 import type { getDb } from "../db";
 import { formatMinorAsRupees } from "../../lib/jp/finance-domain";
 import { sortInbox, type InboxItem } from "../../lib/jp/site-admin-policy";
+import { openDues } from "./books";
+import { openWorkerRequests } from "./reports";
+import { WORKER_PROBLEMS } from "../../lib/jp/app-reports";
 
 type Db = NonNullable<Awaited<ReturnType<typeof getDb>>>;
 type Capability = { siteId: string } & Partial<Record<string, boolean | string>>;
@@ -96,6 +107,10 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
     }
   });
   await guard("returned", async () => {
+    const reportSites = [
+      ...new Set([...sitesWith(capabilities, "dpr.view"), ...sitesWith(capabilities, "dlr.view")]),
+    ];
+    if (!reportSites.length) return;
     const returned = await db
       .select({
         id: dailyReports.id,
@@ -112,7 +127,8 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         and(
           eq(dailyReports.createdBy, userId),
           eq(dailyReports.status, "Returned for Correction"),
-          inArray(dailyReports.siteId, allSiteIds),
+          // Only sites where reports are visible, so a turned-off module stays out of the inbox.
+          inArray(dailyReports.siteId, reportSites),
         ),
       )
       .limit(LIMIT);
@@ -126,6 +142,305 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         siteName: row.siteName,
         occurredAt: iso(row.at),
         route: "/(tabs)/reports",
+        severity: "high",
+      });
+  });
+  await guard("purchase", async () => {
+    const approveSites = sitesWith(capabilities, "purchase.approve");
+    if (!approveSites.length) return;
+    const rows = await db
+      .select({
+        id: purchaseOrders.id,
+        poNumber: purchaseOrders.poNumber,
+        total: purchaseOrders.totalMinor,
+        vendorName: vendors.legalName,
+        siteId: purchaseOrders.siteId,
+        siteName: sites.name,
+        at: purchaseOrders.updatedAt,
+      })
+      .from(purchaseOrders)
+      .innerJoin(sites, eq(purchaseOrders.siteId, sites.id))
+      .innerJoin(vendors, eq(purchaseOrders.vendorId, vendors.id))
+      .where(
+        and(
+          inArray(purchaseOrders.siteId, approveSites),
+          eq(purchaseOrders.status, "Submitted"),
+          ne(purchaseOrders.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(purchaseOrders.updatedAt))
+      .limit(LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `purchase-${row.id}`,
+        kind: "purchase.review",
+        title: "Purchase order awaiting approval",
+        detail: `${row.poNumber} · ${row.vendorName} · ${formatMinorAsRupees(row.total)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/po?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+  });
+  await guard("subcontract", async () => {
+    const approveSites = sitesWith(capabilities, "subcontract.approve");
+    if (!approveSites.length) return;
+    const orders = await db
+      .select({
+        id: workOrders.id,
+        woNumber: workOrders.woNumber,
+        title: workOrders.title,
+        value: workOrders.valueMinor,
+        vendorName: vendors.legalName,
+        siteId: workOrders.siteId,
+        siteName: sites.name,
+        at: workOrders.updatedAt,
+      })
+      .from(workOrders)
+      .innerJoin(sites, eq(workOrders.siteId, sites.id))
+      .innerJoin(vendors, eq(workOrders.vendorId, vendors.id))
+      .where(
+        and(
+          inArray(workOrders.siteId, approveSites),
+          eq(workOrders.status, "Submitted"),
+          ne(workOrders.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workOrders.updatedAt))
+      .limit(LIMIT);
+    for (const row of orders)
+      items.push({
+        id: `wo-${row.id}`,
+        kind: "subcontract.review",
+        title: "Work order awaiting approval",
+        detail: `${row.woNumber} · ${row.vendorName} · ${formatMinorAsRupees(row.value)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/work-order?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const bills = await db
+      .select({
+        id: subcontractBills.id,
+        billNumber: subcontractBills.billNumber,
+        net: subcontractBills.netPayableMinor,
+        workOrderId: subcontractBills.workOrderId,
+        siteId: subcontractBills.siteId,
+        siteName: sites.name,
+        at: subcontractBills.updatedAt,
+      })
+      .from(subcontractBills)
+      .innerJoin(sites, eq(subcontractBills.siteId, sites.id))
+      .where(
+        and(
+          inArray(subcontractBills.siteId, approveSites),
+          eq(subcontractBills.status, "Submitted"),
+          ne(subcontractBills.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(subcontractBills.updatedAt))
+      .limit(LIMIT);
+    for (const row of bills)
+      items.push({
+        id: `sub-bill-${row.id}`,
+        kind: "subcontract.review",
+        title: "Subcontractor bill awaiting approval",
+        detail: `${row.billNumber} · net ${formatMinorAsRupees(row.net)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/sub-bill?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const waiting = await db
+      .select({
+        workOrderId: workMeasurements.workOrderId,
+        woNumber: workOrders.woNumber,
+        siteId: workMeasurements.siteId,
+        siteName: sites.name,
+        at: workMeasurements.createdAt,
+      })
+      .from(workMeasurements)
+      .innerJoin(workOrders, eq(workMeasurements.workOrderId, workOrders.id))
+      .innerJoin(sites, eq(workMeasurements.siteId, sites.id))
+      .where(
+        and(
+          inArray(workMeasurements.siteId, approveSites),
+          eq(workMeasurements.status, "Recorded"),
+          ne(workMeasurements.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workMeasurements.createdAt))
+      .limit(200);
+    const perOrder = new Map<string, (typeof waiting)[number] & { count: number }>();
+    for (const row of waiting) {
+      const entry = perOrder.get(row.workOrderId);
+      if (entry) entry.count += 1;
+      else perOrder.set(row.workOrderId, { ...row, count: 1 });
+    }
+    for (const row of perOrder.values())
+      items.push({
+        id: `mb-${row.workOrderId}`,
+        kind: "subcontract.check",
+        title: "Measurements to check",
+        detail: `${row.woNumber} · ${row.count} ${row.count === 1 ? "entry" : "entries"}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/work-order?siteId=${row.siteId}&id=${row.workOrderId}`,
+        severity: "normal",
+      });
+  });
+  await guard("payroll", async () => {
+    const approveSites = sitesWith(capabilities, "payroll.approve");
+    if (!approveSites.length) return;
+    const runs = await db
+      .select({
+        id: payrollRuns.id,
+        runNumber: payrollRuns.runNumber,
+        net: payrollRuns.netMinor,
+        count: payrollRuns.lineCount,
+        siteId: payrollRuns.siteId,
+        siteName: sites.name,
+        at: payrollRuns.submittedAt,
+      })
+      .from(payrollRuns)
+      .innerJoin(sites, eq(payrollRuns.siteId, sites.id))
+      .where(
+        and(
+          inArray(payrollRuns.siteId, approveSites),
+          eq(payrollRuns.status, "Submitted"),
+          ne(payrollRuns.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(payrollRuns.submittedAt))
+      .limit(LIMIT);
+    for (const row of runs)
+      items.push({
+        id: `pay-run-${row.id}`,
+        kind: "payroll.review",
+        title: "Pay run awaiting approval",
+        detail: `${row.runNumber} · ${row.count} people · net ${formatMinorAsRupees(row.net)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/pay-run?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+    const profiles = await db
+      .select({
+        id: payrollProfiles.id,
+        name: people.fullName,
+        payType: payrollProfiles.payType,
+        siteId: payrollProfiles.siteId,
+        siteName: sites.name,
+        at: payrollProfiles.createdAt,
+      })
+      .from(payrollProfiles)
+      .innerJoin(people, eq(payrollProfiles.personId, people.id))
+      .innerJoin(sites, eq(payrollProfiles.siteId, sites.id))
+      .where(
+        and(
+          inArray(payrollProfiles.siteId, approveSites),
+          eq(payrollProfiles.status, "Pending"),
+          ne(payrollProfiles.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(payrollProfiles.createdAt))
+      .limit(LIMIT);
+    for (const row of profiles)
+      items.push({
+        id: `pay-profile-${row.id}`,
+        kind: "payroll.profile",
+        title: "Pay details to approve",
+        detail: `${row.name} · ${row.payType === "Monthly" ? "monthly salary" : "daily wages"}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/payroll?siteId=${row.siteId}&tab=people`,
+        severity: "normal",
+      });
+  });
+  await guard("advances", async () => {
+    const approveSites = sitesWith(capabilities, "payroll.approve");
+    if (!approveSites.length) return;
+    const rows = await db
+      .select({
+        id: workerAdvances.id,
+        entryType: workerAdvances.entryType,
+        amount: workerAdvances.amountMinor,
+        name: people.fullName,
+        personId: workerAdvances.personId,
+        siteId: workerAdvances.siteId,
+        siteName: sites.name,
+        at: workerAdvances.createdAt,
+      })
+      .from(workerAdvances)
+      .innerJoin(people, eq(workerAdvances.personId, people.id))
+      .innerJoin(sites, eq(workerAdvances.siteId, sites.id))
+      .where(
+        and(
+          inArray(workerAdvances.siteId, approveSites),
+          eq(workerAdvances.status, "Pending"),
+          ne(workerAdvances.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(workerAdvances.createdAt))
+      .limit(LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `advance-${row.id}`,
+        kind: "payroll.advance",
+        title: row.entryType === "Advance" ? "Advance to approve" : "Advance repayment to approve",
+        detail: `${row.name} · ${formatMinorAsRupees(row.amount)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/payroll?siteId=${row.siteId}&tab=khaata`,
+        severity: "normal",
+      });
+  });
+  await guard("worker-help", async () => {
+    const reviewSites = sitesWith(capabilities, "workforce.review");
+    const rows = await openWorkerRequests(db, reviewSites, LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `worker-help-${row.id}`,
+        kind: "worker.help",
+        title: row.source === "pin_reset" ? "Worker forgot PIN" : "Worker needs help",
+        detail:
+          row.source === "pin_reset"
+            ? `${row.name} · set a new PIN`
+            : `${row.name} · ${WORKER_PROBLEMS.find((p) => p.key === row.category)?.label ?? row.category}`,
+        siteId: row.siteId!,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/person?id=${row.personId}`,
+        severity: "normal",
+      });
+  });
+  await guard("accounts", async () => {
+    const manageSites = sitesWith(capabilities, "accounts.manage");
+    if (!manageSites.length) return;
+    const [site] = await db
+      .select({ organizationId: sites.organizationId })
+      .from(sites)
+      .where(eq(sites.id, manageSites[0]))
+      .limit(1);
+    if (!site) return;
+    const open = await openDues(db, site.organizationId);
+    for (const line of open.filter((row) => row.state === "Overdue").slice(0, LIMIT))
+      items.push({
+        id: `due-${line.kind}-${line.period}`,
+        kind: "accounts.due",
+        title: `${line.kind} for ${line.period} is overdue`,
+        detail: `${formatMinorAsRupees(line.outstandingMinor)} was due on ${line.dueDate}`,
+        siteId: manageSites[0],
+        siteName: "Company",
+        occurredAt: iso(line.dueDate),
+        route: "/accounts",
         severity: "high",
       });
   });

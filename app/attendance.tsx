@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { HelpButton } from "@/components/jp/help";
 import { RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import {
@@ -29,6 +30,7 @@ import {
 import { formatMinorAsRupees } from "@/lib/jp/finance-domain";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
 
@@ -55,7 +57,8 @@ export default function AttendanceScreen() {
   const siteOptions = (sites.data ?? []).filter((site) =>
     sitesWith("attendance.view").includes(site.id),
   );
-  const [chosenSite, setChosenSite] = useState<string | null>(null);
+  const siteParam = useSiteParam();
+  const [chosenSite, setChosenSite] = useState<string | null>(siteParam || null);
   const siteId = resolveSelectedId(siteOptions, chosenSite);
   const [view, setView] = useState<(typeof views)[number]>("Mark attendance");
   const canSeeCost = sitesWith("compensation.view").includes(siteId);
@@ -71,6 +74,7 @@ export default function AttendanceScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <AppHeader
+            right={<HelpButton topicKey="attendance" />}
             eyebrow="Workforce"
             title={t("Attendance")}
             subtitle="Mark daily attendance, approve it, and see the estimated labour cost."

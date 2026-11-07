@@ -2,13 +2,16 @@ import { createRequire } from "node:module";
 import type { SqlDriver } from "../sql/engine";
 import type { SqlParam } from "../sql/translate";
 
-/** In-memory SQLite through Node's built in module, for tests of the offline demo backend. */
-export function createNodeDriver(): SqlDriver {
+/**
+ * SQLite through Node's built in module: in memory for tests of the offline demo backend, or a
+ * file for the online demo server.
+ */
+export function createNodeDriver(fileName = ":memory:"): SqlDriver {
   // Loaded at run time: Vite does not know the newer node:sqlite built in.
   const { DatabaseSync } = createRequire(import.meta.url)(
     "node:sqlite",
   ) as typeof import("node:sqlite");
-  const db = new DatabaseSync(":memory:");
+  const db = new DatabaseSync(fileName);
   const bind = (params: SqlParam[]) => params as (string | number | null | Uint8Array)[];
   return {
     async all(sql, params) {

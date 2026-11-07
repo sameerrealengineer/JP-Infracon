@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  type AnyMySqlColumn,
 } from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import { issueCategories } from "../lib/jp/issue-policy";
@@ -149,6 +150,8 @@ export const projects = mysqlTable(
     projectManagerUserId: int("projectManagerUserId").references(() => users.id, {
       onDelete: "restrict",
     }),
+    /** Cover photo: one of the project's own attachments (entityType "project"). */
+    coverAttachmentId: varchar("coverAttachmentId", { length: 36 }),
     createdBy: int("createdBy")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
@@ -182,6 +185,8 @@ export const sites = mysqlTable(
     district: varchar("district", { length: 120 }),
     state: varchar("state", { length: 120 }),
     timeZone: varchar("timeZone", { length: 64 }).default("Asia/Kolkata").notNull(),
+    /** Cover photo: one of the site's own attachments (entityType "site"). */
+    coverAttachmentId: varchar("coverAttachmentId", { length: 36 }),
     status: mysqlEnum("status", ["Active", "On Hold", "Completed", "Inactive"])
       .default("Active")
       .notNull(),
@@ -264,6 +269,12 @@ export const workTasks = mysqlTable(
       .default("Planned")
       .notNull(),
     holdReason: text("holdReason"),
+    /** The person responsible for the task (a site team member), if one is chosen. */
+    assigneeUserId: int("assigneeUserId").references(() => users.id, { onDelete: "restrict" }),
+    /** The crew doing the work, if one is chosen. */
+    crewId: varchar("crewId", { length: 36 }).references((): AnyMySqlColumn => crews.id, {
+      onDelete: "restrict",
+    }),
     scheduleRevision: int("scheduleRevision").default(1).notNull(),
     recordVersion: int("recordVersion").default(1).notNull(),
     clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
@@ -654,8 +665,10 @@ export const dailyReports = mysqlTable(
   (table) => ({
     reportSiteDateIndex: index("daily_report_site_date_idx").on(table.siteId, table.reportDate),
     reportStatusIndex: index("daily_report_status_idx").on(table.organizationId, table.status),
-    reportRevisionUnique: uniqueIndex("daily_report_site_date_shift_revision_uq").on(
+    // A DPR and a DLR for the same site, day and shift are separate records.
+    reportRevisionUnique: uniqueIndex("daily_report_site_kind_date_shift_revision_uq").on(
       table.siteId,
+      table.reportKind,
       table.reportDate,
       table.shiftCode,
       table.revisionNumber,
@@ -1709,5 +1722,1432 @@ export const delegationGrants = mysqlTable(
   },
   (table) => ({
     delegationGrantUnique: uniqueIndex("delegation_grant_uq").on(table.delegationId, table.grantId),
+  }),
+);
+
+/**
+ * A project document (contract, drawing, BOQ, bill, approval, photo…). The file itself is an
+ * `attachments` row per version; this row holds what people search and filter by.
+ */
+export const projectDocuments = mysqlTable(
+  "project_documents",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    /** Null for a project-wide document; set when it belongs to one site. */
+    siteId: varchar("siteId", { length: 36 }).references(() => sites.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 64 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    tags: varchar("tags", { length: 500 }),
+    currentVersion: int("currentVersion").default(1).notNull(),
+    status: mysqlEnum("status", ["Active", "Archived"]).default("Active").notNull(),
+    /** What the AI reader found; suggestions only, never used for money or approvals. */
+    aiDocumentType: varchar("aiDocumentType", { length: 80 }),
+    aiSummary: text("aiSummary"),
+    aiFields: text("aiFields"),
+    indexStatus: mysqlEnum("indexStatus", ["Pending", "Indexed", "Keyword only", "Failed"])
+      .default("Pending")
+      .notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    documentProjectIndex: index("project_document_project_idx").on(
+      table.organizationId,
+      table.projectId,
+      table.status,
+    ),
+    documentSiteIndex: index("project_document_site_idx").on(table.siteId),
+  }),
+);
+
+/** Every uploaded file of a document, kept when it is replaced. */
+export const projectDocumentVersions = mysqlTable(
+  "project_document_versions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    documentId: varchar("documentId", { length: 36 })
+      .notNull()
+      .references(() => projectDocuments.id, { onDelete: "restrict" }),
+    versionNumber: int("versionNumber").notNull(),
+    attachmentId: varchar("attachmentId", { length: 36 })
+      .notNull()
+      .references(() => attachments.id, { onDelete: "restrict" }),
+    note: varchar("note", { length: 500 }),
+    uploadedBy: int("uploadedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    documentVersionUnique: uniqueIndex("project_document_version_uq").on(
+      table.documentId,
+      table.versionNumber,
+    ),
+  }),
+);
+
+/**
+ * Search passages of a document's current version: text for keyword matching and, when an AI
+ * key is set, an embedding (JSON array) for meaning search. Rebuilt when a version is added.
+ */
+export const documentChunks = mysqlTable(
+  "document_chunks",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    documentId: varchar("documentId", { length: 36 })
+      .notNull()
+      .references(() => projectDocuments.id, { onDelete: "restrict" }),
+    versionNumber: int("versionNumber").notNull(),
+    chunkIndex: int("chunkIndex").notNull(),
+    content: text("content").notNull(),
+    embedding: text("embedding"),
+    embeddingModel: varchar("embeddingModel", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    chunkDocumentIndex: index("document_chunk_document_idx").on(table.documentId, table.chunkIndex),
+  }),
+);
+
+/**
+ * A project budget revision. Each change is a new revision: proposed by one person, approved
+ * or rejected by another. The approved revision is the current budget; older approved ones
+ * become Superseded. Totals are set by the server from the lines.
+ */
+export const projectBudgets = mysqlTable(
+  "project_budgets",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    revisionNumber: int("revisionNumber").notNull(),
+    status: mysqlEnum("status", ["Proposed", "Approved", "Rejected", "Superseded"])
+      .default("Proposed")
+      .notNull(),
+    /** Agreement value with the client, when recorded. */
+    contractValueMinor: decimal("contractValueMinor", { precision: 18, scale: 0, mode: "string" }),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("INR").notNull(),
+    reason: text("reason"),
+    proposedBy: int("proposedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    budgetRevisionUnique: uniqueIndex("project_budget_revision_uq").on(
+      table.projectId,
+      table.revisionNumber,
+    ),
+    budgetProjectStatusIndex: index("project_budget_project_status_idx").on(
+      table.projectId,
+      table.status,
+    ),
+  }),
+);
+
+/** Amount per cost head in one budget revision. */
+export const projectBudgetLines = mysqlTable(
+  "project_budget_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    budgetId: varchar("budgetId", { length: 36 })
+      .notNull()
+      .references(() => projectBudgets.id, { onDelete: "restrict" }),
+    costHead: varchar("costHead", { length: 64 }).notNull(),
+    amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    note: varchar("note", { length: 300 }),
+  },
+  (table) => ({
+    budgetLineHeadUnique: uniqueIndex("project_budget_line_head_uq").on(
+      table.budgetId,
+      table.costHead,
+    ),
+  }),
+);
+
+/**
+ * A person's own profile: work details and a photo. The mobile number for alerts stays in
+ * user_contact_preferences so there is one place for it.
+ */
+export const userProfiles = mysqlTable("user_profiles", {
+  userId: int("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "restrict" }),
+  designation: varchar("designation", { length: 120 }),
+  department: varchar("department", { length: 120 }),
+  addressLine: varchar("addressLine", { length: 300 }),
+  city: varchar("city", { length: 120 }),
+  district: varchar("district", { length: 120 }),
+  state: varchar("state", { length: 120 }),
+  pincode: varchar("pincode", { length: 10 }),
+  emergencyContact: varchar("emergencyContact", { length: 160 }),
+  photoStorageKey: varchar("photoStorageKey", { length: 240 }),
+  photoContentType: varchar("photoContentType", { length: 64 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Company-wide settings, such as which optional modules are turned off. */
+export const organizationSettings = mysqlTable("organization_settings", {
+  organizationId: varchar("organizationId", { length: 36 })
+    .primaryKey()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  /** JSON array of module keys that are turned off (see lib/jp/modules.ts). */
+  disabledModules: text("disabledModules"),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Extra details for a worker, technician or subcontractor contact: address, a second phone,
+ * and the subcontractor firm (vendor) they belong to, so bills and payments show on their profile.
+ */
+export const personDetails = mysqlTable("person_details", {
+  personId: varchar("personId", { length: 36 })
+    .primaryKey()
+    .references(() => people.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  addressLine: varchar("addressLine", { length: 300 }),
+  city: varchar("city", { length: 120 }),
+  district: varchar("district", { length: 120 }),
+  pincode: varchar("pincode", { length: 10 }),
+  alternatePhone: varchar("alternatePhone", { length: 40 }),
+  vendorId: varchar("vendorId", { length: 36 }).references(() => vendors.id, {
+    onDelete: "restrict",
+  }),
+  notes: text("notes"),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Append-only notes on a person's work: quality ratings, defaults (left the job, bad work),
+ * safety and praise. A wrong entry is answered by a new one, never edited.
+ */
+export const personFeedback = mysqlTable(
+  "person_feedback",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    kind: mysqlEnum("kind", [
+      "Quality",
+      "Default",
+      "Safety",
+      "Praise",
+      "Payment dispute",
+    ]).notNull(),
+    /** 1 to 5 stars; only for Quality entries. */
+    rating: int("rating"),
+    note: text("note").notNull(),
+    recordedBy: int("recordedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    personFeedbackPersonIndex: index("person_feedback_person_idx").on(
+      table.personId,
+      table.createdAt,
+    ),
+  }),
+);
+
+/** Company rule: for one alert category and role, which channels are used (see lib/jp/alert-rules.ts). */
+export const alertRules = mysqlTable(
+  "alert_rules",
+  {
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 32 }).notNull(),
+    role: varchar("role", { length: 32 }).notNull(),
+    push: mysqlEnum("push", ["Yes", "No"]).default("Yes").notNull(),
+    whatsapp: mysqlEnum("whatsapp", ["Yes", "No"]).default("Yes").notNull(),
+    sms: mysqlEnum("sms", ["Yes", "No"]).default("Yes").notNull(),
+    detail: mysqlEnum("detail", ["full", "title"]).default("full").notNull(),
+    updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    alertRuleUnique: uniqueIndex("alert_rule_org_category_role_uq").on(
+      table.organizationId,
+      table.category,
+      table.role,
+    ),
+  }),
+);
+
+/** Alert categories a person muted for themselves. */
+export const userAlertMutes = mysqlTable(
+  "user_alert_mutes",
+  {
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    category: varchar("category", { length: 32 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userAlertMuteUnique: uniqueIndex("user_alert_mute_uq").on(table.userId, table.category),
+  }),
+);
+
+/**
+ * WhatsApp bot conversation log: each inbound message (deduplicated by WhatsApp id) and each
+ * reply. Gives the bot short context and lets admins see what it said.
+ */
+export const whatsappBotMessages = mysqlTable(
+  "whatsapp_bot_messages",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    waMessageId: varchar("waMessageId", { length: 191 }).unique(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    userId: int("userId").references(() => users.id, { onDelete: "restrict" }),
+    direction: mysqlEnum("direction", ["in", "out"]).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    whatsappBotPhoneIndex: index("whatsapp_bot_phone_idx").on(table.phone, table.createdAt),
+  }),
+);
+
+// ---------------------------------------------------------------------------------------------
+// CRM and client billing (lib/jp/billing-domain.ts). Money is exact paise in DECIMAL(18,0);
+// quantities are thousandths; tax and deduction rates are basis points. Totals are set by the
+// server. These are internal records, not GST returns or e-invoices.
+
+export const crmClients = mysqlTable(
+  "crm_clients",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 180 }).notNull(),
+    clientType: varchar("clientType", { length: 40 }).notNull(),
+    contactPerson: varchar("contactPerson", { length: 120 }),
+    phone: varchar("phone", { length: 20 }),
+    email: varchar("email", { length: 254 }),
+    gstin: varchar("gstin", { length: 15 }),
+    address: text("address"),
+    status: mysqlEnum("status", ["Active", "Inactive"]).default("Active").notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crmClientOrgIndex: index("crm_client_org_idx").on(table.organizationId, table.name),
+  }),
+);
+
+export const crmLeads = mysqlTable(
+  "crm_leads",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 }).references(() => crmClients.id, {
+      onDelete: "restrict",
+    }),
+    title: varchar("title", { length: 180 }).notNull(),
+    contactName: varchar("contactName", { length: 120 }),
+    phone: varchar("phone", { length: 20 }),
+    location: varchar("location", { length: 180 }),
+    source: varchar("source", { length: 40 }).notNull(),
+    stage: varchar("stage", { length: 32 }).notNull(),
+    estimatedValueMinor: decimal("estimatedValueMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }),
+    ownerUserId: int("ownerUserId").references(() => users.id, { onDelete: "restrict" }),
+    nextFollowUpOn: date("nextFollowUpOn", { mode: "string" }),
+    lostReason: text("lostReason"),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crmLeadOrgStageIndex: index("crm_lead_org_stage_idx").on(table.organizationId, table.stage),
+  }),
+);
+
+export const crmActivities = mysqlTable(
+  "crm_activities",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    leadId: varchar("leadId", { length: 36 })
+      .notNull()
+      .references(() => crmLeads.id, { onDelete: "restrict" }),
+    kind: varchar("kind", { length: 32 }).notNull(),
+    note: text("note").notNull(),
+    stageFrom: varchar("stageFrom", { length: 32 }),
+    stageTo: varchar("stageTo", { length: 32 }),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crmActivityLeadIndex: index("crm_activity_lead_idx").on(table.leadId, table.createdAt),
+  }),
+);
+
+export const quotations = mysqlTable(
+  "quotations",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 })
+      .notNull()
+      .references(() => crmClients.id, { onDelete: "restrict" }),
+    leadId: varchar("leadId", { length: 36 }).references(() => crmLeads.id, {
+      onDelete: "restrict",
+    }),
+    quotationNumber: varchar("quotationNumber", { length: 40 }).notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Sent", "Accepted", "Rejected", "Expired"])
+      .default("Draft")
+      .notNull(),
+    quotationDate: date("quotationDate", { mode: "string" }).notNull(),
+    validUntil: date("validUntil", { mode: "string" }),
+    gstBps: int("gstBps").notNull(),
+    subtotalMinor: decimal("subtotalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    terms: text("terms"),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    quotationNumberUnique: uniqueIndex("quotation_org_number_uq").on(
+      table.organizationId,
+      table.quotationNumber,
+    ),
+  }),
+);
+
+export const quotationLines = mysqlTable("quotation_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  quotationId: varchar("quotationId", { length: 36 })
+    .notNull()
+    .references(() => quotations.id, { onDelete: "restrict" }),
+  lineNumber: int("lineNumber").notNull(),
+  itemCode: varchar("itemCode", { length: 40 }),
+  description: varchar("description", { length: 500 }).notNull(),
+  unit: varchar("unit", { length: 20 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** The client contract on a project: who pays, and the default GST and deductions. */
+export const projectContracts = mysqlTable("project_contracts", {
+  projectId: varchar("projectId", { length: 36 })
+    .primaryKey()
+    .references(() => projects.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  clientId: varchar("clientId", { length: 36 })
+    .notNull()
+    .references(() => crmClients.id, { onDelete: "restrict" }),
+  contractNumber: varchar("contractNumber", { length: 80 }),
+  quotationId: varchar("quotationId", { length: 36 }).references(() => quotations.id, {
+    onDelete: "restrict",
+  }),
+  gstBps: int("gstBps").notNull(),
+  retentionBps: int("retentionBps").notNull(),
+  tdsBps: int("tdsBps").notNull(),
+  updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Contract items (client BOQ) a project is billed against. */
+export const contractItems = mysqlTable(
+  "contract_items",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    itemCode: varchar("itemCode", { length: 40 }).notNull(),
+    description: varchar("description", { length: 500 }).notNull(),
+    unit: varchar("unit", { length: 20 }).notNull(),
+    contractQuantityThousandths: decimal("contractQuantityThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Active", "Removed"]).default("Active").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    contractItemCodeUnique: uniqueIndex("contract_item_project_code_uq").on(
+      table.projectId,
+      table.itemCode,
+    ),
+  }),
+);
+
+export const clientBills = mysqlTable(
+  "client_bills",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    clientId: varchar("clientId", { length: 36 })
+      .notNull()
+      .references(() => crmClients.id, { onDelete: "restrict" }),
+    billNumber: varchar("billNumber", { length: 40 }).notNull(),
+    billDate: date("billDate", { mode: "string" }).notNull(),
+    periodFrom: date("periodFrom", { mode: "string" }),
+    periodTo: date("periodTo", { mode: "string" }),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Rejected", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    gstBps: int("gstBps").notNull(),
+    retentionBps: int("retentionBps").notNull(),
+    tdsBps: int("tdsBps").notNull(),
+    workValueMinor: decimal("workValueMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    retentionMinor: decimal("retentionMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    tdsMinor: decimal("tdsMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    otherDeductionMinor: decimal("otherDeductionMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 300 }),
+    netReceivableMinor: decimal("netReceivableMinor", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    reviewReason: text("reviewReason"),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    clientBillNumberUnique: uniqueIndex("client_bill_org_number_uq").on(
+      table.organizationId,
+      table.billNumber,
+    ),
+    clientBillProjectIndex: index("client_bill_project_idx").on(table.projectId, table.status),
+  }),
+);
+
+export const clientBillLines = mysqlTable("client_bill_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => clientBills.id, { onDelete: "restrict" }),
+  contractItemId: varchar("contractItemId", { length: 36 }).references(() => contractItems.id, {
+    onDelete: "restrict",
+  }),
+  lineNumber: int("lineNumber").notNull(),
+  description: varchar("description", { length: 500 }).notNull(),
+  unit: varchar("unit", { length: 20 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** Money received from a client against an approved bill. A ledger record, not a bank check. */
+export const clientReceipts = mysqlTable("client_receipts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => clientBills.id, { onDelete: "restrict" }),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  receivedOn: date("receivedOn", { mode: "string" }).notNull(),
+  mode: varchar("mode", { length: 32 }).notNull(),
+  reference: varchar("reference", { length: 120 }),
+  status: mysqlEnum("status", ["Recorded", "Reversed"]).default("Recorded").notNull(),
+  reversalReason: text("reversalReason"),
+  clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+  createdBy: int("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Purchase (lib/jp/purchase-domain.ts): purchase orders with competing quotes, goods receipts
+// (GRN) that put accepted material into the inventory ledger, and supplier bills matched to
+// the order. Money in paise, quantities in thousandths, GST in basis points.
+
+export const purchaseOrders = mysqlTable(
+  "purchase_orders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    vendorId: varchar("vendorId", { length: 36 })
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    materialRequestId: varchar("materialRequestId", { length: 36 }).references(
+      () => materialRequests.id,
+      { onDelete: "restrict" },
+    ),
+    poNumber: varchar("poNumber", { length: 40 }).notNull(),
+    status: mysqlEnum("status", [
+      "Draft",
+      "Submitted",
+      "Approved",
+      "Rejected",
+      "Cancelled",
+      "Closed",
+    ])
+      .default("Draft")
+      .notNull(),
+    orderDate: date("orderDate", { mode: "string" }).notNull(),
+    expectedDate: date("expectedDate", { mode: "string" }),
+    deliveryAddress: text("deliveryAddress"),
+    terms: text("terms"),
+    subtotalMinor: decimal("subtotalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    gstMinor: decimal("gstMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    poNumberUnique: uniqueIndex("po_org_number_uq").on(table.organizationId, table.poNumber),
+    poSiteStatusIndex: index("po_site_status_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const purchaseOrderLines = mysqlTable("purchase_order_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  lineNumber: int("lineNumber").notNull(),
+  materialItemId: varchar("materialItemId", { length: 36 }).references(() => materialItems.id, {
+    onDelete: "restrict",
+  }),
+  description: varchar("description", { length: 300 }).notNull(),
+  unitCode: varchar("unitCode", { length: 32 }).notNull(),
+  quantityThousandths: decimal("quantityThousandths", {
+    precision: 18,
+    scale: 0,
+    mode: "string",
+  }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  gstBps: int("gstBps").notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+});
+
+/** Competing quotes recorded with a PO so the approver can compare. */
+export const purchaseOrderQuotes = mysqlTable("purchase_order_quotes", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  vendorId: varchar("vendorId", { length: 36 }).references(() => vendors.id, {
+    onDelete: "restrict",
+  }),
+  vendorName: varchar("vendorName", { length: 180 }).notNull(),
+  totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  deliveryDays: int("deliveryDays"),
+  note: varchar("note", { length: 300 }),
+  chosen: mysqlEnum("chosen", ["Yes", "No"]).default("No").notNull(),
+});
+
+export const goodsReceipts = mysqlTable(
+  "goods_receipts",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+    grnNumber: varchar("grnNumber", { length: 40 }).notNull(),
+    receivedOn: date("receivedOn", { mode: "string" }).notNull(),
+    challanNumber: varchar("challanNumber", { length: 80 }),
+    vehicleNumber: varchar("vehicleNumber", { length: 40 }),
+    note: text("note"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    grnNumberUnique: uniqueIndex("grn_org_number_uq").on(table.organizationId, table.grnNumber),
+    grnPoIndex: index("grn_po_idx").on(table.purchaseOrderId),
+  }),
+);
+
+export const goodsReceiptLines = mysqlTable(
+  "goods_receipt_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    goodsReceiptId: varchar("goodsReceiptId", { length: 36 })
+      .notNull()
+      .references(() => goodsReceipts.id, { onDelete: "restrict" }),
+    purchaseOrderLineId: varchar("purchaseOrderLineId", { length: 36 }).notNull(),
+    acceptedThousandths: decimal("acceptedThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rejectedThousandths: decimal("rejectedThousandths", {
+      precision: 18,
+      scale: 0,
+      mode: "string",
+    }).notNull(),
+    rejectReason: varchar("rejectReason", { length: 300 }),
+    inventoryMovementId: varchar("inventoryMovementId", { length: 36 }),
+  },
+  (table) => ({
+    // Named by hand: the generated name is longer than MySQL's 64-character limit.
+    poLineFk: foreignKey({
+      name: "grn_line_po_line_fk",
+      columns: [table.purchaseOrderLineId],
+      foreignColumns: [purchaseOrderLines.id],
+    }).onDelete("restrict"),
+  }),
+);
+
+/** A supplier bill (supplier_invoices) matched to the purchase order it is for. */
+export const purchaseInvoiceLinks = mysqlTable("purchase_invoice_links", {
+  invoiceId: varchar("invoiceId", { length: 36 })
+    .primaryKey()
+    .references(() => supplierInvoices.id, { onDelete: "restrict" }),
+  purchaseOrderId: varchar("purchaseOrderId", { length: 36 })
+    .notNull()
+    .references(() => purchaseOrders.id, { onDelete: "restrict" }),
+  linkedBy: int("linkedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  linkedAt: timestamp("linkedAt").defaultNow().notNull(),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Subcontract (lib/jp/subcontract-domain.ts): work orders to subcontractors (their BOQ), the
+// measurement book (recorded on site, checked by a different person), RA bills built from
+// checked measurements with GST, retention, TDS and advance recovery. An approved bill becomes
+// an Approved supplier invoice so accounts pays it through supplier payments.
+
+const money = (name: string) => decimal(name, { precision: 18, scale: 0, mode: "string" });
+
+export const workOrders = mysqlTable(
+  "work_orders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    vendorId: varchar("vendorId", { length: 36 })
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    woNumber: varchar("woNumber", { length: 40 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    scope: text("scope"),
+    startDate: date("startDate", { mode: "string" }).notNull(),
+    endDate: date("endDate", { mode: "string" }),
+    status: mysqlEnum("status", [
+      "Draft",
+      "Submitted",
+      "Approved",
+      "Rejected",
+      "Cancelled",
+      "Closed",
+    ])
+      .default("Draft")
+      .notNull(),
+    gstBps: int("gstBps").notNull(),
+    retentionBps: int("retentionBps").notNull(),
+    tdsBps: int("tdsBps").notNull(),
+    valueMinor: money("valueMinor").notNull(),
+    advanceMinor: money("advanceMinor").notNull(),
+    advanceRecoveryBps: int("advanceRecoveryBps").notNull(),
+    advanceInvoiceId: varchar("advanceInvoiceId", { length: 36 }),
+    retentionReleasedMinor: money("retentionReleasedMinor").notNull(),
+    retentionInvoiceId: varchar("retentionInvoiceId", { length: 36 }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    woNumberUnique: uniqueIndex("wo_org_number_uq").on(table.organizationId, table.woNumber),
+    woSiteStatusIndex: index("wo_site_status_idx").on(table.siteId, table.status),
+    woVendorIndex: index("wo_vendor_idx").on(table.vendorId),
+  }),
+);
+
+export const workOrderItems = mysqlTable(
+  "work_order_items",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    lineNumber: int("lineNumber").notNull(),
+    itemCode: varchar("itemCode", { length: 40 }).notNull(),
+    description: varchar("description", { length: 500 }).notNull(),
+    unit: varchar("unit", { length: 20 }).notNull(),
+    quantityThousandths: money("quantityThousandths").notNull(),
+    rateMinor: money("rateMinor").notNull(),
+    amountMinor: money("amountMinor").notNull(),
+  },
+  (table) => ({
+    woItemCodeUnique: uniqueIndex("wo_item_code_uq").on(table.workOrderId, table.itemCode),
+  }),
+);
+
+/** Measurement book: one entry per measured portion; deductions are negative quantities. */
+export const workMeasurements = mysqlTable(
+  "work_measurements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    itemId: varchar("itemId", { length: 36 })
+      .notNull()
+      .references(() => workOrderItems.id, { onDelete: "restrict" }),
+    measuredOn: date("measuredOn", { mode: "string" }).notNull(),
+    location: varchar("location", { length: 200 }).notNull(),
+    nos: varchar("nos", { length: 20 }),
+    length: varchar("length", { length: 20 }),
+    breadth: varchar("breadth", { length: 20 }),
+    depth: varchar("depth", { length: 20 }),
+    deduction: mysqlEnum("deduction", ["Yes", "No"]).default("No").notNull(),
+    quantityThousandths: money("quantityThousandths").notNull(),
+    status: mysqlEnum("status", ["Recorded", "Checked", "Rejected"]).default("Recorded").notNull(),
+    checkedBy: int("checkedBy").references(() => users.id, { onDelete: "restrict" }),
+    checkedAt: timestamp("checkedAt"),
+    rejectReason: text("rejectReason"),
+    billId: varchar("billId", { length: 36 }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    measurementWoIndex: index("measurement_wo_idx").on(table.workOrderId, table.status),
+    measurementSiteIndex: index("measurement_site_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const subcontractBills = mysqlTable(
+  "subcontract_bills",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workOrderId: varchar("workOrderId", { length: 36 })
+      .notNull()
+      .references(() => workOrders.id, { onDelete: "restrict" }),
+    billNumber: varchar("billNumber", { length: 60 }).notNull(),
+    billDate: date("billDate", { mode: "string" }).notNull(),
+    periodTo: date("periodTo", { mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Rejected", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    workValueMinor: money("workValueMinor").notNull(),
+    gstMinor: money("gstMinor").notNull(),
+    retentionMinor: money("retentionMinor").notNull(),
+    tdsMinor: money("tdsMinor").notNull(),
+    advanceRecoveryMinor: money("advanceRecoveryMinor").notNull(),
+    otherDeductionMinor: money("otherDeductionMinor").notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 300 }),
+    netPayableMinor: money("netPayableMinor").notNull(),
+    invoiceId: varchar("invoiceId", { length: 36 }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    subBillNumberUnique: uniqueIndex("sub_bill_org_number_uq").on(
+      table.organizationId,
+      table.billNumber,
+    ),
+    subBillWoIndex: index("sub_bill_wo_idx").on(table.workOrderId, table.status),
+  }),
+);
+
+export const subcontractBillLines = mysqlTable("subcontract_bill_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  billId: varchar("billId", { length: 36 })
+    .notNull()
+    .references(() => subcontractBills.id, { onDelete: "restrict" }),
+  itemId: varchar("itemId", { length: 36 })
+    .notNull()
+    .references(() => workOrderItems.id, { onDelete: "restrict" }),
+  quantityThousandths: money("quantityThousandths").notNull(),
+  rateMinor: money("rateMinor").notNull(),
+  amountMinor: money("amountMinor").notNull(),
+});
+
+// ---------------------------------------------------------------------------------------------
+// Payroll (lib/jp/payroll-domain.ts): statutory rates per company with an effective date, a
+// payroll profile per person (daily from attendance or monthly salary, PF/ESI membership) that
+// a different person approves, and monthly pay runs per site with one line per person.
+// Accounts (lib/jp/accounts-domain.ts): PF, ESI, PT and TDS deposits recorded against dues.
+
+export const payrollSettings = mysqlTable(
+  "payroll_settings",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    effectiveFrom: date("effectiveFrom", { mode: "string" }).notNull(),
+    pfWageCeilingMinor: money("pfWageCeilingMinor").notNull(),
+    pfEmployeeBps: int("pfEmployeeBps").notNull(),
+    pfEmployerBps: int("pfEmployerBps").notNull(),
+    epsBps: int("epsBps").notNull(),
+    epsCeilingMinor: money("epsCeilingMinor").notNull(),
+    edliBps: int("edliBps").notNull(),
+    pfAdminBps: int("pfAdminBps").notNull(),
+    esiThresholdMinor: money("esiThresholdMinor").notNull(),
+    esiEmployeeBps: int("esiEmployeeBps").notNull(),
+    esiEmployerBps: int("esiEmployerBps").notNull(),
+    overtimeMultiplierBps: int("overtimeMultiplierBps").notNull(),
+    wageShareBps: int("wageShareBps").notNull(),
+    ptSlabs: text("ptSlabs"),
+    note: text("note"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    payrollSettingsUnique: uniqueIndex("payroll_settings_org_from_uq").on(
+      table.organizationId,
+      table.effectiveFrom,
+    ),
+  }),
+);
+
+export const payrollProfiles = mysqlTable(
+  "payroll_profiles",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    payType: mysqlEnum("payType", ["Daily", "Monthly"]).notNull(),
+    basicMinor: money("basicMinor").notNull(),
+    hraMinor: money("hraMinor").notNull(),
+    otherAllowanceMinor: money("otherAllowanceMinor").notNull(),
+    pfMember: mysqlEnum("pfMember", ["Yes", "No"]).notNull(),
+    esiMember: mysqlEnum("esiMember", ["Yes", "No"]).notNull(),
+    ptApplies: mysqlEnum("ptApplies", ["Yes", "No"]).notNull(),
+    uan: varchar("uan", { length: 12 }),
+    esiNumber: varchar("esiNumber", { length: 10 }),
+    effectiveFrom: date("effectiveFrom", { mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Pending", "Active", "Superseded", "Rejected"])
+      .default("Pending")
+      .notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    payrollProfileSiteIndex: index("payroll_profile_site_idx").on(
+      table.siteId,
+      table.personId,
+      table.status,
+    ),
+  }),
+);
+
+export const payrollRuns = mysqlTable(
+  "payroll_runs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    runNumber: varchar("runNumber", { length: 40 }).notNull(),
+    month: varchar("month", { length: 7 }).notNull(),
+    status: mysqlEnum("status", ["Draft", "Submitted", "Approved", "Paid", "Returned", "Cancelled"])
+      .default("Draft")
+      .notNull(),
+    ratesSnapshot: text("ratesSnapshot").notNull(),
+    lineCount: int("lineCount").notNull(),
+    grossMinor: money("grossMinor").notNull(),
+    deductionMinor: money("deductionMinor").notNull(),
+    netMinor: money("netMinor").notNull(),
+    pfDueMinor: money("pfDueMinor").notNull(),
+    esiDueMinor: money("esiDueMinor").notNull(),
+    ptDueMinor: money("ptDueMinor").notNull(),
+    tdsDueMinor: money("tdsDueMinor").notNull(),
+    costMinor: money("costMinor").notNull(),
+    submittedAt: timestamp("submittedAt"),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    paidOn: date("paidOn", { mode: "string" }),
+    paymentMode: mysqlEnum("paymentMode", ["Bank transfer", "UPI", "Cheque", "Cash"]),
+    paymentReference: varchar("paymentReference", { length: 120 }),
+    paidBy: int("paidBy").references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    payrollRunNumberUnique: uniqueIndex("payroll_run_org_number_uq").on(
+      table.organizationId,
+      table.runNumber,
+    ),
+    payrollRunSiteMonthIndex: index("payroll_run_site_month_idx").on(table.siteId, table.month),
+  }),
+);
+
+export const payrollLines = mysqlTable(
+  "payroll_lines",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    runId: varchar("runId", { length: 36 })
+      .notNull()
+      .references(() => payrollRuns.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    profileId: varchar("profileId", { length: 36 }),
+    payType: mysqlEnum("payType", ["Daily", "Monthly"]).notNull(),
+    workedDaysHundredths: int("workedDaysHundredths").notNull(),
+    paidDaysHundredths: int("paidDaysHundredths").notNull(),
+    paidDaysEdited: mysqlEnum("paidDaysEdited", ["Yes", "No"]).default("No").notNull(),
+    overtimeHundredths: int("overtimeHundredths").notNull(),
+    basicMinor: money("basicMinor").notNull(),
+    hraMinor: money("hraMinor").notNull(),
+    otherAllowanceMinor: money("otherAllowanceMinor").notNull(),
+    overtimeMinor: money("overtimeMinor").notNull(),
+    grossMinor: money("grossMinor").notNull(),
+    pfWageMinor: money("pfWageMinor").notNull(),
+    pfEmployeeMinor: money("pfEmployeeMinor").notNull(),
+    esiEmployeeMinor: money("esiEmployeeMinor").notNull(),
+    ptMinor: money("ptMinor").notNull(),
+    tdsMinor: money("tdsMinor").notNull(),
+    advanceMinor: money("advanceMinor").notNull(),
+    otherDeductionMinor: money("otherDeductionMinor").notNull(),
+    otherDeductionNote: varchar("otherDeductionNote", { length: 200 }),
+    netMinor: money("netMinor").notNull(),
+    employerEpfMinor: money("employerEpfMinor").notNull(),
+    employerEpsMinor: money("employerEpsMinor").notNull(),
+    edliAdminMinor: money("edliAdminMinor").notNull(),
+    esiEmployerMinor: money("esiEmployerMinor").notNull(),
+    costMinor: money("costMinor").notNull(),
+    warnings: text("warnings"),
+  },
+  (table) => ({
+    payrollLineUnique: uniqueIndex("payroll_line_run_person_uq").on(table.runId, table.personId),
+  }),
+);
+
+export const statutoryDeposits = mysqlTable(
+  "statutory_deposits",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    kind: mysqlEnum("kind", ["PF", "ESI", "PT", "TDS salary", "TDS contractor"]).notNull(),
+    period: varchar("period", { length: 7 }).notNull(),
+    amountMinor: money("amountMinor").notNull(),
+    paidOn: date("paidOn", { mode: "string" }).notNull(),
+    challanReference: varchar("challanReference", { length: 80 }).notNull(),
+    note: text("note"),
+    status: mysqlEnum("status", ["Recorded", "Reversed"]).default("Recorded").notNull(),
+    reversedBy: int("reversedBy").references(() => users.id, { onDelete: "restrict" }),
+    reversedAt: timestamp("reversedAt"),
+    reverseReason: text("reverseReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    depositPeriodIndex: index("statutory_deposit_org_period_idx").on(
+      table.organizationId,
+      table.kind,
+      table.period,
+    ),
+  }),
+);
+
+// Worker advances (lib/jp/advance-domain.ts): money given ahead of wages and cash repaid,
+// each approved by a different person; pay runs recover advances through line deductions.
+export const workerAdvances = mysqlTable(
+  "worker_advances",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    entryType: mysqlEnum("entryType", ["Advance", "Repayment"]).notNull(),
+    amountMinor: money("amountMinor").notNull(),
+    installmentMinor: money("installmentMinor").notNull(),
+    entryDate: date("entryDate", { mode: "string" }).notNull(),
+    mode: mysqlEnum("mode", ["Bank transfer", "UPI", "Cheque", "Cash"]).notNull(),
+    reference: varchar("reference", { length: 120 }),
+    reason: text("reason").notNull(),
+    status: mysqlEnum("status", ["Pending", "Approved", "Rejected", "Cancelled"])
+      .default("Pending")
+      .notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    workerAdvanceSitePersonIndex: index("worker_advance_site_person_idx").on(
+      table.siteId,
+      table.personId,
+      table.status,
+    ),
+  }),
+);
+
+// Site presence rules (lib/jp/presence-rules.ts): working hours and days in India time, which
+// events alert, and who gets the alert (empty = site leads). One row per site.
+export const sitePresenceSettings = mysqlTable("site_presence_settings", {
+  siteId: varchar("siteId", { length: 36 })
+    .primaryKey()
+    .references(() => sites.id, { onDelete: "restrict" }),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  workStart: varchar("workStart", { length: 5 }).notNull(),
+  workEnd: varchar("workEnd", { length: 5 }).notNull(),
+  workDays: varchar("workDays", { length: 20 }).notNull(),
+  alertOnLeave: mysqlEnum("alertOnLeave", ["Yes", "No"]).default("Yes").notNull(),
+  alertOnArrive: mysqlEnum("alertOnArrive", ["Yes", "No"]).default("No").notNull(),
+  recipientUserIds: text("recipientUserIds"),
+  updatedBy: int("updatedBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Whether a person's phone is watching site boundaries, reported by the phone itself.
+export const presenceTrackingStatus = mysqlTable("presence_tracking_status", {
+  userId: int("userId")
+    .primaryKey()
+    .references(() => users.id, { onDelete: "restrict" }),
+  enabled: mysqlEnum("enabled", ["Yes", "No"]).notNull(),
+  fenceCount: int("fenceCount").notNull(),
+  platform: varchar("platform", { length: 20 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+// Worker app logins (lib/jp/worker-app.ts): a mobile number and 6-digit PIN for a workforce
+// person, with its own user row (no company membership, so only the worker procedures answer),
+// the features an authorised person switched on, and a lock after repeated wrong PINs.
+export const workerAccounts = mysqlTable("worker_accounts", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  personId: varchar("personId", { length: 36 })
+    .notNull()
+    .unique()
+    .references(() => people.id, { onDelete: "restrict" }),
+  userId: int("userId")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "restrict" }),
+  mobile: varchar("mobile", { length: 15 }).notNull().unique(),
+  pinHash: varchar("pinHash", { length: 255 }).notNull(),
+  features: text("features"),
+  status: mysqlEnum("status", ["Active", "Disabled"]).default("Active").notNull(),
+  failedAttempts: int("failedAttempts").default(0).notNull(),
+  lockedUntil: timestamp("lockedUntil"),
+  createdBy: int("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/**
+ * Problem reports: a worker's "something is wrong", a forgotten PIN, staff feedback and app
+ * errors the phone sends by itself. No foreign keys on purpose, so a report is never lost
+ * because of the very problem it describes; ids are checked by the server when written.
+ */
+export const appReports = mysqlTable(
+  "app_reports",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    source: mysqlEnum("source", ["worker", "pin_reset", "staff", "app_error"]).notNull(),
+    organizationId: varchar("organizationId", { length: 36 }),
+    siteId: varchar("siteId", { length: 36 }),
+    userId: int("userId"),
+    personId: varchar("personId", { length: 36 }),
+    category: varchar("category", { length: 40 }).notNull(),
+    message: varchar("message", { length: 1000 }),
+    detail: text("detail"),
+    screen: varchar("screen", { length: 160 }),
+    appVersion: varchar("appVersion", { length: 32 }),
+    platform: varchar("platform", { length: 16 }),
+    fingerprint: varchar("fingerprint", { length: 255 }),
+    repeatCount: int("repeatCount").default(1).notNull(),
+    status: mysqlEnum("status", ["Open", "Resolved"]).default("Open").notNull(),
+    resolvedBy: int("resolvedBy"),
+    resolvedAt: timestamp("resolvedAt"),
+    resolution: varchar("resolution", { length: 300 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    lastSeenAt: timestamp("lastSeenAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    orgStatusIndex: index("app_report_org_status_idx").on(
+      table.organizationId,
+      table.status,
+      table.createdAt,
+    ),
+    siteStatusIndex: index("app_report_site_status_idx").on(table.siteId, table.status),
+    fingerprintIndex: index("app_report_fingerprint_idx").on(table.fingerprint, table.lastSeenAt),
+  }),
+);
+
+/**
+ * Crews: a trade-wise team on one site (shuttering, bar-bending, masonry…). Membership keeps
+ * history (joined / left dates); daily deployments record which crew worked on which task.
+ */
+export const crews = mysqlTable(
+  "crews",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    trade: varchar("trade", { length: 80 }).notNull(),
+    status: mysqlEnum("status", ["Active", "Closed"]).default("Active").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    crewSiteNameUnique: uniqueIndex("crew_site_name_uq").on(table.siteId, table.name),
+    crewSiteStatusIndex: index("crew_site_status_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const crewMembers = mysqlTable(
+  "crew_members",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    crewId: varchar("crewId", { length: 36 })
+      .notNull()
+      .references(() => crews.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 })
+      .notNull()
+      .references(() => people.id, { onDelete: "restrict" }),
+    joinedOn: date("joinedOn", { mode: "string" }).notNull(),
+    /** Null while the person is still in the crew. */
+    leftOn: date("leftOn", { mode: "string" }),
+    addedBy: int("addedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crewMemberCrewIndex: index("crew_member_crew_idx").on(table.crewId, table.leftOn),
+    crewMemberPersonIndex: index("crew_member_person_idx").on(table.personId, table.leftOn),
+  }),
+);
+
+export const crewDeployments = mysqlTable(
+  "crew_deployments",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    crewId: varchar("crewId", { length: 36 })
+      .notNull()
+      .references(() => crews.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    workDate: date("workDate", { mode: "string" }).notNull(),
+    /** The task the crew worked on, if one was chosen. */
+    taskId: varchar("taskId", { length: 36 }).references(() => workTasks.id, {
+      onDelete: "restrict",
+    }),
+    headcount: int("headcount").notNull(),
+    note: varchar("note", { length: 300 }),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    crewDeploySiteDateIndex: index("crew_deploy_site_date_idx").on(table.siteId, table.workDate),
+    crewDeployCrewDateIndex: index("crew_deploy_crew_date_idx").on(table.crewId, table.workDate),
   }),
 );

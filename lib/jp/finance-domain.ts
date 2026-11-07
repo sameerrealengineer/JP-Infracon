@@ -40,7 +40,14 @@ function indianGroupedInteger(value: string): string {
 }
 
 export function formatMinorAsRupees(value: string | bigint): string {
-  const amount = typeof value === "bigint" ? value : BigInt(normalizeMinorAmount(value, true));
+  // Display only: a signed whole number of paise (differences can be negative).
+  const text = typeof value === "bigint" ? null : value.trim();
+  const amount =
+    typeof value === "bigint"
+      ? value
+      : /^-?\d{1,19}$/.test(text!)
+        ? BigInt(text!)
+        : BigInt(normalizeMinorAmount(text!, true));
   const negative = amount < 0n;
   const absolute = negative ? -amount : amount;
   const rupees = (absolute / 100n).toString();

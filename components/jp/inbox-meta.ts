@@ -16,4 +16,12 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "issue.critical": { icon: "report", tone: "error" },
   "issue.assigned": { icon: "assignment-ind", tone: "warning" },
   "issue.verify": { icon: "verified", tone: "success" },
+  "purchase.review": { icon: "shopping-cart", tone: "accent" },
+  "subcontract.review": { icon: "engineering", tone: "accent" },
+  "subcontract.check": { icon: "straighten", tone: "warning" },
+  "payroll.review": { icon: "payments", tone: "accent" },
+  "payroll.profile": { icon: "badge", tone: "info" },
+  "payroll.advance": { icon: "savings", tone: "warning" },
+  "accounts.due": { icon: "account-balance", tone: "error" },
+  "worker.help": { icon: "support-agent", tone: "warning" },
 };

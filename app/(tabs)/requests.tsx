@@ -1,4 +1,9 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { VoiceRequestAssist } from "@/components/jp/voice-assist";
+import { useWorkspace } from "@/hooks/use-workspace";
+import { useT } from "@/lib/i18n";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,6 +30,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import {
   createClientMutationId,
@@ -59,7 +65,11 @@ function errorText(error: unknown) {
   return error instanceof Error ? error.message : "The server did not confirm this action.";
 }
 
-export default function RequestsScreen() {
+export default function RequestsScreenTab() {
+  return <RequestsScreen inTabs />;
+}
+
+export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
   const colors = useColors();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const utils = trpc.useUtils();
@@ -74,7 +84,9 @@ export default function RequestsScreen() {
   const [quantity, setQuantity] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [chosenSiteId, setSiteId] = useState("");
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [pendingSync, setPendingSync] = useState(false);
 
@@ -226,9 +238,10 @@ export default function RequestsScreen() {
   };
 
   return (
-    <Screen>
+    <Screen inTabs={inTabs}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppHeader
+          right={<HelpButton topicKey="requests" />}
           eyebrow="Material control"
           title="Requests"
           subtitle="Raise material needs from site and track every decision."
@@ -399,115 +412,147 @@ export default function RequestsScreen() {
                 <MaterialIcons name="close" size={23} color={colors.foreground} />
               </Pressable>
             </View>
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Material</Text>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="Material or item description"
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Quantity</Text>
-            <TextInput
-              value={quantity}
-              onChangeText={setQuantity}
-              keyboardType="decimal-pad"
-              placeholder="Positive quantity"
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Unit</Text>
-            <TextInput
-              value={unitCode}
-              onChangeText={setUnitCode}
-              placeholder="e.g. bag, m³, kg"
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>Site</Text>
-            <ScrollView style={styles.siteChoiceScroll} nestedScrollEnabled>
-              {siteOptions.map((site) => (
-                <Pressable
-                  key={site.id}
-                  accessibilityRole="button"
-                  onPress={() => setSiteId(site.id)}
-                  style={[
-                    styles.siteChoice,
-                    {
-                      backgroundColor: siteId === site.id ? `${colors.primary}16` : colors.surface,
-                      borderColor: siteId === site.id ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  <Text
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 8 }}
+            >
+              {siteId && requestsQuery.isSuccess ? (
+                <View style={{ marginBottom: 12 }}>
+                  <VoiceRequestAssist
+                    siteId={siteId}
+                    onFields={(fields) => {
+                      if (fields.itemName) setTitle(fields.itemName);
+                      if (fields.quantity) setQuantity(fields.quantity);
+                      if (fields.unitCode) setUnitCode(fields.unitCode);
+                      if (fields.purpose) setPurpose(fields.purpose);
+                      setAiNote(
+                        fields.otherItems.length
+                          ? `Also mentioned: ${fields.otherItems.join(", ")}. Send each as its own request.`
+                          : null,
+                      );
+                    }}
+                  />
+                  {aiNote ? (
+                    <Text
+                      style={[styles.draftCalloutText, { color: colors.warning, marginTop: 6 }]}
+                    >
+                      {aiNote}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>Material</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Material or item description"
+                placeholderTextColor={colors.muted}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.foreground,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>Quantity</Text>
+              <TextInput
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="decimal-pad"
+                placeholder="Positive quantity"
+                placeholderTextColor={colors.muted}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.foreground,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>Unit</Text>
+              <TextInput
+                value={unitCode}
+                onChangeText={setUnitCode}
+                placeholder="e.g. bag, m³, kg"
+                placeholderTextColor={colors.muted}
+                style={[
+                  styles.input,
+                  {
+                    color: colors.foreground,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>Site</Text>
+              <ScrollView style={styles.siteChoiceScroll} nestedScrollEnabled>
+                {siteOptions.map((site) => (
+                  <Pressable
+                    key={site.id}
+                    accessibilityRole="button"
+                    onPress={() => setSiteId(site.id)}
                     style={[
-                      styles.siteChoiceText,
-                      { color: siteId === site.id ? colors.primary : colors.foreground },
+                      styles.siteChoice,
+                      {
+                        backgroundColor:
+                          siteId === site.id ? `${colors.primary}16` : colors.surface,
+                        borderColor: siteId === site.id ? colors.primary : colors.border,
+                      },
                     ]}
                   >
-                    {site.name} · {site.project}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Text style={[styles.inputLabel, { color: colors.muted }]}>
-              Purpose / note (optional)
-            </Text>
-            <TextInput
-              value={purpose}
-              onChangeText={setPurpose}
-              multiline
-              placeholder="Why this material is needed"
-              placeholderTextColor={colors.muted}
-              style={[
-                styles.input,
-                styles.notesInput,
-                {
-                  color: colors.foreground,
-                  backgroundColor: colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-            <View
-              style={[
-                styles.draftCallout,
-                { backgroundColor: `${colors.warning}12`, borderColor: `${colors.warning}35` },
-              ]}
-            >
-              <MaterialIcons name="info-outline" size={18} color={colors.warning} />
-              <Text style={[styles.draftCalloutText, { color: colors.foreground }]}>
-                Online, the request is submitted for review. Offline, it stays on this device.
-                Neither state is an approval or an order.
+                    <Text
+                      style={[
+                        styles.siteChoiceText,
+                        { color: siteId === site.id ? colors.primary : colors.foreground },
+                      ]}
+                    >
+                      {site.name} · {site.project}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>
+                Purpose / note (optional)
               </Text>
-            </View>
-            <PrimaryButton
-              icon="send"
-              label={createMutation.isPending ? "Submitting…" : "Submit request"}
-              disabled={createMutation.isPending}
-              onPress={createRequest}
-            />
+              <TextInput
+                value={purpose}
+                onChangeText={setPurpose}
+                multiline
+                placeholder="Why this material is needed"
+                placeholderTextColor={colors.muted}
+                style={[
+                  styles.input,
+                  styles.notesInput,
+                  {
+                    color: colors.foreground,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.draftCallout,
+                  { backgroundColor: `${colors.warning}12`, borderColor: `${colors.warning}35` },
+                ]}
+              >
+                <MaterialIcons name="info-outline" size={18} color={colors.warning} />
+                <Text style={[styles.draftCalloutText, { color: colors.foreground }]}>
+                  Online, the request is submitted for review. Offline, it stays on this device.
+                  Neither state is an approval or an order.
+                </Text>
+              </View>
+              <PrimaryButton
+                icon="send"
+                label={createMutation.isPending ? "Submitting…" : "Submit request"}
+                disabled={createMutation.isPending}
+                onPress={createRequest}
+              />
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -524,7 +569,13 @@ function RequestCard({
   localDraft: boolean;
   onSync: () => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
+  const { sitesWith } = useWorkspace();
+  const [showFiles, setShowFiles] = useState(false);
+  const canUpload =
+    sitesWith("material.request").includes(request.siteId) ||
+    sitesWith("material.review").includes(request.siteId);
   return (
     <View
       style={[styles.requestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -563,7 +614,25 @@ function RequestCard({
         <View style={styles.cardAction}>
           <SecondaryButton icon="sync" label="Sync request" onPress={onSync} />
         </View>
-      ) : null}
+      ) : (
+        <View style={styles.cardAction}>
+          <SecondaryButton
+            icon={showFiles ? "expand-less" : "photo-library"}
+            label={showFiles ? "Hide photos" : t("Photos & quotes")}
+            onPress={() => setShowFiles((open) => !open)}
+          />
+          {showFiles ? (
+            <View style={{ marginTop: 10 }}>
+              <AttachmentStrip
+                entityType="material_request"
+                entityId={request.id}
+                title="Photos, quotations and challans"
+                canUpload={canUpload}
+              />
+            </View>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }

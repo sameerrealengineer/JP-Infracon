@@ -1,3 +1,4 @@
+import { ExpenseAssist } from "@/components/jp/voice-assist";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useRef, useState } from "react";
@@ -937,6 +938,24 @@ export function PettyCashLedger(props: Props) {
                   />
                 ))}
               </View>
+              {movementType === "Expense" && props.siteId ? (
+                <ExpenseAssist
+                  siteId={props.siteId}
+                  onFields={(fields) => {
+                    if (fields.amountRupees) changeMovement(setAmountRupees, fields.amountRupees);
+                    if (fields.date) changeMovement(setMovementDate, fields.date);
+                    if (fields.payee) changeMovement(setPayeeName, fields.payee);
+                    if (fields.paymentMode) {
+                      setPaymentMode(fields.paymentMode);
+                      setMovementMutationId(createClientMutationId());
+                    }
+                    if (fields.category) changeMovement(setCategory, fields.category);
+                    if (fields.purpose) changeMovement(setPurpose, fields.purpose);
+                    if (fields.receiptReference)
+                      changeMovement(setReceiptReference, fields.receiptReference);
+                  }}
+                />
+              ) : null}
               <Field
                 label="Date * (YYYY-MM-DD)"
                 value={movementDate}

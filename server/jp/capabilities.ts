@@ -1,4 +1,7 @@
 import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { disabledModulesFor } from "./module-settings";
+import { isPermissionDisabled } from "../../lib/jp/modules";
+import { isCompanyLevel } from "../../lib/jp/access-catalog";
 import { TRPCError } from "@trpc/server";
 import { permissionGrants } from "../../drizzle/schema";
 import { getAccessibleSites, getSiteScope } from "./access";
@@ -75,6 +78,32 @@ export const permissionKeys = [
   "attendance.mark",
   "attendance.approve",
   "approval.self",
+  "document.view",
+  "document.upload",
+  "document.manage",
+  "budget.view",
+  "budget.manage",
+  "budget.approve",
+  "crm.view",
+  "crm.manage",
+  "billing.view",
+  "billing.create",
+  "billing.approve",
+  "billing.receipt",
+  "purchase.view",
+  "purchase.create",
+  "purchase.approve",
+  "purchase.receive",
+  "subcontract.view",
+  "subcontract.create",
+  "subcontract.measure",
+  "subcontract.approve",
+  "payroll.view",
+  "payroll.prepare",
+  "payroll.approve",
+  "payroll.advance",
+  "accounts.view",
+  "accounts.manage",
 ] as const;
 export type PermissionKey = (typeof permissionKeys)[number];
 type AccessibleSite = Awaited<ReturnType<typeof getAccessibleSites>>[number];
@@ -100,10 +129,33 @@ export async function siteCapabilities(
         or(isNull(permissionGrants.effectiveTo), gte(permissionGrants.effectiveTo, now)),
       ),
     );
+  const disabledByOrg = new Map(
+    await Promise.all(
+      organizationIds.map(async (id) => [id, await disabledModulesFor(id)] as const),
+    ),
+  );
   return scopedSites.map((site) => {
     const capabilities = {} as Record<PermissionKey, boolean>;
+    const disabled = disabledByOrg.get(site.organizationId) ?? [];
     for (const permissionKey of permissionKeys) {
-      const siteIsAvailable = site.status === "Active" || permissionKey.endsWith(".view");
+      // CRM, billing and accounts are checked once for the company (commercialAccess), with the
+      // company role, not the site role. Resolve them the same way so a tile is shown only when
+      // the screen behind it will open.
+      if (isCompanyLevel(permissionKey) && permissionKey !== "user.manage") {
+        capabilities[permissionKey] =
+          !isPermissionDisabled(permissionKey, disabled) &&
+          resolveOrganizationPermission({
+            role: site.organizationRole,
+            permissionKey,
+            organizationId: site.organizationId,
+            grants: grants as PermissionGrantForResolution[],
+            now,
+          });
+        continue;
+      }
+      const siteIsAvailable =
+        (site.status === "Active" || permissionKey.endsWith(".view")) &&
+        !isPermissionDisabled(permissionKey, disabled);
       capabilities[permissionKey] = siteIsAvailable
         ? [
             "inventory.catalog.manage",

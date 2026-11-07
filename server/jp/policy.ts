@@ -311,8 +311,110 @@ const issueRoleDefaults: Record<BusinessRole, readonly string[]> = {
   auditor: ["issue.view", "attendance.view"],
 };
 
+const documentLeaders = ["document.view", "document.upload", "document.manage"];
+const documentRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: documentLeaders,
+  director: documentLeaders,
+  admin: documentLeaders,
+  project_manager: documentLeaders,
+  supervisor: ["document.view", "document.upload"],
+  accounts: ["document.view", "document.upload"],
+  storekeeper: ["document.view", "document.upload"],
+  auditor: ["document.view"],
+};
+
+const budgetRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: ["budget.view", "budget.manage", "budget.approve"],
+  director: ["budget.view", "budget.manage", "budget.approve"],
+  admin: ["budget.view", "budget.manage"],
+  project_manager: ["budget.view", "budget.manage"],
+  supervisor: [],
+  accounts: ["budget.view"],
+  storekeeper: [],
+  auditor: ["budget.view"],
+};
+
+/** CRM (clients, leads, quotations) and client billing (contracts, RA bills, receipts). */
+const commercialRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: [
+    "crm.view",
+    "crm.manage",
+    "billing.view",
+    "billing.create",
+    "billing.approve",
+    "billing.receipt",
+  ],
+  director: [
+    "crm.view",
+    "crm.manage",
+    "billing.view",
+    "billing.create",
+    "billing.approve",
+    "billing.receipt",
+  ],
+  admin: ["crm.view", "crm.manage", "billing.view", "billing.create", "billing.receipt"],
+  project_manager: ["crm.view", "crm.manage", "billing.view", "billing.create"],
+  supervisor: [],
+  accounts: ["crm.view", "billing.view", "billing.create", "billing.receipt"],
+  storekeeper: [],
+  auditor: ["crm.view", "billing.view"],
+};
+
+/** Purchase orders, goods receipts and bill matching (site scoped). */
+const allPurchase = ["purchase.view", "purchase.create", "purchase.approve", "purchase.receive"];
+const purchaseRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: allPurchase,
+  director: allPurchase,
+  admin: allPurchase,
+  project_manager: allPurchase,
+  supervisor: ["purchase.view", "purchase.receive"],
+  accounts: ["purchase.view", "purchase.create"],
+  storekeeper: ["purchase.view", "purchase.receive"],
+  auditor: ["purchase.view"],
+};
+
+/** Subcontractor work orders, measurement book and RA bills (site scoped). */
+const allSubcontract = [
+  "subcontract.view",
+  "subcontract.create",
+  "subcontract.measure",
+  "subcontract.approve",
+];
+const subcontractRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: allSubcontract,
+  director: allSubcontract,
+  admin: allSubcontract,
+  project_manager: allSubcontract,
+  supervisor: ["subcontract.view", "subcontract.measure"],
+  accounts: ["subcontract.view", "subcontract.create"],
+  storekeeper: [],
+  auditor: ["subcontract.view"],
+};
+
+/** Payroll (site scoped): accounts prepares, a manager or leader approves. */
+const allPayroll = ["payroll.view", "payroll.prepare", "payroll.approve", "payroll.advance"];
+/** Accounts (company level): statutory dues and deposits, GST summary, project profit. */
+const allAccounts = ["accounts.view", "accounts.manage"];
+const payrollRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: [...allPayroll, ...allAccounts],
+  director: [...allPayroll, ...allAccounts],
+  admin: [...allPayroll, ...allAccounts],
+  project_manager: ["payroll.view", "payroll.approve", "payroll.advance"],
+  // Supervisors hand out site advances, so they may request one (a manager approves it).
+  supervisor: ["payroll.advance"],
+  accounts: ["payroll.view", "payroll.prepare", "payroll.advance", ...allAccounts],
+  storekeeper: [],
+  auditor: ["payroll.view", "accounts.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    payrollRoleDefaults[role].includes(permissionKey) ||
+    subcontractRoleDefaults[role].includes(permissionKey) ||
+    purchaseRoleDefaults[role].includes(permissionKey) ||
+    commercialRoleDefaults[role].includes(permissionKey) ||
+    documentRoleDefaults[role].includes(permissionKey) ||
+    budgetRoleDefaults[role].includes(permissionKey) ||
     issueRoleDefaults[role].includes(permissionKey) ||
     roleDefaults[role].includes(permissionKey) ||
     inventoryRoleDefaults[role].includes(permissionKey) ||

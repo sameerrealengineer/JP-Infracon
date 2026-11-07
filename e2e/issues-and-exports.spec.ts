@@ -21,6 +21,7 @@ const site: Site = {
   projectId: "44444444-4444-4444-8444-444444444444",
   project: "Khurda Rural Water Supply",
   businessRole: "supervisor",
+  organizationRole: "supervisor",
 };
 
 function caps(keys: string[]) {

@@ -23,6 +23,8 @@ pnpm lint                    # expo lint (errors fail CI; warnings do not)
 pnpm format:check            # Prettier check (pnpm format writes)
 pnpm test                    # Vitest, database free tests only
 pnpm test:e2e                # Playwright on the static web export, API faked in the browser (see e2e/AGENTS.md)
+pnpm demo:server             # Online demo: real API over SQLite sample data + web app on :3100
+pnpm test:live               # Playwright against the running demo server (real rules, real data flow)
 pnpm build                   # Bundle the API to dist/ with esbuild
 pnpm build:server            # Bundle the API into one file (dist-server/index.mjs) for the Docker image
 pnpm build:demo-apk          # Offline demo APK on EAS (profile demo); pnpm android:demo builds it locally
@@ -33,7 +35,7 @@ A Husky pre commit hook runs lint-staged (`eslint --fix` and Prettier on staged 
 
 ## Specs
 
-Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
+Feature scope: `docs/scope/`. Build specs go in `docs/specs/NNNN-title.md` when `/architect` writes one (none yet). Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
 
 ## Rules
 
@@ -49,7 +51,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 
 ## Gotchas
 
-- One managed MySQL database serves both development and production. Never point tests at it, seed demo data, or run destructive cleanup.
+- Production data lives in the MySQL 8.4 container on the Azure VM (`deploy/docker-compose.yml`, nightly backup to `~/backups`). Each deploy (`scripts/deploy-azure.sh`) backs it up, then applies every pending migration on start (`RUN_MIGRATIONS=true`). Never point tests at it, seed demo data, or run destructive cleanup. For local work use the demo server (SQLite) or a throwaway MySQL.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. The normal build has no demo logins; the first Super Admin comes from the one time bootstrap flow. Only the offline demo build (below) has built in demo accounts, and they exist only on the phone.
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
@@ -57,6 +59,8 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 - UI text goes through `useT()` from `lib/i18n` (keys are the English text; Hindi and Odia in `lib/i18n/strings.ts`, kept in step by a test). Untranslated text falls back to English.
 - Self-hosting: `Dockerfile` + `deploy/docker-compose.yml` (MySQL 8.4, API, Caddy, optional WAHA); guide in `docs/deploy/self-hosting.md`. `pnpm build:server` bundles the API into one file; `RUN_MIGRATIONS=true` applies `drizzle/` on start; `STORAGE_DIR` (disk) or `S3_*` (R2/S3) replaces Manus Forge storage; `PUBLIC_BASE_URL` builds 5-minute `/api/files/:token` links. `scripts/selfhost-smoke.mts` checks a fresh server end to end — never against real data.
 - The APK lets the person set the server address on the sign-in screen (`lib/server-address.ts`).
+- Errors: `friendlyErrorLink` (`lib/trpc.ts`) turns network/502/HTML failures into one plain translated message on every screen; `app/_layout.tsx` has the root `ErrorBoundary` and `installGlobalErrorReporting()` (`lib/error-reporter.ts`), which send crashes to `jp.feedback.appError` (queued on the phone when offline). Admins read them in App problems (`/app-reports`).
+- `/api/health` answers 503 when the database does not answer. On the VM, `scripts/watchdog.sh` (cron every 2 min, installed by `scripts/deploy-azure.sh`) restarts the API after two failed checks and sends WhatsApp to `WATCHDOG_ALERT_PHONE` through OpenWA; it also warns about a full disk or an old backup. The deploy script fails loudly when the API is not healthy within 3 minutes.
 - Offline demo build (`EXPO_PUBLIC_JP_DEMO=1`, EAS profile `demo`, `pnpm build:demo-apk`): the app runs the real `server/` router on the phone over SQLite, with seven demo accounts and sample data. No server, no server address on the sign-in screen. Details in `lib/demo/AGENTS.md`.
 - `server/_core/`, `lib/_core/`, and the starter components outside `components/jp/` come from the Manus Expo template. Change them only when needed.
 
@@ -80,8 +84,9 @@ MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended), Playwright M
 
 - [server/jp/AGENTS.md](server/jp/AGENTS.md) (tRPC business procedures: site scope, permissions, audit, idempotency)
 - [lib/jp/AGENTS.md](lib/jp/AGENTS.md) (pure shared domain logic: paise math, policies, scheduling, offline drafts)
-- [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the shared MySQL database)
+- [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the production MySQL database)
 - [e2e/AGENTS.md](e2e/AGENTS.md) (Playwright tests on the static web export with a faked tRPC API)
 - [lib/demo/AGENTS.md](lib/demo/AGENTS.md) (offline demo build: real server code on the phone over SQLite, demo accounts, sample data)
+- [scripts/AGENTS.md](scripts/AGENTS.md) (production deploy, watchdog, WhatsApp setup, database reset, demo server scripts)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

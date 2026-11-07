@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { Avatar, useMyProfile } from "@/components/jp/avatar";
 import {
   AppHeader,
   Card,
@@ -19,7 +20,6 @@ import {
   SectionHeader,
   StatusPill,
   formatDateTime,
-  initialsOf,
   type IconName,
   type Tone,
 } from "@/components/jp/ui";
@@ -38,6 +38,7 @@ export default function MoreScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const auth = useAuth({ autoFetch: false });
+  const serverLogout = trpc.auth.logout.useMutation();
   const workspace = useWorkspace();
   const { colorScheme, setColorScheme } = useThemeContext();
   const { online } = useConnectivity();
@@ -45,6 +46,7 @@ export default function MoreScreen() {
   const sites = trpc.jp.workspace.mySites.useQuery();
   const [signingOut, setSigningOut] = useState(false);
   const { can, me } = workspace;
+  const profile = useMyProfile();
 
   const modules: {
     icon: IconName;
@@ -54,6 +56,38 @@ export default function MoreScreen() {
     route: string;
     show: boolean;
   }[] = [
+    {
+      icon: "handshake",
+      title: "Clients & leads",
+      detail: "Enquiries, follow-ups, quotations",
+      tone: "accent",
+      route: "/crm",
+      show: can("crm.view"),
+    },
+    {
+      icon: "request-quote",
+      title: "Client billing",
+      detail: "RA bills, GST, receipts, receivables",
+      tone: "success",
+      route: "/billing",
+      show: can("billing.view"),
+    },
+    {
+      icon: "account-balance",
+      title: "Accounts",
+      detail: "PF, ESI, TDS dues, GST, project profit",
+      tone: "info",
+      route: "/accounts",
+      show: can("accounts.view"),
+    },
+    {
+      icon: "payments",
+      title: "Payroll",
+      detail: "Monthly wages, salaries, PF, ESI, payslips",
+      tone: "success",
+      route: "/payroll",
+      show: can("payroll.view"),
+    },
     {
       icon: "health-and-safety",
       title: "Safety & quality",
@@ -87,6 +121,54 @@ export default function MoreScreen() {
       show: can("workforce.view"),
     },
     {
+      icon: "menu-book",
+      title: "Help & guide",
+      detail: "Where to start, how each part works",
+      tone: "accent",
+      route: "/help",
+      show: true,
+    },
+    {
+      icon: "diversity-3",
+      title: "Crews",
+      detail: "Trade teams, daily work, cost",
+      tone: "accent",
+      route: "/crews",
+      show: can("workforce.view"),
+    },
+    {
+      icon: "insights",
+      title: "Team tracking",
+      detail: "Attendance, presence, reports, pay",
+      tone: "info",
+      route: "/tracking",
+      show: can("workforce.review"),
+    },
+    {
+      icon: "person-search",
+      title: "People directory",
+      detail: "History, pay, quality, contact",
+      tone: "accent",
+      route: "/people",
+      show: can("workforce.view"),
+    },
+    {
+      icon: "shopping-cart",
+      title: "Purchase orders",
+      detail: "PO, vendor quotes, goods receipt, bill match",
+      tone: "accent",
+      route: "/purchase",
+      show: can("purchase.view"),
+    },
+    {
+      icon: "engineering",
+      title: "Subcontractors",
+      detail: "Work orders, measurement book, RA bills",
+      tone: "accent",
+      route: "/subcontract",
+      show: can("subcontract.view"),
+    },
+    {
       icon: "inventory",
       title: "Inventory",
       detail: "Catalogue & stock ledger",
@@ -101,6 +183,38 @@ export default function MoreScreen() {
       tone: "accent",
       route: "/finance",
       show: can("finance.invoice.view", "finance.cash.view"),
+    },
+    {
+      icon: "folder-copy",
+      title: "Project documents",
+      detail: "Contracts, drawings, bills, smart search",
+      tone: "info",
+      route: "/documents",
+      show: can("document.view"),
+    },
+    {
+      icon: "account-balance-wallet",
+      title: "Project budget",
+      detail: "Budget vs spent, revisions, approval",
+      tone: "accent",
+      route: "/project-budget",
+      show: can("budget.view"),
+    },
+    {
+      icon: "health-and-safety",
+      title: "System check",
+      detail: "Test AI, voice, scan, uploads, WhatsApp",
+      tone: "success",
+      route: "/system-check",
+      show: workspace.canManageSites || workspace.canManageAccounts,
+    },
+    {
+      icon: "tune",
+      title: "Modules",
+      detail: "Turn modules on or off, AI advice",
+      tone: "info",
+      route: "/modules",
+      show: workspace.canManageSites || workspace.canManageAccounts,
     },
     {
       icon: "add-business",
@@ -176,6 +290,22 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "support-agent",
+      title: "Report a problem",
+      detail: "Tell the admin what is wrong or what you need",
+      tone: "warning",
+      route: "/report-problem",
+      show: true,
+    },
+    {
+      icon: "bug-report",
+      title: "App problems",
+      detail: "Errors, worker help, forgotten PINs",
+      tone: "error",
+      route: "/app-reports",
+      show: workspace.canManageAccounts || can("workforce.review"),
+    },
+    {
       icon: "notifications-none",
       title: "Notifications",
       detail: "Work waiting on you",
@@ -188,6 +318,8 @@ export default function MoreScreen() {
   const signOut = async () => {
     setSigningOut(true);
     try {
+      // Revoke the session on the server (works on every server, including the online demo).
+      await serverLogout.mutateAsync().catch(() => null);
       await auth.logout();
       // Remove every cached record so the next person on this phone sees nothing of yours.
       queryClient.clear();
@@ -201,7 +333,7 @@ export default function MoreScreen() {
 
   return (
     <AuthGate>
-      <Screen>
+      <Screen inTabs>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 36 }}
@@ -214,13 +346,20 @@ export default function MoreScreen() {
           />
 
           <HeroCard>
-            <View style={styles.profile}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initialsOf(me.data?.name)}</Text>
-              </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open my profile"
+              onPress={() => router.push("/profile" as never)}
+              style={styles.profile}
+            >
+              <Avatar uri={profile.data?.photoUrl} name={me.data?.name} size={58} tone="gold" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.name}>{me.data?.name ?? "Signed-in user"}</Text>
-                <Text style={styles.role}>{prettyRole(workspace.role)}</Text>
+                <Text style={styles.role}>
+                  {[profile.data?.designation, prettyRole(workspace.role)]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
                 <Text style={styles.scope}>
                   {sites.data
                     ? `${sites.data.length} site${sites.data.length === 1 ? "" : "s"} in your access`
@@ -229,8 +368,14 @@ export default function MoreScreen() {
                     ? ` · signed in ${formatDateTime(me.data.lastSignedIn)}`
                     : ""}
                 </Text>
+                {profile.data && profile.data.completeness < 100 ? (
+                  <Text style={[styles.link, { color: "#E6C987" }]}>
+                    Profile {profile.data.completeness}% complete · tap to finish
+                  </Text>
+                ) : null}
               </View>
-            </View>
+              <MaterialIcons name="chevron-right" size={24} color="#E6C987" />
+            </Pressable>
           </HeroCard>
 
           <SectionHeader title={t("Modules")} caption={t("Only what your role allows")} />

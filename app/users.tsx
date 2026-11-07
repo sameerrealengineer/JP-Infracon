@@ -1,3 +1,5 @@
+import { useRouter } from "expo-router";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   Alert,
@@ -19,7 +21,9 @@ import {
   Screen,
   SectionHeader,
 } from "@/components/jp/ui";
+import { Avatar } from "@/components/jp/avatar";
 import { AuthGate } from "@/components/jp/auth-gate";
+import { CompanySetupNeeded, useNeedsCompanySetup } from "@/components/jp/company-setup-needed";
 import { useColors } from "@/hooks/use-colors";
 import { resolveChoice, resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
@@ -88,11 +92,16 @@ const labels = Object.fromEntries(roleOptions.map((role) => [role.value, role.la
 >;
 
 export default function UserAccountsScreen() {
+  const teamPhotos = trpc.jp.profile.team.useQuery(undefined, { staleTime: 5 * 60_000 });
+  const photoOf = (userId: number) =>
+    teamPhotos.data?.find((row) => row.userId === userId)?.photoUrl ?? null;
   const colors = useColors();
   const utils = trpc.useUtils();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
+  const router = useRouter();
   const access = trpc.jp.workspace.onboardingState.useQuery();
   const options = trpc.jp.accounts.options.useQuery();
+  const needsCompanySetup = useNeedsCompanySetup();
   const [chosenOrganizationId, setOrganizationId] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -280,6 +289,7 @@ export default function UserAccountsScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="users" />}
             eyebrow="Administration"
             title="Team accounts"
             subtitle="Create individual logins and control who can work on which site."
@@ -325,7 +335,10 @@ export default function UserAccountsScreen() {
                   Loading manageable organizations…
                 </Text>
               ) : null}
-              {!options.isLoading && options.data?.length === 0 ? (
+              {!options.isLoading && options.data?.length === 0 && needsCompanySetup ? (
+                <CompanySetupNeeded />
+              ) : null}
+              {!options.isLoading && options.data?.length === 0 && !needsCompanySetup ? (
                 <EmptyState
                   icon="domain-disabled"
                   title="No manageable organization"
@@ -607,6 +620,7 @@ export default function UserAccountsScreen() {
                             index > 0 && { borderTopColor: colors.border, borderTopWidth: 1 },
                           ]}
                         >
+                          <Avatar uri={photoOf(account.id)} name={account.name} size={40} />
                           <View style={styles.accountCopy}>
                             <Text style={[styles.accountName, { color: colors.foreground }]}>
                               {account.name || "Unnamed account"}
@@ -627,6 +641,20 @@ export default function UserAccountsScreen() {
                           </View>
                           {account.username ? (
                             <View style={styles.actions}>
+                              {account.id !== me.data?.id && account.businessRole !== "owner" ? (
+                                <Pressable
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Access for ${account.name || account.username}`}
+                                  onPress={() =>
+                                    router.push(
+                                      `/user-access?organizationId=${organizationId}&userId=${account.id}` as never,
+                                    )
+                                  }
+                                  style={[styles.iconAction, { borderColor: colors.border }]}
+                                >
+                                  <MaterialIcons name="tune" size={17} color={colors.primary} />
+                                </Pressable>
+                              ) : null}
                               {me.data?.platformOwner ? (
                                 <Pressable
                                   accessibilityRole="button"

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, count, desc, eq, inArray, ne, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -34,10 +34,37 @@ import { attachmentsRouter } from "./attachments";
 import { exportsRouter } from "./exports";
 import { attendanceRouter } from "./attendance";
 import { delegationRouter } from "./delegation";
-import { notificationsRouter } from "./notify";
+import { notificationsRouter, dispatchAlert, siteLeadIds } from "./notify";
 import { aiRouter } from "./ai";
+import { documentsRouter } from "./documents";
+import { budgetsRouter } from "./budgets";
+import { profileRouter } from "./profile";
+import { placesRouter } from "./places";
+import { modulesRouter } from "./modules-router";
+import { assistantRouter } from "./assistant";
 import { presenceRouter } from "./presence";
+import { peopleRouter } from "./people";
+import { crmRouter } from "./crm";
+import { billingRouter } from "./billing";
+import { systemCheckRouter } from "./system-check";
+import { purchaseRouter } from "./purchase";
+import { subcontractRouter } from "./subcontract";
+import { payrollRouter } from "./payroll";
+import { booksRouter } from "./books";
+import { advancesRouter } from "./advances";
+import { trackingRouter } from "./tracking";
+import { crewsRouter } from "./crews";
+import { userAccessRouter } from "./user-access";
+import { workerRouter } from "./worker";
+import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
+import {
+  checkReportItems,
+  dailyReportProcedures,
+  insertReportItems,
+  linkAttendanceToReport,
+  reportHeaderFields,
+} from "./daily-reports";
 import { siteCapabilities, sitesWithPermission } from "./capabilities";
 
 const codeSchema = z
@@ -161,7 +188,27 @@ export const jpRouter = router({
   delegation: delegationRouter,
   notifications: notificationsRouter,
   ai: aiRouter,
+  documents: documentsRouter,
+  budgets: budgetsRouter,
+  profile: profileRouter,
+  places: placesRouter,
+  modules: modulesRouter,
+  assistant: assistantRouter,
   presence: presenceRouter,
+  people: peopleRouter,
+  crm: crmRouter,
+  billing: billingRouter,
+  systemCheck: systemCheckRouter,
+  purchase: purchaseRouter,
+  subcontract: subcontractRouter,
+  payroll: payrollRouter,
+  books: booksRouter,
+  advances: advancesRouter,
+  tracking: trackingRouter,
+  crews: crewsRouter,
+  userAccess: userAccessRouter,
+  worker: workerRouter,
+  feedback: reportsRouter,
   workspace: router({
     inbox: protectedProcedure.query(async ({ ctx }) => {
       assertActiveAccount(ctx.user);
@@ -434,11 +481,24 @@ export const jpRouter = router({
 
     auditEvents: protectedProcedure.query(async ({ ctx }) => {
       const db = requireDb(await (await import("../db")).getDb());
-      const capabilities = await siteCapabilities(ctx.user, await getAccessibleSites(ctx.user));
+      const accessible = await getAccessibleSites(ctx.user);
+      const capabilities = await siteCapabilities(ctx.user, accessible);
       const siteIds = capabilities.map((capability) => capability.siteId);
       if (siteIds.length === 0) return [];
       const auditSiteIds = sitesWithPermission(capabilities, siteIds, "audit.view");
       if (auditSiteIds.length === 0) return [];
+      // Company-level events (CRM, billing, settings) carry no site: shown to leaders and auditors.
+      const companyAuditOrgIds = [
+        ...new Set(
+          accessible
+            .filter(
+              (site) =>
+                auditSiteIds.includes(site.id) &&
+                ["owner", "director", "admin", "auditor"].includes(site.businessRole),
+            )
+            .map((site) => site.organizationId),
+        ),
+      ];
       const compensationSiteIds = sitesWithPermission(capabilities, siteIds, "compensation.view");
       const kycVisibleSiteIds = sitesWithPermission(capabilities, siteIds, "workforce.kyc.view");
       const financeVisibleSiteIds = sitesWithPermission(
@@ -494,7 +554,15 @@ export const jpRouter = router({
         .innerJoin(users, eq(auditEvents.actorUserId, users.id))
         .where(
           and(
-            inArray(auditEvents.siteId, auditSiteIds),
+            companyAuditOrgIds.length
+              ? or(
+                  inArray(auditEvents.siteId, auditSiteIds),
+                  and(
+                    isNull(auditEvents.siteId),
+                    inArray(auditEvents.organizationId, companyAuditOrgIds),
+                  ),
+                )
+              : inArray(auditEvents.siteId, auditSiteIds),
             compensationAuditVisibility,
             kycAuditVisibility,
             financeAuditVisibility,
@@ -508,6 +576,7 @@ export const jpRouter = router({
   }),
 
   reports: router({
+    ...dailyReportProcedures,
     list: reportListProcedure,
 
     createDraft: protectedProcedure
@@ -521,11 +590,13 @@ export const jpRouter = router({
           remarks: z.string().trim().max(5000).optional(),
           nextDayPlan: z.string().trim().max(3000).optional(),
           clientMutationId: mutationIdSchema,
+          ...reportHeaderFields,
         }),
       )
       .mutation(async ({ ctx, input }) => {
         const permission = input.reportKind === "DPR" ? "dpr.create" : "dlr.create";
         const scope = await getSiteScope(ctx.user, input.siteId, permission);
+        const items = await checkReportItems(input.reportKind, scope.siteId, input.items);
         const db = requireDb(await (await import("../db")).getDb());
         const [existing] = await db
           .select()
@@ -554,11 +625,14 @@ export const jpRouter = router({
               title: input.title,
               remarks: input.remarks || null,
               nextDayPlan: input.nextDayPlan || null,
+              weatherCode: input.weatherCode ?? null,
+              overallStatus: input.overallStatus ?? null,
               status: "Draft",
               revisionNumber: 1,
               clientMutationId: input.clientMutationId,
               createdBy: ctx.user.id,
             });
+            await insertReportItems(tx, id, items);
             await createAudit(tx, {
               organizationId: scope.organizationId,
               siteId: scope.siteId,
@@ -571,6 +645,7 @@ export const jpRouter = router({
                 reportKind: input.reportKind,
                 reportDate: input.reportDate,
                 siteId: scope.siteId,
+                lines: items.length,
               }),
             });
           });
@@ -622,6 +697,7 @@ export const jpRouter = router({
               code: "PRECONDITION_FAILED",
               message: "This report was changed by another action and can no longer be submitted.",
             });
+          await linkAttendanceToReport(tx, lockedReport);
           await tx
             .update(dailyReports)
             .set({
@@ -645,6 +721,18 @@ export const jpRouter = router({
             afterSummary: JSON.stringify({ status: "Submitted" }),
           });
         });
+        void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+          dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: "report.submitted",
+            title: `${report.reportKind} submitted for review`,
+            detail: `Report date ${report.reportDate}`,
+            route: "/reports",
+            recipientUserIds,
+          }),
+        );
         return { id: report.id, status: "Submitted" as const, submittedAt: now };
       }),
 
@@ -725,6 +813,21 @@ export const jpRouter = router({
             reason: input.reason,
           });
         });
+        if (report.createdBy !== ctx.user.id)
+          void dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: input.decision === "Approved" ? "report.approved" : "report.returned",
+            title:
+              input.decision === "Approved"
+                ? `Your ${report.reportKind} was approved`
+                : `Your ${report.reportKind} was returned for correction`,
+            detail:
+              input.decision === "Approved" ? `Report date ${report.reportDate}` : input.reason,
+            route: "/reports",
+            recipientUserIds: [report.createdBy],
+          });
         return { id: report.id, status: input.decision };
       }),
   }),
@@ -875,6 +978,22 @@ export const jpRouter = router({
           .select()
           .from(materialRequestItems)
           .where(eq(materialRequestItems.requestId, id));
+        void siteLeadIds(scope.organizationId, scope.siteId, ctx.user.id).then((recipientUserIds) =>
+          dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: "material_request.submitted",
+            title: "New material request needs review",
+            detail: items
+              .slice(0, 3)
+              .map((item) => item.itemNameSnapshot)
+              .filter(Boolean)
+              .join(", "),
+            route: "/requests",
+            recipientUserIds,
+          }),
+        );
         return { ...created, items };
       }),
 
@@ -955,6 +1074,17 @@ export const jpRouter = router({
             reason: input.reason,
           });
         });
+        if (request.requestedBy !== ctx.user.id)
+          void dispatchAlert({
+            organizationId: scope.organizationId,
+            siteId: scope.siteId,
+            siteName: scope.siteName,
+            kind: `material_request.${input.decision.toLowerCase()}`,
+            title: `Your material request was ${input.decision.toLowerCase()}`,
+            detail: input.reason,
+            route: "/requests",
+            recipientUserIds: [request.requestedBy],
+          });
         return { id: request.id, status: input.decision };
       }),
   }),

@@ -28,7 +28,7 @@ import {
 } from "../../lib/jp/petty-cash-policy";
 import { getDb } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope, selfApprovalAllowed, type SiteScope } from "./access";
+import { assertModuleOn, getSiteScope, selfApprovalAllowed, type SiteScope } from "./access";
 
 type CashMovementType = "Funding" | "Expense" | "Cash Return";
 type CashPermission = "finance.cash.movement.review" | "finance.cash.movement.post";
@@ -866,6 +866,8 @@ export const pettyCashRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const scope = await getSiteScope(ctx.user, input.siteId, "site.view");
+      // The custodian may hold no finance permission, but the module switch still applies.
+      await assertModuleOn(scope.organizationId, "finance.cash.view");
       const db = requireDb(await getDb());
       const existingEvent = await findMutationEvent(db, ctx.user.id, input.clientMutationId);
       if (existingEvent) {

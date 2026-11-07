@@ -2,7 +2,8 @@
  * Builds outbound alert requests for the supported open-source gateways, without sending them.
  * Keeping this pure lets the request shapes be tested without a network or real credentials.
  *
- * WhatsApp: WAHA (devlikeapro/waha), Evolution API (EvolutionAPI/evolution-api), or the official
+ * WhatsApp: OpenWA (rmyndharis/OpenWA), WAHA (devlikeapro/waha), Evolution API
+ * (EvolutionAPI/evolution-api), or the official
  * WhatsApp Business Cloud API. SMS: SMS Gateway for Android (capcom6/android-sms-gateway) or
  * textbee (vernu/textbee). Push: Expo push service.
  */
@@ -27,6 +28,7 @@ export function normalizeIndianMobile(value: string | null | undefined): string 
 }
 
 export type WhatsAppConfig =
+  | { provider: "openwa"; baseUrl: string; apiKey: string; session: string }
   | { provider: "waha"; baseUrl: string; apiKey?: string; session: string }
   | { provider: "evolution"; baseUrl: string; apiKey: string; instance: string }
   | { provider: "cloud"; token: string; phoneNumberId: string; apiVersion?: string };
@@ -34,6 +36,13 @@ export type WhatsAppConfig =
 export function whatsappRequest(config: WhatsAppConfig, to: string, text: string): HttpRequest {
   const digits = to.replace(/^\+/, "");
   const json = { "Content-Type": "application/json" };
+  if (config.provider === "openwa")
+    return {
+      url: `${config.baseUrl.replace(/\/+$/, "")}/api/sessions/${encodeURIComponent(config.session)}/messages/send-text`,
+      method: "POST",
+      headers: { ...json, "X-API-Key": config.apiKey },
+      body: JSON.stringify({ chatId: `${digits}@c.us`, text }),
+    };
   if (config.provider === "waha")
     return {
       url: `${config.baseUrl.replace(/\/+$/, "")}/api/sendText`,
@@ -57,6 +66,83 @@ export function whatsappRequest(config: WhatsAppConfig, to: string, text: string
       to: digits,
       type: "text",
       text: { body: text },
+    }),
+  };
+}
+
+export type WhatsAppMedia = {
+  kind: "image" | "video" | "document";
+  /** A short-lived https link the gateway downloads from. */
+  url: string;
+  mimetype: string;
+  filename: string;
+  caption?: string;
+};
+
+/** A photo, video or document with a caption, for gateways that can send media. */
+export function whatsappMediaRequest(
+  config: WhatsAppConfig,
+  to: string,
+  media: WhatsAppMedia,
+): HttpRequest {
+  const digits = to.replace(/^\+/, "");
+  const json = { "Content-Type": "application/json" };
+  const caption = media.caption?.slice(0, 1000);
+  if (config.provider === "openwa")
+    return {
+      url: `${config.baseUrl.replace(/\/+$/, "")}/api/sessions/${encodeURIComponent(config.session)}/messages/send-${media.kind}`,
+      method: "POST",
+      headers: { ...json, "X-API-Key": config.apiKey },
+      body: JSON.stringify({
+        chatId: `${digits}@c.us`,
+        url: media.url,
+        mimetype: media.mimetype,
+        filename: media.filename,
+        caption,
+      }),
+    };
+  if (config.provider === "waha") {
+    const path =
+      media.kind === "image" ? "sendImage" : media.kind === "video" ? "sendVideo" : "sendFile";
+    return {
+      url: `${config.baseUrl.replace(/\/+$/, "")}/api/${path}`,
+      method: "POST",
+      headers: config.apiKey ? { ...json, "X-Api-Key": config.apiKey } : json,
+      body: JSON.stringify({
+        session: config.session,
+        chatId: `${digits}@c.us`,
+        file: { mimetype: media.mimetype, url: media.url, filename: media.filename },
+        caption,
+      }),
+    };
+  }
+  if (config.provider === "evolution")
+    return {
+      url: `${config.baseUrl.replace(/\/+$/, "")}/message/sendMedia/${encodeURIComponent(config.instance)}`,
+      method: "POST",
+      headers: { ...json, apikey: config.apiKey },
+      body: JSON.stringify({
+        number: digits,
+        mediatype: media.kind,
+        mimetype: media.mimetype,
+        media: media.url,
+        fileName: media.filename,
+        caption,
+      }),
+    };
+  return {
+    url: `https://graph.facebook.com/${config.apiVersion ?? "v21.0"}/${config.phoneNumberId}/messages`,
+    method: "POST",
+    headers: { ...json, Authorization: `Bearer ${config.token}` },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: digits,
+      type: media.kind,
+      [media.kind]: {
+        link: media.url,
+        caption,
+        ...(media.kind === "document" ? { filename: media.filename } : {}),
+      },
     }),
   };
 }

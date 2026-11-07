@@ -1,4 +1,6 @@
 import { and, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { disabledModulesFor } from "./module-settings";
+import { MODULES, isPermissionDisabled, moduleForPermission } from "../../lib/jp/modules";
 import { TRPCError } from "@trpc/server";
 import type { User } from "../../drizzle/schema";
 import {
@@ -168,9 +170,23 @@ export async function getSiteScope(
         code: "FORBIDDEN",
         message: `Your current role does not include ${permissionKey} for this site.`,
       });
+    await assertModuleOn(siteRow.organizationId, permissionKey);
   }
 
   return { ...siteRow, businessRole };
+}
+
+/**
+ * Refuses a permission whose module the company turned off. getSiteScope calls it; code that
+ * checks a site with a core key (site.view) and resolves the real permission itself must call it too.
+ */
+export async function assertModuleOn(organizationId: string, permissionKey: string) {
+  if (!isPermissionDisabled(permissionKey, await disabledModulesFor(organizationId))) return;
+  const module = MODULES.find((row) => row.key === moduleForPermission(permissionKey));
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: `${module?.title ?? "This module"} is turned off for your company. An admin can turn it on in Settings → Modules.`,
+  });
 }
 
 export async function getAccessibleSites(user: User) {
@@ -268,7 +284,8 @@ export async function getAccessibleSites(user: User) {
         code: "INTERNAL_SERVER_ERROR",
         message: "The assigned site role could not be resolved.",
       });
-    return { ...site, businessRole };
+    // organizationRole decides company-level keys (CRM, billing, accounts), like commercialAccess.
+    return { ...site, businessRole, organizationRole };
   });
   const organizationIds = [...new Set(scopedSites.map((site) => site.organizationId))];
   const scopeCheckTime = new Date();

@@ -8,8 +8,11 @@ import {
   auditEvents,
   siteGeofences,
   dailyReports,
+  materialRequests,
   pettyCashMovements,
   siteIssues,
+  sites,
+  workTasks,
   supplierInvoices,
   supplierPayments,
   users,
@@ -19,8 +22,10 @@ import { getDb } from "../db";
 import { storageGetSignedUrl, storagePut } from "../storage";
 import { getSiteScope } from "./access";
 import {
-  MAX_ATTACHMENT_BYTES,
+  MAX_VIDEO_BYTES,
   attachmentEntityTypes,
+  isVideoType,
+  maxBytesFor,
   safeFileName,
   sniffContentType,
   type AttachmentEntityType,
@@ -44,9 +49,17 @@ const entityRules: Record<AttachmentEntityType, { view: string; upload: readonly
   supplier_invoice: { view: "finance.invoice.view", upload: ["finance.invoice.create"] },
   supplier_payment: { view: "finance.payment.view", upload: ["finance.payment.create"] },
   petty_cash_movement: { view: "finance.cash.view", upload: ["finance.cash.movement.create"] },
+  project: { view: "site.view", upload: ["site.manage", "document.upload"] },
+  site: { view: "site.view", upload: ["site.manage", "dpr.create", "issue.create"] },
+  work_task: { view: "task.view", upload: ["task.manage", "task.status.update"] },
+  material_request: {
+    view: "material.request.view",
+    upload: ["material.request", "material.review"],
+  },
 };
 
-async function siteOf(db: Db, entityType: AttachmentEntityType, entityId: string) {
+/** The site(s) a record belongs to; a project's files are reached through any of its sites. */
+async function sitesOf(db: Db, entityType: AttachmentEntityType, entityId: string) {
   const pick = async (table: { id: any; siteId: any }) => {
     const [row] = await db
       .select({ siteId: table.siteId })
@@ -55,33 +68,55 @@ async function siteOf(db: Db, entityType: AttachmentEntityType, entityId: string
       .limit(1);
     return (row as { siteId: string } | undefined)?.siteId;
   };
-  const siteId =
-    entityType === "site_issue"
-      ? await pick(siteIssues)
-      : entityType === "daily_report"
-        ? await pick(dailyReports)
-        : entityType === "supplier_invoice"
-          ? await pick(supplierInvoices)
-          : entityType === "supplier_payment"
-            ? await pick(supplierPayments)
-            : await pick(pettyCashMovements);
-  if (!siteId) throw new TRPCError({ code: "NOT_FOUND", message: "Record not found." });
-  return siteId;
+  let siteIds: string[] = [];
+  if (entityType === "project")
+    siteIds = (
+      await db.select({ id: sites.id }).from(sites).where(eq(sites.projectId, entityId))
+    ).map((row) => row.id);
+  else {
+    const table =
+      entityType === "site"
+        ? sites
+        : entityType === "site_issue"
+          ? siteIssues
+          : entityType === "daily_report"
+            ? dailyReports
+            : entityType === "supplier_invoice"
+              ? supplierInvoices
+              : entityType === "supplier_payment"
+                ? supplierPayments
+                : entityType === "work_task"
+                  ? workTasks
+                  : entityType === "material_request"
+                    ? materialRequests
+                    : pettyCashMovements;
+    const siteId =
+      entityType === "site"
+        ? (await db.select({ id: sites.id }).from(sites).where(eq(sites.id, entityId)).limit(1))[0]
+            ?.id
+        : await pick(table as { id: any; siteId: any });
+    if (siteId) siteIds = [siteId];
+  }
+  if (siteIds.length === 0)
+    throw new TRPCError({ code: "NOT_FOUND", message: "Record not found." });
+  return siteIds;
 }
 
+/** The first of the record's sites where the person holds one of the keys. */
 async function scopeFor(
   user: Parameters<typeof getSiteScope>[0],
-  siteId: string,
+  siteIds: readonly string[],
   keys: readonly string[],
 ) {
   let lastError: unknown;
-  for (const key of keys) {
-    try {
-      return await getSiteScope(user, siteId, key);
-    } catch (error) {
-      lastError = error;
+  for (const siteId of siteIds)
+    for (const key of keys) {
+      try {
+        return await getSiteScope(user, siteId, key);
+      } catch (error) {
+        lastError = error;
+      }
     }
-  }
   throw lastError;
 }
 
@@ -93,8 +128,8 @@ const entityInput = {
 export const attachmentsRouter = router({
   list: protectedProcedure.input(z.object(entityInput)).query(async ({ ctx, input }) => {
     const db = requireDb(await getDb());
-    const siteId = await siteOf(db, input.entityType, input.entityId);
-    const scope = await getSiteScope(ctx.user, siteId, entityRules[input.entityType].view);
+    const siteIds = await sitesOf(db, input.entityType, input.entityId);
+    const scope = await scopeFor(ctx.user, siteIds, [entityRules[input.entityType].view]);
     const files = await db
       .select({
         id: attachments.id,
@@ -139,10 +174,35 @@ export const attachmentsRouter = router({
       } catch {
         locations = [];
       }
+    // Small photo previews (short-lived links) for the first photos, so lists show thumbnails.
+    const previews = new Map<string, string>();
+    const keyed = await db
+      .select({ id: attachments.id, storageKey: attachments.storageKey })
+      .from(attachments)
+      .where(
+        inArray(
+          attachments.id,
+          files
+            .filter((file) => file.contentType.startsWith("image/"))
+            .slice(0, 24)
+            .map((file) => file.id)
+            .concat(["00000000-0000-0000-0000-000000000000"]),
+        ),
+      );
+    await Promise.all(
+      keyed.map(async (row) => {
+        try {
+          previews.set(row.id, await storageGetSignedUrl(row.storageKey));
+        } catch {
+          // No preview; the app shows an icon.
+        }
+      }),
+    );
     return files.map((file) => {
       const location = locations.find((row) => row.attachmentId === file.id);
       return {
         ...file,
+        previewUrl: previews.get(file.id) ?? null,
         location: location
           ? {
               latitude: Number(location.latitude),
@@ -165,7 +225,7 @@ export const attachmentsRouter = router({
         base64: z
           .string()
           .min(8)
-          .max(Math.ceil((MAX_ATTACHMENT_BYTES * 4) / 3) + 16),
+          .max(Math.ceil((MAX_VIDEO_BYTES * 4) / 3) + 16),
         captureTime: z.coerce.date().optional(),
         location: z
           .object({
@@ -180,8 +240,8 @@ export const attachmentsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const db = requireDb(await getDb());
-      const siteId = await siteOf(db, input.entityType, input.entityId);
-      const scope = await scopeFor(ctx.user, siteId, entityRules[input.entityType].upload);
+      const siteIds = await sitesOf(db, input.entityType, input.entityId);
+      const scope = await scopeFor(ctx.user, siteIds, entityRules[input.entityType].upload);
       const [prior] = await db
         .select({ entityId: auditEvents.entityId })
         .from(auditEvents)
@@ -194,16 +254,19 @@ export const attachmentsRouter = router({
         .limit(1);
       if (prior) return { id: prior.entityId };
       const bytes = Buffer.from(input.base64, "base64");
-      if (bytes.length === 0 || bytes.length > MAX_ATTACHMENT_BYTES)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Files must be between 1 byte and 8 MB.",
-        });
-      const contentType = sniffContentType(bytes);
+      const contentType = bytes.length ? sniffContentType(bytes) : null;
       if (!contentType)
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Only JPEG, PNG, WebP photos and PDF documents can be attached.",
+          message:
+            "Only photos (JPEG, PNG, WebP), PDF documents and MP4/MOV/3GP videos can be attached.",
+        });
+      if (bytes.length > maxBytesFor(contentType))
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: isVideoType(contentType)
+            ? "Videos must be under 30 MB (about a minute)."
+            : "Photos and PDFs must be under 8 MB.",
         });
       const id = randomUUID();
       const fileName = safeFileName(input.fileName, contentType);
@@ -297,8 +360,8 @@ export const attachmentsRouter = router({
       if (!file || !(attachmentEntityTypes as readonly string[]).includes(file.entityType))
         throw new TRPCError({ code: "NOT_FOUND", message: "File not found." });
       const entityType = file.entityType as AttachmentEntityType;
-      const siteId = await siteOf(db, entityType, file.entityId);
-      const scope = await getSiteScope(ctx.user, siteId, entityRules[entityType].view);
+      const siteIds = await sitesOf(db, entityType, file.entityId);
+      const scope = await scopeFor(ctx.user, siteIds, [entityRules[entityType].view]);
       if (scope.organizationId !== file.organizationId)
         throw new TRPCError({ code: "NOT_FOUND", message: "File not found." });
       try {

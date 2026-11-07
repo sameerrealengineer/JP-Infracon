@@ -5,6 +5,7 @@ import {
   isExpoPushToken,
   normalizeIndianMobile,
   smsRequest,
+  whatsappMediaRequest,
   whatsappRequest,
 } from "./notify-policy";
 
@@ -22,6 +23,58 @@ describe("normalizeIndianMobile", () => {
 });
 
 describe("gateway requests", () => {
+  const openwa = {
+    provider: "openwa" as const,
+    baseUrl: "http://openwa:2785/",
+    apiKey: "k",
+    session: "jp main",
+  };
+  it("builds an OpenWA send-text call", () => {
+    const req = whatsappRequest(openwa, "+919876543210", "hi");
+    expect(req.url).toBe("http://openwa:2785/api/sessions/jp%20main/messages/send-text");
+    expect(req.headers["X-API-Key"]).toBe("k");
+    expect(JSON.parse(req.body)).toEqual({ chatId: "919876543210@c.us", text: "hi" });
+  });
+  it("builds media calls for every gateway", () => {
+    const media = {
+      kind: "image" as const,
+      url: "https://files.example/p.jpg",
+      mimetype: "image/jpeg",
+      filename: "p.jpg",
+      caption: "Slab photo",
+    };
+    const open = whatsappMediaRequest(openwa, "+919876543210", { ...media, kind: "video" });
+    expect(open.url).toBe("http://openwa:2785/api/sessions/jp%20main/messages/send-video");
+    expect(JSON.parse(open.body)).toMatchObject({
+      chatId: "919876543210@c.us",
+      url: media.url,
+      mimetype: "image/jpeg",
+      caption: "Slab photo",
+    });
+    const waha = whatsappMediaRequest(
+      { provider: "waha", baseUrl: "http://wa:3000", session: "default" },
+      "+919876543210",
+      { ...media, kind: "document" },
+    );
+    expect(waha.url).toBe("http://wa:3000/api/sendFile");
+    expect(JSON.parse(waha.body).file.url).toBe(media.url);
+    const evo = whatsappMediaRequest(
+      { provider: "evolution", baseUrl: "https://evo.example", apiKey: "k", instance: "jp" },
+      "+919876543210",
+      media,
+    );
+    expect(evo.url).toBe("https://evo.example/message/sendMedia/jp");
+    expect(JSON.parse(evo.body)).toMatchObject({ number: "919876543210", mediatype: "image" });
+    const cloud = whatsappMediaRequest(
+      { provider: "cloud", token: "t", phoneNumberId: "123" },
+      "+919876543210",
+      media,
+    );
+    expect(JSON.parse(cloud.body)).toMatchObject({
+      type: "image",
+      image: { link: media.url, caption: "Slab photo" },
+    });
+  });
   it("builds a WAHA sendText call", () => {
     const req = whatsappRequest(
       { provider: "waha", baseUrl: "http://wa:3000/", apiKey: "k", session: "default" },

@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Platform } from "react-native";
+import { siteAlertsEnabled } from "@/lib/geofence-task";
 import { trpc } from "@/lib/trpc";
 
 Notifications.setNotificationHandler({
@@ -21,6 +22,23 @@ Notifications.setNotificationHandler({
 export function usePushRegistration(enabled: boolean) {
   const router = useRouter();
   const register = trpc.jp.notifications.registerDevice.useMutation();
+  const reportTracking = trpc.jp.presence.reportTracking.useMutation();
+  const fences = trpc.jp.presence.myFences.useQuery(undefined, {
+    enabled: enabled && Platform.OS !== "web",
+  });
+  const fenceCount = fences.data?.length;
+
+  // Tell the server whether this phone watches site boundaries, so leaders see who is not.
+  useEffect(() => {
+    if (!enabled || Platform.OS === "web" || fenceCount === undefined) return;
+    void siteAlertsEnabled().then((on) =>
+      reportTracking
+        .mutateAsync({ enabled: on, fenceCount: on ? fenceCount : 0, platform: Platform.OS })
+        .catch(() => null),
+    );
+    // Once per sign-in, after the site boundaries are known.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, fenceCount]);
 
   useEffect(() => {
     if (!enabled || Platform.OS === "web") return;

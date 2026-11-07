@@ -1,4 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { AssignTaskSheet } from "@/components/jp/assign-task-sheet";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -19,9 +21,12 @@ import {
   SecondaryButton,
   StatusPill,
 } from "@/components/jp/ui";
+import { AttachmentStrip } from "@/components/jp/attachment-strip";
+import { ScheduleDashboard } from "@/components/jp/schedule-dashboard";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import type { RescheduleStrategy, TaskStatus } from "@/lib/jp/scheduling";
@@ -63,9 +68,11 @@ function errorMessage(error: unknown) {
 export default function ScheduleScreen() {
   const colors = useColors();
   const utils = trpc.useUtils();
+  const [filesTaskId, setFilesTaskId] = useState<string | null>(null);
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [showCreate, setShowCreate] = useState(false);
   const [taskCreateMutationId, setTaskCreateMutationId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -93,6 +100,7 @@ export default function ScheduleScreen() {
   const [statusReason, setStatusReason] = useState("");
   const [statusMutationId, setStatusMutationId] = useState<string | null>(null);
   const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
+  const [assignTaskId, setAssignTaskId] = useState<string | null>(null);
 
   const siteOptions = useMemo(
     () =>
@@ -177,7 +185,7 @@ export default function ScheduleScreen() {
       setMessage(
         "Task saved to the server schedule. Its initial planned dates are retained in revision history.",
       );
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Task was not saved: ${errorMessage(error)}`);
     }
@@ -216,7 +224,7 @@ export default function ScheduleScreen() {
         "Reschedule applied after impact review. Original and revised dates remain in schedule history.",
       );
       clearReschedule();
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Reschedule was not applied: ${errorMessage(error)}`);
     }
@@ -244,7 +252,7 @@ export default function ScheduleScreen() {
       setStatusTarget(null);
       setStatusReason("");
       setStatusMutationId(null);
-      await tasksQuery.refetch();
+      await Promise.all([tasksQuery.refetch(), utils.jp.places.invalidate()]);
     } catch (error) {
       setMessage(`Status was not changed: ${errorMessage(error)}`);
     }
@@ -260,6 +268,7 @@ export default function ScheduleScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="schedule" />}
             eyebrow="Site operations"
             title="Schedule"
             subtitle="Task dates, dependencies, and reviewed schedule changes."
@@ -328,6 +337,7 @@ export default function ScheduleScreen() {
                   reschedule keeps the original plan in history.
                 </Text>
               </View>
+              <ScheduleDashboard siteId={siteId} />
               {message ? (
                 <View
                   style={[
@@ -573,6 +583,16 @@ export default function ScheduleScreen() {
                             {task.workCategory}
                           </Text>
                         ) : null}
+                        {task.assigneeName || task.crewName ? (
+                          <Text style={[styles.cardMeta, { color: colors.foreground }]}>
+                            {[
+                              task.assigneeName ? `Responsible: ${task.assigneeName}` : null,
+                              task.crewName ? `Crew: ${task.crewName}` : null,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </Text>
+                        ) : null}
                         {task.description ? (
                           <Text style={[styles.cardDescription, { color: colors.muted }]}>
                             {task.description}
@@ -607,10 +627,24 @@ export default function ScheduleScreen() {
                               }}
                             />
                           ) : null}
+                          {canManage &&
+                          task.status !== "Completed" &&
+                          task.status !== "Cancelled" ? (
+                            <SecondaryButton
+                              icon="assignment-ind"
+                              label="Assign"
+                              onPress={() => setAssignTaskId(task.id)}
+                            />
+                          ) : null}
                           <SecondaryButton
                             icon="history"
                             label={isHistoryOpen ? "Close history" : "History"}
                             onPress={() => setHistoryTaskId(isHistoryOpen ? null : task.id)}
+                          />
+                          <SecondaryButton
+                            icon={filesTaskId === task.id ? "expand-less" : "photo-library"}
+                            label={filesTaskId === task.id ? "Hide photos" : "Photos"}
+                            onPress={() => setFilesTaskId(filesTaskId === task.id ? null : task.id)}
                           />
                           {canUpdateStatus &&
                           task.status !== "Completed" &&
@@ -627,6 +661,23 @@ export default function ScheduleScreen() {
                             />
                           ) : null}
                         </View>
+
+                        {filesTaskId === task.id ? (
+                          <View
+                            style={[
+                              styles.inlinePanel,
+                              { backgroundColor: colors.background, borderColor: colors.border },
+                            ]}
+                          >
+                            <AttachmentStrip
+                              entityType="work_task"
+                              entityId={task.id}
+                              title="Work photos and videos"
+                              allowVideo
+                              canUpload={canUpdateStatus || canManage}
+                            />
+                          </View>
+                        ) : null}
 
                         {isRescheduling ? (
                           <View
@@ -915,6 +966,18 @@ export default function ScheduleScreen() {
             </>
           ) : null}
         </ScrollView>
+        {assignTaskId && siteId
+          ? (() => {
+              const task = tasksQuery.data?.find((row) => row.id === assignTaskId);
+              return task ? (
+                <AssignTaskSheet
+                  task={task}
+                  siteId={siteId}
+                  onClose={() => setAssignTaskId(null)}
+                />
+              ) : null;
+            })()
+          : null}
       </Screen>
     </AuthGate>
   );

@@ -11,7 +11,7 @@ import {
 } from "../../drizzle/schema";
 import { parseRupeesToPaise, previousCalendarDate } from "../../lib/jp/workforce-domain";
 import { protectedProcedure, router } from "../_core/trpc";
-import { getSiteScope } from "./access";
+import { assertModuleOn, getSiteScope } from "./access";
 import { resolveSitePermission, type PermissionGrantForResolution } from "./policy";
 import { getDb } from "../db";
 
@@ -72,6 +72,7 @@ async function scopedPermission(
   permissionKey: string,
 ) {
   const scope = await getSiteScope(user, siteId, "site.view");
+  await assertModuleOn(scope.organizationId, permissionKey);
   if (!permissionKey.endsWith(".view") && scope.siteStatus !== "Active") {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",

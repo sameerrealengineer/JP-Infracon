@@ -9,38 +9,168 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { ChipGroup, InlineError, SecondaryButton } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
-import { readBase64 } from "@/lib/device-files";
+import { compressPhoto, readBase64 } from "@/lib/device-files";
 import type { IssueDraftFields } from "@/lib/jp/ai-extraction";
+import type { ReportDraftFields } from "@/lib/jp/ai-report-extraction";
+import type { RequestDraftFields } from "@/lib/jp/ai-request-extraction";
+import type { ExpenseDraftFields } from "@/lib/jp/ai-expense-extraction";
+import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
+import { useT } from "@/lib/i18n";
 
 const languages = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
 type Lang = keyof typeof languages;
 const MAX_SECONDS = 28;
 
-/**
- * Speak (Odia, Hindi or English) or type freely; the server transcribes with Sarvam AI and
- * fills the issue form. The person still reviews every field before sending.
- */
+/** Voice or typed text → issue form fields. */
 export function VoiceIssueAssist({
+  siteId,
+  onFields,
+  initialText,
+}: {
+  siteId: string;
+  onFields: (fields: IssueDraftFields) => void;
+  initialText?: string;
+}) {
+  const fill = trpc.jp.ai.fillIssue.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt="Tap the mic and describe the problem"
+      textLabel="Describe the issue in your own words"
+      initialText={initialText}
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
+    />
+  );
+}
+
+/** Voice or typed day summary → daily report draft fields (work lines for a DPR). */
+export function VoiceReportAssist({
+  siteId,
+  reportKind,
+  onFields,
+  initialText,
+}: {
+  siteId: string;
+  reportKind: "DPR" | "DLR";
+  onFields: (fields: ReportDraftFields) => void;
+  initialText?: string;
+}) {
+  const fill = trpc.jp.ai.fillReport.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt={
+        reportKind === "DPR"
+          ? "Tap the mic and say what work was done today, where, and how much"
+          : "Tap the mic and say who worked today, by trade"
+      }
+      textLabel="Describe today's work in your own words"
+      initialText={initialText}
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, reportKind, text }))}
+    />
+  );
+}
+
+/** Voice, typed note or receipt photo → petty cash expense fields. */
+export function ExpenseAssist({
   siteId,
   onFields,
 }: {
   siteId: string;
-  onFields: (fields: IssueDraftFields) => void;
+  onFields: (fields: ExpenseDraftFields) => void;
+}) {
+  const { t } = useT();
+  const fill = trpc.jp.ai.fillExpense.useMutation();
+  const [scanError, setScanError] = useState<string | null>(null);
+  const scan = async () => {
+    setScanError(null);
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      const result = permission.granted
+        ? await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.9 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.9 });
+      if (result.canceled || !result.assets[0]) return;
+      const imageBase64 = await compressPhoto(result.assets[0].uri, 1400);
+      onFields(await fill.mutateAsync({ siteId, imageBase64 }));
+    } catch (cause) {
+      setScanError(cause instanceof Error ? cause.message : "The receipt could not be read.");
+    }
+  };
+  return (
+    <View style={{ gap: 8 }}>
+      <SecondaryButton
+        icon="receipt-long"
+        label={fill.isPending ? "Reading receipt…" : t("Scan receipt with AI")}
+        disabled={fill.isPending}
+        onPress={() => void scan()}
+      />
+      {scanError ? <InlineError message={scanError} /> : null}
+      <VoiceAssist
+        siteId={siteId}
+        prompt="Or tap the mic and say what was paid, to whom and for what"
+        textLabel="e.g. 450 rupees diesel generator ke liye, Mahavir petrol pump, cash"
+        filling={fill.isPending}
+        onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
+      />
+    </View>
+  );
+}
+
+/** Voice or typed material need → material request fields. */
+export function VoiceRequestAssist({
+  siteId,
+  onFields,
+}: {
+  siteId: string;
+  onFields: (fields: RequestDraftFields) => void;
+}) {
+  const fill = trpc.jp.ai.fillRequest.useMutation();
+  return (
+    <VoiceAssist
+      siteId={siteId}
+      prompt="Tap the mic and say what material you need, how much, and for what"
+      textLabel="e.g. 50 bori cement aur 2 ton 12mm saria, first floor slab ke liye"
+      filling={fill.isPending}
+      onFill={async (text) => onFields(await fill.mutateAsync({ siteId, text }))}
+    />
+  );
+}
+
+/**
+ * Speak (Odia, Hindi or English) or type freely; the server transcribes with Sarvam AI and
+ * an AI model fills the form. The person still reviews every field before saving.
+ */
+function VoiceAssist({
+  siteId,
+  prompt,
+  textLabel,
+  filling,
+  onFill,
+  initialText = "",
+}: {
+  siteId: string;
+  prompt: string;
+  textLabel: string;
+  /** Words passed on from the assistant, ready to fill the form with one tap. */
+  initialText?: string;
+  filling: boolean;
+  onFill: (text: string) => Promise<void>;
 }) {
   const colors = useColors();
   const status = trpc.jp.ai.status.useQuery();
   const transcribe = trpc.jp.ai.transcribe.useMutation();
-  const fill = trpc.jp.ai.fillIssue.useMutation();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [language, setLanguage] = useState<Lang>("od-IN");
   const [recording, setRecording] = useState(false);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (status.data && !status.data.formFill) return null;
-  const busy = transcribe.isPending || fill.isPending;
+  const busy = transcribe.isPending || filling;
 
   const stop = async () => {
     if (timer.current) clearTimeout(timer.current);
@@ -80,7 +210,7 @@ export function VoiceIssueAssist({
   const fillForm = async () => {
     setError(null);
     try {
-      onFields(await fill.mutateAsync({ siteId, text: text.trim() }));
+      await onFill(text.trim());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The form could not be filled.");
     }
@@ -121,9 +251,7 @@ export function VoiceIssueAssist({
             )}
           </Pressable>
           <Text style={[styles.hint, { color: colors.muted }]}>
-            {recording
-              ? `Listening… tap to stop (max ${MAX_SECONDS} s)`
-              : "Tap the mic and describe the problem"}
+            {recording ? `Listening… tap to stop (max ${MAX_SECONDS} s)` : prompt}
           </Text>
         </>
       ) : null}
@@ -133,7 +261,7 @@ export function VoiceIssueAssist({
         multiline
         placeholder="…or type in your own words, any language"
         placeholderTextColor={colors.muted}
-        accessibilityLabel="Describe the issue in your own words"
+        accessibilityLabel={textLabel}
         style={[
           styles.input,
           { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.surface },
@@ -142,7 +270,7 @@ export function VoiceIssueAssist({
       {error ? <InlineError message={error} title="AI assist" /> : null}
       <SecondaryButton
         icon="auto-fix-high"
-        label={fill.isPending ? "Filling…" : "Fill the form with AI"}
+        label={filling ? "Filling…" : "Fill the form with AI"}
         disabled={text.trim().length < 3 || busy}
         onPress={() => void fillForm()}
       />

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +21,7 @@ import {
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
 import { resolveSelectedId } from "@/lib/jp/selection";
+import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 import { createClientMutationId } from "@/lib/jp/local-repository";
 import { formatPaiseAsRupees } from "@/lib/jp/workforce-domain";
@@ -69,7 +71,8 @@ export default function WorkforceScreen() {
   const colors = useColors();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
-  const [chosenSiteId, setSiteId] = useState("");
+  const siteParam = useSiteParam();
+  const [chosenSiteId, setSiteId] = useState(siteParam);
   const [message, setMessage] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createKey, setCreateKey] = useState<string | null>(null);
@@ -308,6 +311,7 @@ export default function WorkforceScreen() {
       <Screen>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <AppHeader
+            right={<HelpButton topicKey="workforce" />}
             eyebrow="People & compensation"
             title="Workforce"
             subtitle="Workers, technicians and contacts with KYC status and approved rates."

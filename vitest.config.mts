@@ -12,6 +12,6 @@ export default defineConfig({
   },
   test: {
     // Playwright specs live in e2e/ and run with `pnpm test:e2e`, not Vitest.
-    exclude: [...configDefaults.exclude, "e2e/**"],
+    exclude: [...configDefaults.exclude, "e2e/**", "e2e-live/**"],
   },
 });

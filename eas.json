@@ -6,8 +6,21 @@
   "build": {
     "demo": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_JP_DEMO": "1" }
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_JP_DEMO": "1"
+      }
+    },
+    "production": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://jpinfracon.centralindia.cloudapp.azure.com"
+      }
     }
   }
 }

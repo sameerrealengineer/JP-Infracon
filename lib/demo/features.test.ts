@@ -112,8 +112,16 @@ describe("offline demo: every screen and workflow runs on the phone database", (
     const stock = await manager.jp.inventory.list({ siteId: siteA });
     const cement = stock.catalogue.find((item) => item.itemCode === "CEM-OPC53")!;
     expect(Number(cement.onHand)).toBe(200); // the 40 bag issue is still waiting for review
-    expect(stock.pendingReviewCount).toBe(1);
-    const pending = stock.movements.find((row) => row.status === "Submitted")!;
+    // The 40 bag issue, plus two goods-receipt inwards from the sample purchase order.
+    expect(stock.pendingReviewCount).toBe(3);
+    expect(
+      stock.movements.filter(
+        (row) => row.status === "Submitted" && row.movementType === "Receipt/Inward",
+      ),
+    ).toHaveLength(2);
+    const pending = stock.movements.find(
+      (row) => row.status === "Submitted" && row.movementType === "Issue/Consumption",
+    )!;
     await manager.jp.inventory.reviewMovement({
       movementId: pending.id,
       decision: "Post",
@@ -124,7 +132,8 @@ describe("offline demo: every screen and workflow runs on the phone database", (
   });
 
   it("workforce, rates and attendance", async () => {
-    expect((await supervisor.jp.workforce.list({ siteId: siteA })).length).toBe(3);
+    // Three workers and the site engineer added for payroll.
+    expect((await supervisor.jp.workforce.list({ siteId: siteA })).length).toBe(4);
     await accounts.jp.workforce.rates({ siteId: siteA });
     const roster = await manager.jp.attendance.roster({
       siteId: siteA,
@@ -205,7 +214,8 @@ describe("offline demo: every screen and workflow runs on the phone database", (
   it("supplier bills and payments: review and post by different people", async () => {
     await accounts.jp.finance.listVendors({ siteId: siteA });
     const invoices = await accounts.jp.finance.listInvoices({ siteId: siteA });
-    expect(invoices.rows.length).toBe(2);
+    // 2 supplier bills + the subcontractor advance and RA-01 posted as payables
+    expect(invoices.rows.length).toBe(4);
     await accounts.jp.finance.invoiceDetail({ siteId: siteA, invoiceId: invoices.rows[0].id });
     const payments = await manager.jp.finance.payments.listPayments({ siteId: siteA });
     const payment = payments.rows[0];

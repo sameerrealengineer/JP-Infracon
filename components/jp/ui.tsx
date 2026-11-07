@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Image as PhotoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter, useSegments } from "expo-router";
 import { useEffect, type ComponentProps, type ReactNode } from "react";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/jp/domain";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
+import { deniedPermission, permissionLabel } from "@/lib/jp/access-catalog";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -173,7 +175,13 @@ export function AppHeader({
   const inTabs = segments[0] === "(tabs)";
   const inboxCount = useInboxCount();
   const me = trpc.auth.me.useQuery(undefined, { retry: false, staleTime: 5 * 60_000 });
+  const profile = trpc.jp.profile.me.useQuery(undefined, { retry: false, staleTime: 4 * 60_000 });
   const initials = userInitials && userInitials !== "?" ? userInitials : initialsOf(me.data?.name);
+  const photo = profile.data?.photoUrl ?? null;
+  const assistant = trpc.jp.assistant.status.useQuery(undefined, {
+    retry: false,
+    staleTime: 10 * 60_000,
+  });
   return (
     <View style={styles.header}>
       <View style={styles.headerTopRow}>
@@ -196,6 +204,13 @@ export function AppHeader({
         )}
         <View style={styles.headerActions}>
           {right}
+          {assistant.data?.available && segments[0] !== "assistant" ? (
+            <IconButton
+              icon="auto-awesome"
+              label={t("Ask the AI assistant")}
+              onPress={() => router.push("/assistant" as never)}
+            />
+          ) : null}
           <IconButton
             icon="notifications-none"
             label={t("Open notifications")}
@@ -204,15 +219,24 @@ export function AppHeader({
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open account and settings"
-            onPress={() => router.push("/(tabs)/more" as never)}
+            accessibilityLabel={t("Open my profile")}
+            onPress={() => router.push("/profile" as never)}
             style={({ pressed }) => [
               styles.avatar,
               { backgroundColor: colors.primary },
               pressed && styles.pressed,
             ]}
           >
-            <Text style={[styles.avatarText, { color: colors.background }]}>{initials}</Text>
+            {photo ? (
+              <PhotoImage
+                source={{ uri: photo }}
+                style={styles.avatarPhoto}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+              />
+            ) : (
+              <Text style={[styles.avatarText, { color: colors.background }]}>{initials}</Text>
+            )}
           </Pressable>
         </View>
       </View>
@@ -562,6 +586,7 @@ export function ListRow({
   onPress,
   trailing,
   tone = "info",
+  leading,
 }: {
   icon: IconName;
   title: string;
@@ -569,6 +594,8 @@ export function ListRow({
   onPress?: () => void;
   trailing?: ReactNode;
   tone?: Tone;
+  /** Replaces the icon, for example with a person's photo. */
+  leading?: ReactNode;
 }) {
   const colors = useColors();
   const accent = useToneColor(tone);
@@ -579,9 +606,11 @@ export function ListRow({
       onPress={onPress}
       style={({ pressed }) => [styles.listRow, pressed && { opacity: 0.7 }]}
     >
-      <View style={[styles.listIcon, { backgroundColor: `${accent}12` }]}>
-        <MaterialIcons name={icon} size={19} color={accent} />
-      </View>
+      {leading ?? (
+        <View style={[styles.listIcon, { backgroundColor: `${accent}12` }]}>
+          <MaterialIcons name={icon} size={19} color={accent} />
+        </View>
+      )}
       <View style={{ flex: 1 }}>
         <Text style={[styles.listTitle, { color: colors.foreground }]}>{title}</Text>
         {detail ? <Text style={[styles.listDetail, { color: colors.muted }]}>{detail}</Text> : null}
@@ -777,6 +806,35 @@ function friendlyError(message: string) {
   return message;
 }
 
+function noAccessDetail(permission: string, t: ReturnType<typeof useT>["t"]) {
+  return t(
+    "Your role does not allow “{permission}”. Ask your owner or admin to switch it on for you in User access.",
+    { permission: permissionLabel(permission) },
+  );
+}
+
+/** True when a tRPC error is a permission refusal (the screen should show NoAccess). */
+export function isAccessDenied(error: unknown) {
+  return (error as { data?: { code?: string } } | null)?.data?.code === "FORBIDDEN";
+}
+
+/** Whole-screen state for a person whose role does not include this screen. */
+export function NoAccess({ area, message }: { area: string; message?: string }) {
+  const { t } = useT();
+  const denied = message ? deniedPermission(message) : null;
+  return (
+    <EmptyState
+      icon="lock-outline"
+      title={t("You don't have access to {area}", { area })}
+      detail={
+        denied
+          ? noAccessDetail(denied, t)
+          : t("Ask your owner or admin to switch it on for you in User access.")
+      }
+    />
+  );
+}
+
 export function InlineError({
   message,
   onRetry,
@@ -788,6 +846,8 @@ export function InlineError({
 }) {
   const colors = useColors();
   const { t } = useT();
+  // A permission refusal is not a fault: say so plainly, without the internal key.
+  const denied = deniedPermission(message);
   return (
     <View
       style={[
@@ -796,14 +856,20 @@ export function InlineError({
       ]}
       accessibilityRole="alert"
     >
-      <MaterialIcons name="error-outline" size={19} color={colors.error} />
+      <MaterialIcons
+        name={denied ? "lock-outline" : "error-outline"}
+        size={19}
+        color={colors.error}
+      />
       <View style={{ flex: 1 }}>
         <Text style={[styles.errorTitle, { color: colors.foreground }]}>
-          {title ?? t("Something went wrong")}
+          {title ?? (denied ? t("No access") : t("Something went wrong"))}
         </Text>
-        <Text style={[styles.errorDetail, { color: colors.muted }]}>{friendlyError(message)}</Text>
+        <Text style={[styles.errorDetail, { color: colors.muted }]}>
+          {denied ? noAccessDetail(denied, t) : friendlyError(message)}
+        </Text>
       </View>
-      {onRetry ? (
+      {onRetry && !denied ? (
         <Pressable accessibilityRole="button" onPress={onRetry} hitSlop={8}>
           <Text style={[styles.retryText, { color: colors.primary }]}>{t("Retry")}</Text>
         </Pressable>
@@ -943,9 +1009,22 @@ export function Sheet({
   );
 }
 
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+export function Screen({
+  children,
+  scroll = true,
+  inTabs = false,
+}: {
+  children: ReactNode;
+  scroll?: boolean;
+  /** Tab screens skip the bottom inset because the tab bar already covers it. */
+  inTabs?: boolean;
+}) {
   return (
-    <ScreenContainer className="px-5" safeAreaClassName="bg-background">
+    <ScreenContainer
+      className="px-5"
+      safeAreaClassName="bg-background"
+      edges={inTabs ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
+    >
       {scroll ? children : <View style={{ flex: 1 }}>{children}</View>}
     </ScreenContainer>
   );
@@ -997,6 +1076,7 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarText: { fontSize: 14, fontWeight: "800", letterSpacing: 0.4 },
+  avatarPhoto: { width: 42, height: 42, borderRadius: 21 },
   heroShell: { borderRadius: 24, marginBottom: 20 },
   hero: { borderRadius: 24, padding: 20, overflow: "hidden" },
   heroGlow: {

@@ -19,6 +19,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import { useConnectivity } from "@/hooks/use-connectivity";
+import { siteScopedRoute } from "@/lib/jp/site-route";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
 
@@ -32,17 +33,19 @@ export default function NotificationsScreen() {
   const { online } = useConnectivity();
   const inbox = trpc.jp.workspace.inbox.useQuery();
   const [view, setView] = useState<View_>("All");
-  const items = (inbox.data?.items ?? []).filter((item) =>
-    view === "All"
+  const all = inbox.data?.items ?? [];
+  const inView = (v: View_, item: (typeof all)[number]) =>
+    v === "All"
       ? true
-      : view === "Urgent"
+      : v === "Urgent"
         ? item.severity === "high"
-        : view === "My corrections"
+        : v === "My corrections"
           ? item.kind === "report.returned" || item.kind === "cash.acknowledge"
           : item.kind !== "report.returned" &&
             item.kind !== "task.overdue" &&
-            item.kind !== "cash.acknowledge",
-  );
+            item.kind !== "cash.acknowledge";
+  const items = all.filter((item) => inView(view, item));
+  const countFor = (v: View_) => all.filter((item) => inView(v, item)).length;
 
   return (
     <AuthGate>
@@ -79,7 +82,12 @@ export default function NotificationsScreen() {
               message={`Could not check: ${inbox.data.unavailable.join(", ")}. Ask your administrator to finish the database update.`}
             />
           ) : null}
-          <ChipGroup options={views} value={view} onChange={setView} />
+          <ChipGroup
+            options={views}
+            value={view}
+            onChange={setView}
+            format={(v) => (inbox.data ? `${t(v)} · ${countFor(v)}` : t(v))}
+          />
           {inbox.isLoading ? (
             <LoadingBlock label="Checking your queue…" />
           ) : items.length === 0 ? (
@@ -97,8 +105,8 @@ export default function NotificationsScreen() {
                     icon={inboxIcon[item.kind].icon}
                     tone={inboxIcon[item.kind].tone}
                     title={item.title}
-                    detail={`${item.siteName} · ${item.detail}`}
-                    onPress={() => router.push(item.route as never)}
+                    detail={`${item.siteName} · ${item.detail} · ${formatDateTime(item.occurredAt)}`}
+                    onPress={() => router.push(siteScopedRoute(item.route, item.siteId) as never)}
                     trailing={
                       item.severity === "high" ? (
                         <StatusPill label="Urgent" tone="error" compact />
@@ -112,6 +120,13 @@ export default function NotificationsScreen() {
           <Text style={[styles.note, { color: colors.muted }]}>
             Opening an item takes you to its register, where your access is checked again.
           </Text>
+          <Text
+            accessibilityRole="link"
+            onPress={() => router.push("/alert-settings" as never)}
+            style={[styles.link, { color: colors.primary }]}
+          >
+            {t("Choose which alerts reach your phone and WhatsApp")}
+          </Text>
         </ScrollView>
       </Screen>
     </AuthGate>
@@ -120,4 +135,5 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   note: { fontSize: 11, textAlign: "center", marginTop: 14, lineHeight: 16 },
+  link: { fontSize: 13, fontWeight: "700", textAlign: "center", marginTop: 12 },
 });

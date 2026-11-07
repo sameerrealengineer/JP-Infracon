@@ -1,5 +1,10 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { createTRPCClient as createVanillaTRPCClient, httpBatchLink } from "@trpc/client";
+import {
+  createTRPCClient as createVanillaTRPCClient,
+  httpBatchLink,
+  type TRPCLink,
+} from "@trpc/client";
+import { observable } from "@trpc/server/observable";
 import superjson from "superjson";
 import { Platform } from "react-native";
 import type { AppRouter } from "@/server/routers";
@@ -7,6 +12,37 @@ import { getApiBaseUrl } from "@/constants/api";
 import * as Auth from "@/lib/_core/auth";
 import { DEMO_MODE } from "@/lib/demo/config";
 import { createDemoLink } from "@/lib/demo/link";
+import { transportError } from "@/lib/jp/app-reports";
+import { translateNow } from "@/lib/i18n";
+
+/**
+ * When the server could not answer properly (no internet, server restarting, a web page in
+ * place of data), every screen shows one plain message in the person's language instead of a
+ * technical one. Normal server answers keep their own message.
+ */
+export const friendlyErrorLink: TRPCLink<AppRouter> =
+  () =>
+  ({ next, op }) =>
+    observable((observer) =>
+      next(op).subscribe({
+        next: (value) => observer.next(value),
+        complete: () => observer.complete(),
+        error: (error) => {
+          if (!error.data) {
+            const response = (error.meta as { response?: { status?: number } } | undefined)
+              ?.response;
+            const found = transportError({ message: error.message, status: response?.status });
+            if (found)
+              try {
+                error.message = translateNow(found.text, found.vars);
+              } catch {
+                // Keep the original message.
+              }
+          }
+          observer.error(error);
+        },
+      }),
+    );
 
 /**
  * tRPC React client for type-safe API calls.
@@ -27,6 +63,7 @@ export function createTRPCClient() {
     return trpc.createClient({ links: [createDemoLink(Auth.getSessionToken, Platform.OS)] });
   return trpc.createClient({
     links: [
+      friendlyErrorLink,
       httpBatchLink({
         url: `${getApiBaseUrl()}/api/trpc`,
         // tRPC v11: transformer MUST be inside httpBatchLink, not at root
@@ -59,6 +96,7 @@ export function createBackgroundClient() {
     });
   return createVanillaTRPCClient<AppRouter>({
     links: [
+      friendlyErrorLink,
       httpBatchLink({
         url: `${getApiBaseUrl()}/api/trpc`,
         transformer: superjson,

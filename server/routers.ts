@@ -12,6 +12,7 @@ import {
   changeOwnPassword,
   credentialSessionLifetimeMs,
   passwordLogin,
+  workerPinLogin,
   registerWithInvite,
   revokeSession,
 } from "./_core/credential-auth";
@@ -51,6 +52,27 @@ export const appRouter = router({
         });
         const webClient = ctx.req.headers["x-jp-client-platform"] === "web";
         return { user: result.user, sessionToken: webClient ? null : result.sessionToken };
+      }),
+    workerLogin: publicProcedure
+      .input(z.object({ mobile: z.string().trim().min(10).max(16), pin: z.string().max(6) }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await workerPinLogin(input.mobile, input.pin);
+        ctx.res.cookie(getSessionCookieName(ctx.req), result.sessionToken, {
+          ...getSessionCookieOptions(ctx.req),
+          maxAge: credentialSessionLifetimeMs,
+        });
+        const webClient = ctx.req.headers["x-jp-client-platform"] === "web";
+        return { user: result.user, sessionToken: webClient ? null : result.sessionToken };
+      }),
+    /** A worker forgot their PIN: tells their supervisor; same answer for every number. */
+    workerForgotPin: publicProcedure
+      .input(z.object({ mobile: z.string().trim().max(20) }))
+      .mutation(async ({ ctx, input }) => {
+        const { requestPinReset } = await import("./jp/reports");
+        return requestPinReset(
+          input.mobile,
+          String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
+        );
       }),
     registerWithInvite: publicProcedure
       .input(

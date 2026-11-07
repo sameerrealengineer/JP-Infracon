@@ -23,7 +23,11 @@
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
     "prepare": "husky",
-    "build:server": "esbuild server/_core/index.ts --platform=node --target=node22 --bundle --format=esm --outfile=dist-server/index.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
+    "build:server": "esbuild server/_core/index.ts --platform=node --target=node22 --bundle --format=esm --outfile=dist-server/index.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\"",
+    "build:demo-server": "node scripts/build-demo-server.mjs",
+    "demo:server": "node scripts/build-demo-server.mjs && node dist-demo/demo-server.mjs",
+    "audit:app": "node scripts/audit-app.mjs",
+    "test:live": "playwright test -c playwright.live.config.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1161.0",
@@ -66,6 +70,7 @@
     "expo-router": "~57.0.22",
     "expo-secure-store": "~57.0.4",
     "expo-sharing": "~57.0.24",
+    "expo-speech": "~57.0.3",
     "expo-splash-screen": "~57.0.9",
     "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
@@ -75,6 +80,7 @@
     "expo-video": "~57.0.4",
     "expo-web-browser": "~57.0.3",
     "express": "^4.22.1",
+    "fflate": "^0.8.3",
     "jose": "6.1.0",
     "mysql2": "^3.16.0",
     "nativewind": "^4.2.1",
