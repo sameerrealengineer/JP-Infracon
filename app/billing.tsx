@@ -406,6 +406,7 @@ function ContractSetup({ projectId, onDone }: { projectId: string; onDone: () =>
 
 function AddItem({ projectId, onDone }: { projectId: string; onDone: () => void }) {
   const { t } = useT();
+  const colors = useColors();
   const add = trpc.jp.billing.contract.addItems.useMutation();
   const [open, setOpen] = useState(false);
   const [key, setKey] = useState(createClientMutationId);
@@ -422,7 +423,7 @@ function AddItem({ projectId, onDone }: { projectId: string; onDone: () => void 
       <Text
         accessibilityRole="button"
         onPress={() => setOpen(true)}
-        style={[styles.link, { color: "#1E3E60" }]}
+        style={[styles.link, { color: colors.primary }]}
       >
         + {t("Add contract item")}
       </Text>

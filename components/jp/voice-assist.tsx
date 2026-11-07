@@ -284,6 +284,7 @@ function VoiceAssist({
   filling: boolean;
   onFill: (text: string) => Promise<void>;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const status = trpc.jp.ai.status.useQuery();
   const transcribe = trpc.jp.ai.transcribe.useMutation();
@@ -346,65 +347,89 @@ function VoiceAssist({
     }
   };
 
+  const example = textLabel.startsWith("e.g.") ? textLabel : null;
   return (
     <View
       style={[
         styles.box,
-        { borderColor: `${colors.accent}55`, backgroundColor: `${colors.accent}0D` },
+        { borderColor: `${colors.accent}66`, backgroundColor: `${colors.accent}12` },
       ]}
     >
       <View style={styles.header}>
-        <MaterialIcons name="auto-awesome" size={18} color={colors.accent} />
+        <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+          <MaterialIcons name="auto-awesome" size={14} color="#0E1A26" />
+        </View>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Speak or type — AI fills the form
+          {t("Speak or type — AI fills the form")}
         </Text>
       </View>
       {children}
-      {status.data?.voice ? (
-        <>
-          <ChipGroup
-            options={Object.keys(languages) as Lang[]}
-            value={language}
-            onChange={setLanguage}
-            format={(value) => languages[value]}
-          />
+      <View style={styles.row}>
+        {status.data?.voice ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={recording ? "Stop recording" : "Start recording"}
+            accessibilityLabel={recording ? t("Stop recording") : t("Start recording")}
             onPress={() => void (recording ? stop() : start())}
             disabled={busy}
-            style={[styles.mic, { backgroundColor: recording ? colors.error : colors.primary }]}
+            style={({ pressed }) => [
+              styles.mic,
+              { backgroundColor: recording ? colors.error : colors.primary },
+              pressed && { opacity: 0.85 },
+              busy && !recording && { opacity: 0.6 },
+            ]}
           >
             {transcribe.isPending ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.background} />
             ) : (
-              <MaterialIcons name={recording ? "stop" : "mic"} size={30} color="#fff" />
+              <MaterialIcons
+                name={recording ? "stop" : "mic"}
+                size={28}
+                color={colors.background}
+              />
             )}
           </Pressable>
-          <Text style={[styles.hint, { color: colors.muted }]}>
-            {recording ? `Listening… tap to stop (max ${MAX_SECONDS} s)` : prompt}
-          </Text>
-        </>
+        ) : null}
+        <TextInput
+          value={text}
+          onChangeText={setText}
+          multiline
+          placeholder={example ?? t("…or type in your own words, any language")}
+          placeholderTextColor={colors.muted}
+          accessibilityLabel={t(textLabel)}
+          style={[
+            styles.input,
+            {
+              color: colors.foreground,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            },
+          ]}
+        />
+      </View>
+      <Text style={[styles.hint, { color: recording ? colors.error : colors.muted }]}>
+        {recording
+          ? t("Listening… tap to stop (max {seconds} s)", { seconds: MAX_SECONDS })
+          : transcribe.isPending
+            ? t("Reading your voice…")
+            : t(prompt)}
+      </Text>
+      {status.data?.voice ? (
+        <ChipGroup
+          options={Object.keys(languages) as Lang[]}
+          value={language}
+          onChange={setLanguage}
+          format={(value) => languages[value]}
+        />
       ) : null}
-      <TextInput
-        value={text}
-        onChangeText={setText}
-        multiline
-        placeholder="…or type in your own words, any language"
-        placeholderTextColor={colors.muted}
-        accessibilityLabel={textLabel}
-        style={[
-          styles.input,
-          { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.surface },
-        ]}
-      />
-      {error ? <InlineError message={error} title="AI assist" /> : null}
-      <SecondaryButton
-        icon="auto-fix-high"
-        label={filling ? "Filling…" : "Fill the form with AI"}
-        disabled={text.trim().length < 2 || busy}
-        onPress={() => void fillForm()}
-      />
+      {error ? <InlineError message={error} title={t("AI assist")} /> : null}
+      {text.trim().length >= 2 || filling ? (
+        <SecondaryButton
+          icon="auto-fix-high"
+          label={filling ? t("Filling…") : t("Fill the form with AI")}
+          disabled={text.trim().length < 2 || busy}
+          onPress={() => void fillForm()}
+        />
+      ) : null}
     </View>
   );
 }
@@ -412,23 +437,31 @@ function VoiceAssist({
 const styles = StyleSheet.create({
   box: { borderWidth: 1, borderRadius: 18, padding: 14, gap: 10, marginBottom: 16 },
   header: { flexDirection: "row", alignItems: "center", gap: 8 },
-  title: { fontSize: 14, fontWeight: "800" },
-  mic: {
-    alignSelf: "center",
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  badge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  hint: { fontSize: 12, textAlign: "center" },
+  title: { fontSize: 14, fontWeight: "800", flex: 1 },
+  row: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  mic: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hint: { fontSize: 12, textAlign: "left" },
   result: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 6 },
   resultText: { fontSize: 14, fontWeight: "700" },
   question: { fontSize: 15, fontWeight: "800" },
   input: {
     borderWidth: 1,
     borderRadius: 14,
-    minHeight: 70,
+    flex: 1,
+    minHeight: 56,
     padding: 12,
     fontSize: 14,
     textAlignVertical: "top",

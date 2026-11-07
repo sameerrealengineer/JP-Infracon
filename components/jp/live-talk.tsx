@@ -8,7 +8,7 @@ import {
   type AudioPlayer,
 } from "expo-audio";
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { audioFileFromBase64, readBase64 } from "@/lib/device-files";
 import type { AssistantAction } from "@/lib/jp/assistant-catalog";
 import {
@@ -233,6 +233,7 @@ export function LiveTalk({
       player.current = null;
       void listen();
     } else if (phase === "hearing") void finishTurn();
+    else if (phase === "listening") void pause();
   };
 
   const close = async () => {
@@ -241,14 +242,50 @@ export function LiveTalk({
     onClose();
   };
 
+  // A slow pulse while the conversation is live, so the person sees it listening or talking.
+  const [pulse] = useState(() => new Animated.Value(1));
+  const live = phase === "listening" || phase === "hearing" || phase === "speaking";
+  useEffect(() => {
+    if (!live) {
+      pulse.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: phase === "hearing" ? 1.1 : 1.05,
+          duration: phase === "hearing" ? 380 : 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: phase === "hearing" ? 380 : 900,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [live, phase, pulse]);
+
   const label: Record<Phase, string> = {
     paused: "Tap to talk",
-    listening: "Listening…",
+    listening: "Listening… tap to stop",
     hearing: "Hearing you… pause when done",
     thinking: "Thinking…",
     speaking: "Speaking — tap to interrupt",
   };
-  const ring = phase === "hearing" ? "#4CC38A" : phase === "speaking" ? "#D9B76A" : "#5B8DEF";
+  // Midnight & gold: champagne while listening, green while it hears you, gold while speaking.
+  const ring =
+    phase === "hearing"
+      ? "#6CD3A1"
+      : phase === "speaking"
+        ? "#D9B76A"
+        : phase === "listening"
+          ? "#E6C987"
+          : "#97A3B0";
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={() => void close()}>
@@ -272,26 +309,28 @@ export function LiveTalk({
             accessibilityRole="button"
             accessibilityLabel={t(label[phase])}
             onPress={tap}
-            disabled={phase === "thinking" || phase === "listening"}
-            style={({ pressed }) => [
-              styles.orb,
-              { borderColor: ring, shadowColor: ring },
-              pressed && { transform: [{ scale: 0.96 }] },
-            ]}
+            disabled={phase === "thinking"}
           >
-            <MaterialIcons
-              name={
-                phase === "speaking"
-                  ? "graphic-eq"
-                  : phase === "thinking"
-                    ? "more-horiz"
-                    : phase === "paused"
-                      ? "mic-none"
-                      : "mic"
-              }
-              size={64}
-              color="#FFFFFF"
-            />
+            <Animated.View
+              style={[
+                styles.orb,
+                { borderColor: ring, shadowColor: ring, transform: [{ scale: pulse }] },
+              ]}
+            >
+              <MaterialIcons
+                name={
+                  phase === "speaking"
+                    ? "graphic-eq"
+                    : phase === "thinking"
+                      ? "more-horiz"
+                      : phase === "paused"
+                        ? "mic-none"
+                        : "mic"
+                }
+                size={64}
+                color="#FFFFFF"
+              />
+            </Animated.View>
           </Pressable>
           <Text style={styles.phase}>{t(label[phase])}</Text>
         </View>

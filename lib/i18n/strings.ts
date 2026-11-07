@@ -347,6 +347,7 @@ export const hi: Dictionary = {
   "Try saying:": "ऐसे बोलकर देखें:",
   "Type your question": "अपना सवाल लिखें",
   "Listening…": "सुन रहा हूँ…",
+  "Listening… tap to stop": "सुन रहा हूँ… रोकने के लिए दबाएँ",
   "Nothing is saved yet. The form opens with your words; check it and save.":
     "अभी कुछ सेव नहीं हुआ। फ़ॉर्म आपके शब्दों के साथ खुलेगा; जाँचकर सेव करें।",
   "Ask the AI assistant": "AI सहायक से पूछें",
@@ -568,6 +569,30 @@ export const hi: Dictionary = {
   "Answer by mic or type below; it adds to what you said before.":
     "माइक से बोलें या नीचे लिखें; यह पहले कही बात में जुड़ जाएगा।",
   "Start again": "फिर से शुरू करें",
+  "Speak or type — AI fills the form": "बोलिए या लिखिए — AI फ़ॉर्म भर देगा",
+  "Stop recording": "रिकॉर्डिंग रोकें",
+  "Start recording": "रिकॉर्डिंग शुरू करें",
+  "…or type in your own words, any language": "…या अपने शब्दों में लिखिए, किसी भी भाषा में",
+  "Listening… tap to stop (max {seconds} s)":
+    "सुन रहा हूँ… रोकने के लिए दबाएँ (ज़्यादा से ज़्यादा {seconds} सेकंड)",
+  "Reading your voice…": "आपकी आवाज़ पढ़ रहा हूँ…",
+  "AI assist": "AI मदद",
+  "Filling…": "भर रहा हूँ…",
+  "Fill the form with AI": "AI से फ़ॉर्म भरें",
+  "Tap the mic and say the details": "माइक दबाइए और जानकारी बोलिए",
+  "Tap the mic and describe the problem": "माइक दबाइए और समस्या बताइए",
+  "Tap the mic and say what work was done today, where, and how much":
+    "माइक दबाइए और बताइए आज कौन सा काम, कहाँ और कितना हुआ",
+  "Tap the mic and say who worked today, by trade":
+    "माइक दबाइए और बताइए आज किस काम के कितने लोग थे",
+  "Or tap the mic and say what was paid, to whom and for what":
+    "या माइक दबाइए और बताइए क्या, किसे और किसलिए दिया",
+  "Tap the mic and say what material you need, how much, and for what":
+    "माइक दबाइए और बताइए कौन सा माल, कितना और किसलिए चाहिए",
+  "Describe the issue in your own words": "समस्या अपने शब्दों में बताइए",
+  "Describe today's work in your own words": "आज का काम अपने शब्दों में बताइए",
+  "Work items": "काम के आइटम",
+  "Quantities done": "किया गया काम (मात्रा)",
   "Add the client first": "पहले क्लाइंट जोड़ें",
   "A contract is made with a client. Add the client in Clients & leads, then come back here.":
     "कॉन्ट्रैक्ट किसी क्लाइंट के साथ बनता है। क्लाइंट और लीड में क्लाइंट जोड़ें, फिर यहाँ वापस आएँ।",
@@ -1604,6 +1629,7 @@ export const or: Dictionary = {
   "Try saying:": "ଏମିତି କହି ଦେଖନ୍ତୁ:",
   "Type your question": "ଆପଣଙ୍କ ପ୍ରଶ୍ନ ଲେଖନ୍ତୁ",
   "Listening…": "ଶୁଣୁଛି…",
+  "Listening… tap to stop": "ଶୁଣୁଛି… ବନ୍ଦ କରିବାକୁ ଦବାନ୍ତୁ",
   "Nothing is saved yet. The form opens with your words; check it and save.":
     "ଏପର୍ଯ୍ୟନ୍ତ କିଛି ସେଭ୍ ହୋଇନାହିଁ। ଫର୍ମ ଆପଣଙ୍କ କଥା ସହ ଖୋଲିବ; ଯାଞ୍ଚ କରି ସେଭ୍ କରନ୍ତୁ।",
   "Ask the AI assistant": "AI ସହାୟକଙ୍କୁ ପଚାରନ୍ତୁ",
@@ -1823,6 +1849,30 @@ export const or: Dictionary = {
   "Answer by mic or type below; it adds to what you said before.":
     "ମାଇକରେ କୁହନ୍ତୁ ବା ତଳେ ଲେଖନ୍ତୁ; ଆଗରୁ କହିଥିବା କଥା ସହ ଯୋଡ଼ିହେବ।",
   "Start again": "ପୁଣି ଆରମ୍ଭ କରନ୍ତୁ",
+  "Speak or type — AI fills the form": "କୁହନ୍ତୁ ବା ଲେଖନ୍ତୁ — AI ଫର୍ମ ଭରିଦେବ",
+  "Stop recording": "ରେକର୍ଡିଂ ବନ୍ଦ କରନ୍ତୁ",
+  "Start recording": "ରେକର୍ଡିଂ ଆରମ୍ଭ କରନ୍ତୁ",
+  "…or type in your own words, any language": "…ବା ନିଜ ଭାଷାରେ ଲେଖନ୍ତୁ",
+  "Listening… tap to stop (max {seconds} s)":
+    "ଶୁଣୁଛି… ବନ୍ଦ କରିବାକୁ ଦବାନ୍ତୁ (ସର୍ବାଧିକ {seconds} ସେକେଣ୍ଡ)",
+  "Reading your voice…": "ଆପଣଙ୍କ କଥା ପଢୁଛି…",
+  "AI assist": "AI ସହାୟତା",
+  "Filling…": "ଭରୁଛି…",
+  "Fill the form with AI": "AI ଦ୍ୱାରା ଫର୍ମ ଭରନ୍ତୁ",
+  "Tap the mic and say the details": "ମାଇକ ଦବାଇ ବିବରଣୀ କୁହନ୍ତୁ",
+  "Tap the mic and describe the problem": "ମାଇକ ଦବାଇ ସମସ୍ୟା କୁହନ୍ତୁ",
+  "Tap the mic and say what work was done today, where, and how much":
+    "ମାଇକ ଦବାଇ କୁହନ୍ତୁ ଆଜି କେଉଁ କାମ, କେଉଁଠି ଓ କେତେ ହେଲା",
+  "Tap the mic and say who worked today, by trade":
+    "ମାଇକ ଦବାଇ କୁହନ୍ତୁ ଆଜି କେଉଁ କାମରେ କେତେ ଲୋକ ଥିଲେ",
+  "Or tap the mic and say what was paid, to whom and for what":
+    "ବା ମାଇକ ଦବାଇ କୁହନ୍ତୁ କ'ଣ, କାହାକୁ ଓ କାହିଁକି ଦିଆଗଲା",
+  "Tap the mic and say what material you need, how much, and for what":
+    "ମାଇକ ଦବାଇ କୁହନ୍ତୁ କେଉଁ ମାଲ, କେତେ ଓ କାହିଁକି ଦରକାର",
+  "Describe the issue in your own words": "ସମସ୍ୟା ନିଜ ଭାଷାରେ କୁହନ୍ତୁ",
+  "Describe today's work in your own words": "ଆଜିର କାମ ନିଜ ଭାଷାରେ କୁହନ୍ତୁ",
+  "Work items": "କାମର ଆଇଟମ",
+  "Quantities done": "ହୋଇଥିବା କାମ (ପରିମାଣ)",
   "Add the client first": "ପ୍ରଥମେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ",
   "A contract is made with a client. Add the client in Clients & leads, then come back here.":
     "କଣ୍ଟ୍ରାକ୍ଟ ଜଣେ କ୍ଲାଏଣ୍ଟଙ୍କ ସହ ହୁଏ। କ୍ଲାଏଣ୍ଟ ଓ ଲିଡରେ କ୍ଲାଏଣ୍ଟ ଯୋଡନ୍ତୁ, ତାପରେ ଏଠାକୁ ଫେରନ୍ତୁ।",
