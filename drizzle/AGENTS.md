@@ -2,7 +2,7 @@
 
 ## Overview
 
-Drizzle schema and SQL migration history for the single managed MySQL database. That database is shared by development and production, so every change here is a production change.
+Drizzle schema and SQL migration history for the production MySQL database (a container on the Azure VM). Every deploy applies pending migrations on start, so every committed migration here becomes a production change at the next deploy.
 
 ## Key files
 
@@ -16,7 +16,7 @@ Drizzle schema and SQL migration history for the single managed MySQL database. 
 ## Commands
 
 ```bash
-pnpm db:push   # drizzle-kit generate + migrate; needs DATABASE_URL and hits the shared database
+pnpm db:push   # drizzle-kit generate + migrate against DATABASE_URL in one step
 ```
 
 ## Conventions
@@ -27,16 +27,17 @@ pnpm db:push   # drizzle-kit generate + migrate; needs DATABASE_URL and hits the
 
 ## Gotchas
 
-- At the 2 November 2026 handoff the shared database had migrations through 0009. Migrations 0010 (petty cash tables) and 0011 (expense attestation, task snapshots) were not applied. Check before assuming they exist, and ask before applying.
+- Since the move to the Azure VM (2 November 2026), each deploy applies every migration in this folder, so production has all of them as of the last deploy. Notes below that say "not applied" describe the old managed database and are history. Migrations 0010 and 0011 add petty cash tables, expense attestation and task snapshots.
 - Migration 0012 (`site_issues`, `site_issue_events`, additive) was generated on 2 November 2026 and is not applied. The Issues screens and exports need it; the inbox skips sections whose tables are missing.
 - Migration 0013 (additive, new tables only: delegations, delegation_grants, registration_invites, push_devices, notification_deliveries, user_contact_preferences, site_geofences, attachment_locations, site_presence_events) is generated and not applied. Code that reads these tables catches a missing table so older screens keep working; new columns are never added to existing hot tables (users, sites, permission_grants, attachments) for that reason.
 - Migration 0014 (3 November 2026) changes the daily report unique key to include `reportKind` (adds the new key, then drops the old one) so a DPR and a DLR for the same site, day and shift can both exist. Migration 0015 adds `project_documents`, `project_document_versions` and `document_chunks` (new tables only). Both were applied on the Azure server on 3 November 2026 after a backup. Migration 0016 adds `project_budgets` and `project_budget_lines` (new tables only). Migration 0017 adds `user_profiles`, `organization_settings` and a nullable `coverAttachmentId` on `projects` and `sites`; the offline demo adds missing nullable columns to older phone databases on start (`lib/demo/sql/ddl.ts`). Take a backup before applying.
-- Migration 0018 (4 November 2026) adds `person_details` and `person_feedback`; 0019 adds `alert_rules` and `user_alert_mutes`; 0020 adds `whatsapp_bot_messages`; 0021 adds CRM and billing tables (`crm_clients`, `crm_leads`, `crm_activities`, `quotations`, `quotation_lines`, `project_contracts`, `contract_items`, `client_bills`, `client_bill_lines`, `client_receipts`); 0022 adds purchase tables (`purchase_orders`, `purchase_order_lines`, `purchase_order_quotes`, `goods_receipts`, `goods_receipt_lines`, `purchase_invoice_links`); 0023 adds subcontract tables (`work_orders`, `work_order_items`, `work_measurements`, `subcontract_bills`, `subcontract_bill_lines`); 0024 adds payroll and accounts tables (`payroll_settings`, `payroll_profiles`, `payroll_runs`, `payroll_lines`, `statutory_deposits`); 0025 adds `worker_advances`; 0026 adds `site_presence_settings` and `presence_tracking_status`; 0027 adds `worker_accounts`. New tables only, not applied anywhere yet. Code reading them catches a missing table. Generate migrations offline with a dummy `DATABASE_URL` (generate does not connect).
+- Migration 0018 (4 November 2026) adds `person_details` and `person_feedback`; 0019 adds `alert_rules` and `user_alert_mutes`; 0020 adds `whatsapp_bot_messages`; 0021 adds CRM and billing tables (`crm_clients`, `crm_leads`, `crm_activities`, `quotations`, `quotation_lines`, `project_contracts`, `contract_items`, `client_bills`, `client_bill_lines`, `client_receipts`); 0022 adds purchase tables (`purchase_orders`, `purchase_order_lines`, `purchase_order_quotes`, `goods_receipts`, `goods_receipt_lines`, `purchase_invoice_links`); 0023 adds subcontract tables (`work_orders`, `work_order_items`, `work_measurements`, `subcontract_bills`, `subcontract_bill_lines`); 0024 adds payroll and accounts tables (`payroll_settings`, `payroll_profiles`, `payroll_runs`, `payroll_lines`, `statutory_deposits`); 0025 adds `worker_advances`; 0026 adds `site_presence_settings` and `presence_tracking_status`; 0027 adds `worker_accounts`. New tables only, applied on production by the deploy that shipped them. Code reading them catches a missing table (older phone demo databases, self hosted servers not yet updated). Generate migrations offline with a dummy `DATABASE_URL` (generate does not connect).
 - MySQL refuses names longer than 64 characters; the demo (SQLite) does not, so a long generated FK name in 0022 stopped the production server on 5 November 2026. Give such keys a short `foreignKey({ name })`; `server/_core/migrate.test.ts` fails on any name over 64. `RUN_MIGRATIONS` first repairs a create-only migration that failed halfway (drops its leftover tables only if every one is empty) and then runs it again.
+- Migration 0028 adds `app_reports` (problem reports, forgot PIN requests, and phone crash reports; no foreign keys so a report is never lost). New table only.
 - Migration 0029 (6 November 2026, new tables only: `crews`, `crew_members`, `crew_deployments`) was generated offline (`DATABASE_URL` set to a dummy value; `generate` does not connect) and applied on the Azure server at deploy after a backup.
 - Migration 0030 (6 November 2026) adds two nullable columns to `work_tasks`: `assigneeUserId` (users) and `crewId` (crews). Additive only.
-- Do not run `pnpm db:push` casually: it generates and migrates against the shared database in one step.
-- `RUN_MIGRATIONS=true` (`server/_core/migrate.ts`) applies every pending migration in `drizzle/` when the API starts. Use it only on a self hosted database you have backed up; never with `DATABASE_URL` pointing at the shared database.
+- Do not run `pnpm db:push` casually: it generates and migrates against whatever `DATABASE_URL` points at in one step. Production migrations go through a deploy, never `db:push`.
+- `RUN_MIGRATIONS=true` (`server/_core/migrate.ts`) applies every pending migration in `drizzle/` when the API starts. Production sets it in `deploy/docker-compose.yml`, and `scripts/deploy-azure.sh` takes a backup first. Use it elsewhere only on a database you have backed up.
 - The database exposes no CHECK constraints, so value rules live in the API.
 
 ## Agent skills

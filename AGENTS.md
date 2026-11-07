@@ -35,7 +35,7 @@ A Husky pre commit hook runs lint-staged (`eslint --fix` and Prettier on staged 
 
 ## Specs
 
-Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
+Feature scope: `docs/scope/`. Build specs go in `docs/specs/NNNN-title.md` when `/architect` writes one (none yet). Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
 
 ## Rules
 
@@ -51,7 +51,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title.md`. Product requirement
 
 ## Gotchas
 
-- One managed MySQL database serves both development and production. Never point tests at it, seed demo data, or run destructive cleanup.
+- Production data lives in the MySQL 8.4 container on the Azure VM (`deploy/docker-compose.yml`, nightly backup to `~/backups`). Each deploy (`scripts/deploy-azure.sh`) backs it up, then applies every pending migration on start (`RUN_MIGRATIONS=true`). Never point tests at it, seed demo data, or run destructive cleanup. For local work use the demo server (SQLite) or a throwaway MySQL.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. The normal build has no demo logins; the first Super Admin comes from the one time bootstrap flow. Only the offline demo build (below) has built in demo accounts, and they exist only on the phone.
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.
@@ -84,8 +84,9 @@ MCP servers: Expo MCP (recommended), Drizzle Kit MCP (recommended), Playwright M
 
 - [server/jp/AGENTS.md](server/jp/AGENTS.md) (tRPC business procedures: site scope, permissions, audit, idempotency)
 - [lib/jp/AGENTS.md](lib/jp/AGENTS.md) (pure shared domain logic: paise math, policies, scheduling, offline drafts)
-- [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the shared MySQL database)
+- [drizzle/AGENTS.md](drizzle/AGENTS.md) (schema and migrations for the production MySQL database)
 - [e2e/AGENTS.md](e2e/AGENTS.md) (Playwright tests on the static web export with a faked tRPC API)
 - [lib/demo/AGENTS.md](lib/demo/AGENTS.md) (offline demo build: real server code on the phone over SQLite, demo accounts, sample data)
+- [scripts/AGENTS.md](scripts/AGENTS.md) (production deploy, watchdog, WhatsApp setup, database reset, demo server scripts)
 
 _Drafted by /audit from the repo, worth a quick human pass. Edit freely: once a line stops matching this draft, later runs treat it as curated and will flag rather than overwrite it._

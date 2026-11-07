@@ -74,7 +74,7 @@ Protected tRPC procedures for every JP Infracon feature. Each module checks the 
 - The database has no CHECK constraints. Positive amounts, date ordering, and non negative balances are enforced only here; do not claim the database enforces them.
 - Supplier payment posting and petty cash entries are app ledger events, not bank transfers.
 - Petty cash Expense entries require the site fund attestation; Personal Funds are rejected until the reimbursement workflow exists. Task labels on cash movements are snapshots, so later task edits do not rewrite history.
-- Tests here (`policy.test.ts`) are database free. Do not write tests that hit the shared database.
+- Tests here (`policy.test.ts`) are database free. Do not write tests that hit the production database.
 
 ## Agent skills
 

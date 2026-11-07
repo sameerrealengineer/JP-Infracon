@@ -59,6 +59,13 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `app-reports.ts` | Report sources, worker problem tiles, staff categories, text cleaning, stack trimming, error fingerprints, and `transportError` (plain messages for no internet, 502/503/504, a web page instead of data) used by `friendlyErrorLink` in `lib/trpc.ts` |
 | `worker-speech.ts` | What the worker screen says aloud in English, Hindi and Odia (whole rupees, attendance counts, drawings) and the speech language codes |
 | `worker-app.ts` | Worker PIN rules (6 digits, no repeats/runs), lock after wrong PINs, switched-on features, attendance signs |
+| `crew-domain.ts` | Crew trades, who was in which crew on a day, deployment checks, crew labour cost from approved attendance; one open crew per person per site |
+| `tracking-domain.ts` | Team tracking: month ranges in IST, attendance (hours in hundredths, days in halves), presence and report sums per person |
+| `project-hub.ts` | Project page billing summary: only Approved bills count as billed; drafts and waiting bills counted apart |
+| `site-route.ts` | `siteScopedRoute`: the link that opens a module for one site |
+| `help-content.ts` | In-app guide topics, first steps per role (`startPathFor`), troubleshooting |
+| `ai-expense-extraction.ts` | Prompt, schema and re-checking of AI petty cash expense drafts (amount, date, payment mode); saves nothing |
+| `ai-request-extraction.ts` | Prompt, schema and re-checking of AI material request drafts (names, quantities, units); saves nothing |
 
 ## Conventions
 

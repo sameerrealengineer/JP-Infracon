@@ -2,7 +2,7 @@
 
 ## Overview
 
-Playwright tests that drive the real web build of the app at a phone viewport. The API is never called: every tRPC request is answered in the browser with typed fake data, so these tests never touch the shared MySQL database.
+Playwright tests that drive the real web build of the app at a phone viewport. The API is never called: every tRPC request is answered in the browser with typed fake data, so these tests never touch the production database.
 
 ## Key files
 
@@ -30,5 +30,6 @@ npx playwright test finance          # one spec (reuses a server already on :809
 
 - These specs are not in CI yet. `serve-export.mjs` maps a dynamic path such as `/site/<id>` to `site/[id].html`.
 - Hidden tab screens stay in the DOM, so assert on text unique to the screen you navigated to.
+- Live tests are separate: `e2e-live/` with `playwright.live.config.ts` (`pnpm test:live`) drives the real demo API on :3100 (`LIVE_BASE_URL`), one worker, no fakes. Start `pnpm demo:server` first and delete its database file between runs for fresh sample data.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._
