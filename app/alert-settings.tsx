@@ -114,7 +114,11 @@ function Form({
         checked={draft.pushOptIn}
         onToggle={() => setDraft((current) => ({ ...current, pushOptIn: !current.pushOptIn }))}
         title="App notifications"
-        detail="Free. Works once the app is installed from the APK."
+        detail={
+          Platform.OS === "web"
+            ? "Free. On this browser, also switch on Notifications on this browser below."
+            : "Free. Works once the app is installed from the APK."
+        }
         available
       />
       <Toggle

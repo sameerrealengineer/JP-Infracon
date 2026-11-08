@@ -108,7 +108,9 @@ for (const role of ROLES) {
       .catch(() => undefined);
     // Open the first record on list screens, so detail screens are checked too.
     const first = page
-      .getByRole("button", { name: /^Open (?!notifications|my profile)/ })
+      .getByRole("button", {
+        name: /^Open (?!notifications|my profile|the manual page|the user manual)/,
+      })
       .filter({ visible: true })
       .first();
     if (await first.count()) {
