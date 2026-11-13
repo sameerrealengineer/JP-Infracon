@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { permissionsSeen } from "./e2e/permissions-seen";
 
 const port = 8091;
 
@@ -11,6 +12,7 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: `http://localhost:${port}`,
+    storageState: permissionsSeen(`http://localhost:${port}`),
     trace: "retain-on-failure",
   },
   // Android first, portrait: test at a phone viewport.

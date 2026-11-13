@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { centeredColumn } from "@/constants/layout";
 import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
@@ -1393,6 +1394,7 @@ const styles = StyleSheet.create({
   reviewButtonText: { fontSize: 10, fontWeight: "900" },
   backdrop: { flex: 1, backgroundColor: "rgba(10,18,22,0.7)", justifyContent: "flex-end" },
   modalCard: {
+    ...centeredColumn,
     maxHeight: "92%",
     borderTopLeftRadius: 21,
     borderTopRightRadius: 21,

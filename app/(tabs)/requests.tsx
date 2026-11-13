@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { centeredColumn } from "@/constants/layout";
 import { HelpButton } from "@/components/jp/help";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { VoiceRequestAssist } from "@/components/jp/voice-assist";
@@ -734,6 +735,7 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 12 },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(10, 20, 18, 0.52)", justifyContent: "flex-end" },
   modalCard: {
+    ...centeredColumn,
     maxHeight: "94%",
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,

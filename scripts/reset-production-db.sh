@@ -14,7 +14,7 @@ HOST="${JP_DEPLOY_HOST:-jpadmin@jpinfracon.centralindia.cloudapp.azure.com}"
 PHRASE="DELETE ALL JP DATA"
 
 echo "== 1/3 Backup =="
-ssh "$HOST" 'set -e; bash ~/backup.sh; f=$(ls -t ~/backups/*.sql.gz | head -1); \
+ssh -n "$HOST" 'set -e; bash ~/backup.sh; f=$(ls -t ~/backups/*.sql.gz | head -1); \
   s=$(stat -c %s "$f"); echo "backup: $f ($s bytes)"; [ "$s" -gt 1000 ] || { echo "Backup looks empty, stopping."; exit 1; }'
 
 echo
@@ -23,7 +23,7 @@ read -r -p "Type exactly '$PHRASE' to continue: " answer
 [ "$answer" = "$PHRASE" ] || { echo "Not confirmed. Nothing was deleted."; exit 1; }
 
 echo "== 2/3 Wipe and recreate =="
-ssh "$HOST" 'set -e; cd ~/jp-infracon/deploy; \
+ssh -n "$HOST" 'set -e; cd ~/jp-infracon/deploy; \
   docker compose --env-file .env stop api >/dev/null; \
   docker compose exec -T mysql sh -c "mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" -e \"DROP DATABASE jp_infracon; CREATE DATABASE jp_infracon CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL ON jp_infracon.* TO '"'"'jp'"'"'@'"'"'%'"'"';\"" 2>&1 | grep -v Warning || true; \
   docker compose --env-file .env up -d api >/dev/null; sleep 25; \

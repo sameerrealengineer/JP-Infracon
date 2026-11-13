@@ -1329,6 +1329,43 @@ export const hi: Dictionary = {
   "Asking for help in the app is not switched on for you. Call your supervisor.":
     "ऐप में मदद माँगना आपके लिए चालू नहीं है। सुपरवाइज़र को फ़ोन करें।",
   "🆘 Tell a problem / ask for help": "🆘 समस्या बताना / मदद माँगना",
+  // App permissions
+  "Approvals, issues, payments and site alerts reach you at once.":
+    "मंज़ूरी, समस्याएँ, भुगतान और साइट अलर्ट तुरंत आप तक पहुँचें।",
+  Microphone: "माइक्रोफ़ोन",
+  "Speak to fill forms, voice notes and live talk with the assistant.":
+    "बोलकर फ़ॉर्म भरें, वॉइस नोट और असिस्टेंट से लाइव बात।",
+  "Site photos, bill scans and evidence for reports and issues.":
+    "साइट फ़ोटो, बिल स्कैन और रिपोर्ट व समस्याओं के सबूत।",
+  "Photos and files": "फ़ोटो और फ़ाइलें",
+  "Attach photos, PDFs and documents from the phone.": "फ़ोन से फ़ोटो, PDF और दस्तावेज़ जोड़ें।",
+  "GPS on site photos and attendance at the right site.":
+    "साइट फ़ोटो पर GPS और सही साइट पर हाज़िरी।",
+  'Location "Allow all the time"': 'लोकेशन "हर समय अनुमति दें"',
+  "Site arrival and leaving alerts when the app is closed. Choose “Allow all the time”.":
+    "ऐप बंद होने पर भी साइट पहुँचने और निकलने के अलर्ट। “हर समय अनुमति दें” चुनें।",
+  Allowed: "अनुमति है",
+  "Not yet": "अभी नहीं",
+  "Not on this device": "इस डिवाइस पर नहीं",
+  "Needs home screen": "होम स्क्रीन से खोलें",
+  "Allow these once now, so photos, voice, GPS, files and alerts work every time without asking in the middle of your work.":
+    "इन्हें अभी एक बार अनुमति दें, ताकि फ़ोटो, आवाज़, GPS, फ़ाइलें और अलर्ट हर बार काम के बीच पूछे बिना चलें।",
+  "On iPhone: Safari → Share → Add to Home Screen, then open JP Infracon from the home screen and come back here.":
+    "iPhone पर: Safari → Share → Add to Home Screen, फिर होम स्क्रीन से JP Infracon खोलें और यहाँ वापस आएँ।",
+  Allow: "अनुमति दें",
+  "Some are blocked in this browser. Tap the lock or ⓘ next to the address, allow them, then reload. iPhone: Settings → Safari (or Settings → JP Infracon) → allow Camera, Microphone and Location.":
+    "कुछ इस ब्राउज़र में बंद हैं। पते के पास ताले या ⓘ पर टैप करें, अनुमति दें, फिर पेज रीलोड करें। iPhone: Settings → Safari (या Settings → JP Infracon) → Camera, Microphone और Location की अनुमति दें।",
+  "Some are blocked. Open the app settings → Permissions, allow them, then come back.":
+    "कुछ बंद हैं। ऐप सेटिंग्स → Permissions खोलें, अनुमति दें, फिर वापस आएँ।",
+  "Open app settings": "ऐप सेटिंग्स खोलें",
+  "Allow all": "सबकी अनुमति दें",
+  "Check again": "फिर से जाँचें",
+  "Continue for now": "अभी आगे बढ़ें",
+  Continue: "आगे बढ़ें",
+  "ONE-TIME SETUP": "एक बार की सेटिंग",
+  "App permissions": "ऐप अनुमतियाँ",
+  SETTINGS: "सेटिंग्स",
+  "Camera, microphone, location, files and alerts": "कैमरा, माइक्रोफ़ोन, लोकेशन, फ़ाइलें और अलर्ट",
 };
 
 export const or: Dictionary = {
@@ -2634,6 +2671,42 @@ export const or: Dictionary = {
   "Asking for help in the app is not switched on for you. Call your supervisor.":
     "ଆପ୍‌ରେ ସାହାଯ୍ୟ ମାଗିବା ଆପଣଙ୍କ ପାଇଁ ଚାଲୁ ନାହିଁ। ସୁପରଭାଇଜରଙ୍କୁ ଫୋନ୍ କରନ୍ତୁ।",
   "🆘 Tell a problem / ask for help": "🆘 ସମସ୍ୟା କହିବା / ସାହାଯ୍ୟ ମାଗିବା",
+  // App permissions
+  "Approvals, issues, payments and site alerts reach you at once.":
+    "ଅନୁମୋଦନ, ସମସ୍ୟା, ପେମେଣ୍ଟ ଏବଂ ସାଇଟ୍ ଆଲର୍ଟ ତୁରନ୍ତ ଆପଣଙ୍କ ପାଖରେ ପହଞ୍ଚିବ।",
+  Microphone: "ମାଇକ୍ରୋଫୋନ୍",
+  "Speak to fill forms, voice notes and live talk with the assistant.":
+    "କହି ଫର୍ମ ପୂରଣ, ଭଏସ୍ ନୋଟ୍ ଏବଂ ସହାୟକ ସହ ଲାଇଭ୍ କଥା।",
+  "Site photos, bill scans and evidence for reports and issues.":
+    "ସାଇଟ୍ ଫଟୋ, ବିଲ୍ ସ୍କାନ୍ ଏବଂ ରିପୋର୍ଟ ଓ ସମସ୍ୟାର ପ୍ରମାଣ।",
+  "Photos and files": "ଫଟୋ ଏବଂ ଫାଇଲ୍",
+  "Attach photos, PDFs and documents from the phone.": "ଫୋନରୁ ଫଟୋ, PDF ଏବଂ ଡକ୍ୟୁମେଣ୍ଟ ଯୋଡନ୍ତୁ।",
+  "GPS on site photos and attendance at the right site.": "ସାଇଟ୍ ଫଟୋରେ GPS ଏବଂ ଠିକ୍ ସାଇଟରେ ହାଜିରା।",
+  'Location "Allow all the time"': 'ଲୋକେସନ୍ "ସବୁବେଳେ ଅନୁମତି"',
+  "Site arrival and leaving alerts when the app is closed. Choose “Allow all the time”.":
+    "ଆପ୍ ବନ୍ଦ ଥିଲେ ମଧ୍ୟ ସାଇଟ୍ ପହଞ୍ଚିବା ଓ ଛାଡିବା ଆଲର୍ଟ। “ସବୁବେଳେ ଅନୁମତି” ବାଛନ୍ତୁ।",
+  Allowed: "ଅନୁମତି ଅଛି",
+  "Not yet": "ଏପର୍ଯ୍ୟନ୍ତ ନାହିଁ",
+  "Not on this device": "ଏହି ଡିଭାଇସରେ ନାହିଁ",
+  "Needs home screen": "ହୋମ୍ ସ୍କ୍ରିନରୁ ଖୋଲନ୍ତୁ",
+  "Allow these once now, so photos, voice, GPS, files and alerts work every time without asking in the middle of your work.":
+    "ଏଗୁଡିକୁ ଏବେ ଥରେ ଅନୁମତି ଦିଅନ୍ତୁ, ଯାହାଦ୍ୱାରା ଫଟୋ, ସ୍ୱର, GPS, ଫାଇଲ୍ ଓ ଆଲର୍ଟ କାମ ମଝିରେ ନ ପଚାରି ସବୁବେଳେ ଚାଲିବ।",
+  "On iPhone: Safari → Share → Add to Home Screen, then open JP Infracon from the home screen and come back here.":
+    "iPhone ରେ: Safari → Share → Add to Home Screen, ତାପରେ ହୋମ୍ ସ୍କ୍ରିନରୁ JP Infracon ଖୋଲି ଏଠାକୁ ଫେରନ୍ତୁ।",
+  Allow: "ଅନୁମତି ଦିଅନ୍ତୁ",
+  "Some are blocked in this browser. Tap the lock or ⓘ next to the address, allow them, then reload. iPhone: Settings → Safari (or Settings → JP Infracon) → allow Camera, Microphone and Location.":
+    "କିଛି ଏହି ବ୍ରାଉଜରରେ ବନ୍ଦ ଅଛି। ଠିକଣା ପାଖରେ ତାଲା ବା ⓘ ଟ୍ୟାପ୍ କରି ଅନୁମତି ଦିଅନ୍ତୁ, ତାପରେ ରିଲୋଡ୍ କରନ୍ତୁ। iPhone: Settings → Safari (ବା Settings → JP Infracon) → Camera, Microphone ଓ Location ଅନୁମତି ଦିଅନ୍ତୁ।",
+  "Some are blocked. Open the app settings → Permissions, allow them, then come back.":
+    "କିଛି ବନ୍ଦ ଅଛି। ଆପ୍ ସେଟିଂସ୍ → Permissions ଖୋଲି ଅନୁମତି ଦିଅନ୍ତୁ, ତାପରେ ଫେରନ୍ତୁ।",
+  "Open app settings": "ଆପ୍ ସେଟିଂସ୍ ଖୋଲନ୍ତୁ",
+  "Allow all": "ସବୁ ଅନୁମତି ଦିଅନ୍ତୁ",
+  "Check again": "ପୁଣି ଯାଞ୍ଚ କରନ୍ତୁ",
+  "Continue for now": "ଏବେ ଆଗକୁ ଯାଆନ୍ତୁ",
+  Continue: "ଆଗକୁ ଯାଆନ୍ତୁ",
+  "ONE-TIME SETUP": "ଥରେ ମାତ୍ର ସେଟିଂ",
+  "App permissions": "ଆପ୍ ଅନୁମତି",
+  SETTINGS: "ସେଟିଂସ୍",
+  "Camera, microphone, location, files and alerts": "କ୍ୟାମେରା, ମାଇକ୍ରୋଫୋନ୍, ଲୋକେସନ୍, ଫାଇଲ୍ ଓ ଆଲର୍ଟ",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

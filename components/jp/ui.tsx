@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { centeredColumn } from "@/constants/layout";
 import { ManualButton } from "@/components/jp/manual-button";
 import { manualModuleForSegments } from "@/lib/jp/manual-content";
 import { Image as PhotoImage } from "expo-image";
@@ -16,6 +17,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
   type TextInputProps,
 } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
@@ -1023,7 +1025,6 @@ export function Sheet({
 
 export function Screen({
   children,
-  scroll = true,
   inTabs = false,
 }: {
   children: ReactNode;
@@ -1031,13 +1032,16 @@ export function Screen({
   /** Tab screens skip the bottom inset because the tab bar already covers it. */
   inTabs?: boolean;
 }) {
+  const { width } = useWindowDimensions();
   return (
     <ScreenContainer
-      className="px-5"
       safeAreaClassName="bg-background"
       edges={inTabs ? ["top", "left", "right"] : ["top", "left", "right", "bottom"]}
     >
-      {scroll ? children : <View style={{ flex: 1 }}>{children}</View>}
+      {/* Small phones get a little less side padding; tablets and computers a centred column. */}
+      <View style={[{ flex: 1, paddingHorizontal: width < 360 ? 14 : 20 }, centeredColumn]}>
+        {children}
+      </View>
     </ScreenContainer>
   );
 }
@@ -1308,6 +1312,7 @@ export const styles = StyleSheet.create({
   chipText: { fontSize: 12, fontWeight: "700" },
   sheetBackdrop: { flex: 1, backgroundColor: "rgba(5,10,16,0.55)" },
   sheet: {
+    ...centeredColumn,
     maxHeight: "90%",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,

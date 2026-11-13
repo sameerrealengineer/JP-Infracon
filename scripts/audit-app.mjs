@@ -58,6 +58,10 @@ const findings = [];
 
 for (const role of ROLES) {
   const context = await browser.newContext({ ...devices["Pixel 7"] });
+  // The one-time permission screen counts as seen, so the walk starts at the app.
+  await context.addInitScript(() =>
+    window.localStorage.setItem("jp-infracon.permissions-asked.v1", "audit"),
+  );
   const page = await context.newPage();
   let current = "login";
   const note = (kind, detail) => findings.push({ role, route: current, kind, detail });

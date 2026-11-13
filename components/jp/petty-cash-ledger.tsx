@@ -1,4 +1,5 @@
 import { ExpenseAssist } from "@/components/jp/voice-assist";
+import { centeredColumn } from "@/constants/layout";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useRef, useState } from "react";
@@ -1400,6 +1401,7 @@ const styles = StyleSheet.create({
   },
   backdrop: { flex: 1, backgroundColor: "rgba(15,23,42,0.55)", justifyContent: "flex-end" },
   modal: {
+    ...centeredColumn,
     maxHeight: "92%",
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,

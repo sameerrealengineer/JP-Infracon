@@ -66,6 +66,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `help-content.ts` | In-app guide topics, first steps per role (`startPathFor`), troubleshooting |
 | `ai-expense-extraction.ts` | Prompt, schema and re-checking of AI petty cash expense drafts (amount, date, payment mode); saves nothing |
 | `ai-request-extraction.ts` | Prompt, schema and re-checking of AI material request drafts (names, quantities, units); saves nothing |
+| `permission-plan.ts` | Permissions asked up front after sign-in, per platform and in order (notifications first), status mapping, which to ask and which are blocked |
 
 ## Conventions
 

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { centeredColumn } from "@/constants/layout";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -1205,6 +1206,7 @@ const styles = StyleSheet.create({
   },
   backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.68)", justifyContent: "flex-end" },
   modal: {
+    ...centeredColumn,
     maxHeight: "93%",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

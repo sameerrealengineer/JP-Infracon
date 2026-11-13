@@ -1,8 +1,9 @@
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
+import { onPermissionChange } from "@/lib/device-permissions";
 import { siteAlertsEnabled } from "@/lib/geofence-task";
 import { trpc } from "@/lib/trpc";
 
@@ -16,7 +17,7 @@ Notifications.setNotificationHandler({
 });
 
 /**
- * After sign-in, asks for notification permission once and registers this phone's Expo push token
+ * After sign-in (and whenever notifications are allowed on the permission screen) registers this phone's Expo push token
  * with the server. Tapping an alert opens the screen it points to. Does nothing on web.
  */
 export function usePushRegistration(enabled: boolean) {
@@ -27,6 +28,7 @@ export function usePushRegistration(enabled: boolean) {
     enabled: enabled && Platform.OS !== "web",
   });
   const fenceCount = fences.data?.length;
+  const [allowedAt, setAllowedAt] = useState(0);
 
   // Tell the server whether this phone watches site boundaries, so leaders see who is not.
   useEffect(() => {
@@ -52,8 +54,8 @@ export function usePushRegistration(enabled: boolean) {
             vibrationPattern: [0, 250, 150, 250],
             lightColor: "#D9B76A",
           });
-        const current = await Notifications.getPermissionsAsync();
-        const status = current.granted ? current : await Notifications.requestPermissionsAsync();
+        // The permission screen asks; here the token is only registered once it is allowed.
+        const status = await Notifications.getPermissionsAsync();
         if (!status.granted || cancelled) return;
         const projectId =
           (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas
@@ -69,12 +71,16 @@ export function usePushRegistration(enabled: boolean) {
         // Push is best effort; the in-app inbox still shows everything.
       }
     })();
+    const stop = onPermissionChange((key, granted) => {
+      if (key === "notifications" && granted === "granted") setAllowedAt(Date.now());
+    });
     return () => {
       cancelled = true;
+      stop();
     };
-    // Register once per sign-in.
+    // Register once per sign-in, and again when notifications are allowed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, allowedAt]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;

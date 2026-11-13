@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { centeredColumn } from "@/constants/layout";
 import { markSignedOut } from "@/lib/jp/session-expiry";
 import { useRouter } from "expo-router";
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
@@ -589,7 +590,7 @@ export function WorkerSelf() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingTop: 48, paddingBottom: 48, gap: 14 },
+  content: { ...centeredColumn, padding: 16, paddingTop: 48, paddingBottom: 48, gap: 14 },
   state: { flex: 1, justifyContent: "center", padding: 24, gap: 16 },
   langRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   lang: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 22, borderWidth: 1 },

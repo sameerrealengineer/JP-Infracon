@@ -1,4 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
+import { permissionsSeen } from "./e2e/permissions-seen";
+
+const baseURL = process.env.LIVE_BASE_URL ?? "http://localhost:3100";
 
 /**
  * Live end-to-end tests: the real web app against the online demo server (real API, real
@@ -15,7 +18,8 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   timeout: 120_000,
   use: {
-    baseURL: process.env.LIVE_BASE_URL ?? "http://localhost:3100",
+    baseURL,
+    storageState: permissionsSeen(baseURL),
     trace: "retain-on-failure",
   },
   projects: [{ name: "phone", use: { ...devices["Pixel 7"], browserName: "chromium" } }],

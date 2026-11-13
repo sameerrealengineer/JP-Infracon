@@ -20,6 +20,7 @@ import { getApiBaseUrl } from "@/constants/api";
 import { languageNames, useT, type Language } from "@/lib/i18n";
 import * as Auth from "@/lib/_core/auth";
 import { DEMO_ACCOUNTS, DEMO_MODE, DEMO_PASSWORD } from "@/lib/demo/config";
+import { PermissionsGate } from "@/components/jp/permissions-gate";
 import { WorkerSelf } from "@/components/jp/worker-home";
 import { WorkerSignIn } from "@/components/jp/worker-sign-in";
 
@@ -178,7 +179,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
     me.data?.accountStatus === "Active" && Boolean(me.data.mustChangePassword);
   if (me.data?.accountStatus === "Active" && !mustChangePassword)
     // A worker login sees only the worker screen, whatever route was opened.
-    return me.data.loginMethod === "worker_pin" ? <WorkerSelf /> : <>{children}</>;
+    // Every permission is asked once, right after the first sign-in on this device.
+    return (
+      <PermissionsGate>
+        {me.data.loginMethod === "worker_pin" ? <WorkerSelf /> : children}
+      </PermissionsGate>
+    );
   if (setup.isLoading && !setup.isError)
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>

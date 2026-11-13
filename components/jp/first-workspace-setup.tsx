@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { centeredColumn } from "@/constants/layout";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
@@ -157,6 +158,7 @@ export function FirstWorkspaceSetup({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(10,20,18,0.56)" },
   sheet: {
+    ...centeredColumn,
     maxHeight: "92%",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,

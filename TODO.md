@@ -6,6 +6,15 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-13 — permissions up front, every screen size, fresh production database
+
+Delivered in source (typecheck, lint, 567 unit tests including the permission plan). Production database reset for the client handover on 2026-11-13 after a backup (`~/backups/jp-2026-11-13.sql.gz` plus `files-20261113-071259.tar.gz` for uploads): 93 empty tables, no users, no files; the first Super Admin comes from the bootstrap flow.
+
+- One-time "App permissions" screen right after the first sign-in on each phone or browser (staff and mistri logins): notifications, microphone, camera, photos and files, location, and on Android location "all the time", with one "Allow all" button, the state of each, and a way to the settings for blocked ones. Also at More → App permissions. Push registration starts as soon as notifications are allowed there.
+- Web app: notifications are asked first (browsers allow that prompt only straight after a tap); iPhone needs the home-screen app for notifications.
+- Every screen and sheet is a centred column (max 760 px) on tablets and computers; phones under 360 px get less side padding.
+- Open: test the permission screen on a real Android phone and iPhone (Safari forgets camera/microphone answers per session unless set to Allow in Settings → Safari), and tablet landscape (the app is locked to portrait).
+
 ## Increment 2026-11-06 — access fixes, photos, faster AI, team tracking, project page, help, crews
 
 Delivered in source and deployed to the Azure server (typecheck, lint 0 errors, 492 unit/server tests including demo-backend flows for billing access, tracking and crews; browser checks on the demo server for each screen; APKs 1.5.1–1.5.4 built). Migration 0029 (new tables only: crews, crew_members, crew_deployments) applied on the server at deploy after a backup.

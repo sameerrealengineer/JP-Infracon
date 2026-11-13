@@ -210,6 +210,14 @@ export default function MoreScreen() {
       show: can("budget.view"),
     },
     {
+      icon: "verified-user",
+      title: "App permissions",
+      detail: "Camera, microphone, location, files and alerts",
+      tone: "info",
+      route: "/permissions",
+      show: true,
+    },
+    {
       icon: "health-and-safety",
       title: "System check",
       detail: "Test AI, voice, scan, uploads, WhatsApp",
