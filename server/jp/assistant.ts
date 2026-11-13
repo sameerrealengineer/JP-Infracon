@@ -1,3 +1,4 @@
+import { EXPERT_KEYS, expertFor, type ExpertKey } from "../../lib/jp/assistant-experts";
 import { randomUUID } from "node:crypto";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -91,6 +92,8 @@ export type AssistantQuestion = {
   files: { name: string; base64: string }[];
   /** Where the answer is shown; WhatsApp replies cannot open app screens. */
   channel?: "app" | "whatsapp" | "voice";
+  /** Specialist mode (drawing reader, contract expert…); general when not given. */
+  expert?: ExpertKey;
 };
 
 /**
@@ -168,10 +171,22 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
   const history = input.history
     .map((turn) => `${turn.role === "user" ? "Person" : "Assistant"}: ${turn.text}`)
     .join("\n");
+  const expert = expertFor(input.expert);
+  const sentences =
+    input.channel === "voice"
+      ? "two"
+      : expert.key !== "general"
+        ? String(expert.sentences)
+        : files.length
+          ? "eight"
+          : "three";
   const prompt =
     "You are the helper inside JP Infracon, a construction site app used in Odisha, India. " +
+    (expert.guidance ? `Mode: ${expert.title}. ${expert.guidance} ` : "") +
     "Answer in the same language and script the person used (Odia, Hindi, English or Hinglish), " +
-    `in at most ${files.length ? "eight" : input.channel === "voice" ? "two" : "three"} short sentences, simply, for busy site staff. Use only the facts below; ` +
+    `in at most ${sentences} short sentences, simply, for busy site staff. Use only the facts below ` +
+    (expert.key === "general" ? "" : "and your trade knowledge (say when it is general guidance)") +
+    "; " +
     "if you do not know, say so and point to the right screen. Never say you saved, submitted, " +
     "approved or paid anything: you can only open a screen or start a draft that the person " +
     "checks and saves.\n" +
@@ -273,6 +288,7 @@ export const assistantRouter = router({
           .max(10)
           .default([]),
         siteId: z.string().uuid().nullish(),
+        expert: z.enum(EXPERT_KEYS).default("general"),
         /** Photos, PDFs (drawings), Word, Excel or CSV to read for this one answer; not stored. */
         files: z
           .array(

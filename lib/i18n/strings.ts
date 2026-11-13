@@ -1531,18 +1531,97 @@ export const hi: Dictionary = {
   "This person also works for another company. Ask the Super Admin to reset it.":
     "यह व्यक्ति दूसरी कंपनी में भी काम करते हैं। रीसेट के लिए सुपर एडमिन से कहें।",
   // Sample data
-  "{removed} sample records removed. {kept} stay because real records use them.": "{removed} सैंपल रिकॉर्ड हटाए गए। {kept} बचे हैं क्योंकि असली रिकॉर्ड उनका उपयोग करते हैं।",
+  "{removed} sample records removed. {kept} stay because real records use them.":
+    "{removed} सैंपल रिकॉर्ड हटाए गए। {kept} बचे हैं क्योंकि असली रिकॉर्ड उनका उपयोग करते हैं।",
   "All {removed} sample records removed.": "सभी {removed} सैंपल रिकॉर्ड हटा दिए गए।",
   "Remove all sample data?": "सारा सैंपल डेटा हटाएँ?",
-  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.": "SAMPLE लिखा हर रिकॉर्ड (उदाहरण काम, रिपोर्ट, बिल, वेतन और उदाहरण अकाउंट्स लॉगिन) सबके लिए हट जाएगा। असली लोग, सप्लायर, साइट और आपकी डाली हर चीज़ बची रहेगी। यह वापस नहीं होगा।",
+  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.":
+    "SAMPLE लिखा हर रिकॉर्ड (उदाहरण काम, रिपोर्ट, बिल, वेतन और उदाहरण अकाउंट्स लॉगिन) सबके लिए हट जाएगा। असली लोग, सप्लायर, साइट और आपकी डाली हर चीज़ बची रहेगी। यह वापस नहीं होगा।",
   "Sample data": "सैंपल डेटा",
-  "Example records that show how each form is filled.": "उदाहरण रिकॉर्ड जो दिखाते हैं कि हर फ़ॉर्म कैसे भरा जाता है।",
+  "Example records that show how each form is filled.":
+    "उदाहरण रिकॉर्ड जो दिखाते हैं कि हर फ़ॉर्म कैसे भरा जाता है।",
   "Leaders only": "सिर्फ़ लीडर के लिए",
-  "Only the Super Admin, Owner, Director or Admin can remove sample data.": "सिर्फ़ सुपर एडमिन, मालिक, डायरेक्टर या एडमिन सैंपल डेटा हटा सकते हैं।",
+  "Only the Super Admin, Owner, Director or Admin can remove sample data.":
+    "सिर्फ़ सुपर एडमिन, मालिक, डायरेक्टर या एडमिन सैंपल डेटा हटा सकते हैं।",
   "sample records in the app": "ऐप में सैंपल रिकॉर्ड",
-  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.": "जब आपकी टीम फ़ॉर्म सीख ले, तो एक टैप में उदाहरण हटा दें। असली लोग, सप्लायर, साइट और आपकी टीम की डाली हर चीज़ बची रहेगी।",
+  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.":
+    "जब आपकी टीम फ़ॉर्म सीख ले, तो एक टैप में उदाहरण हटा दें। असली लोग, सप्लायर, साइट और आपकी टीम की डाली हर चीज़ बची रहेगी।",
   "Remove all sample data": "सारा सैंपल डेटा हटाएँ",
   "Remove all example records in one tap": "एक टैप में सारे उदाहरण रिकॉर्ड हटाएँ",
+  // Warranties, calendar, AI experts
+  "Handover and after": "हैंडओवर और उसके बाद",
+  Warranties: "वारंटी",
+  "What is covered, by whom and until when; claims in one place.":
+    "क्या कवर है, किसकी ओर से और कब तक; दावे एक ही जगह।",
+  "Add warranty": "वारंटी जोड़ें",
+  "No warranties here": "यहाँ कोई वारंटी नहीं",
+  "Add the warranty cards of equipment, doors, pumps and your defect liability.":
+    "उपकरण, दरवाज़े, पंप के वारंटी कार्ड और अपनी डिफेक्ट लायबिलिटी जोड़ें।",
+  "{days} days left": "{days} दिन बाकी",
+  "ended {days} days ago": "{days} दिन पहले खत्म",
+  "{count} open claims": "{count} खुले दावे",
+  Category: "श्रेणी",
+  "For example: submersible pump 1.5 HP": "जैसे: सबमर्सिबल पंप 1.5 HP",
+  "Bill, serial or model": "बिल, सीरियल या मॉडल",
+  "Start date": "शुरू तारीख",
+  Years: "साल",
+  "Ends on {date}": "{date} को खत्म",
+  "What is covered": "क्या कवर है",
+  "Service phone": "सर्विस फ़ोन",
+  "Until {date}": "{date} तक",
+  Claims: "दावे",
+  "No claims yet.": "अभी कोई दावा नहीं।",
+  "New claim: what went wrong?": "नया दावा: क्या खराब हुआ?",
+  "Raise claim": "दावा करें",
+  "Close warranty": "वारंटी बंद करें",
+  Plan: "योजना",
+  Calendar: "कैलेंडर",
+  "Tasks, bills due, warranties and work orders on every site you can see.":
+    "आपकी हर साइट के काम, देय बिल, वारंटी और वर्क ऑर्डर।",
+  "Previous month": "पिछला महीना",
+  "Next month": "अगला महीना",
+  "Nothing on this day": "इस दिन कुछ नहीं",
+  "Pick another day, or another month.": "कोई और दिन या महीना चुनें।",
+  done: "पूरा",
+  Expert: "विशेषज्ञ",
+  "Task starts": "काम शुरू",
+  "Task due": "काम की आखिरी तारीख",
+  "Bill due": "बिल देय",
+  "Warranty ends": "वारंटी खत्म",
+  "Work order ends": "वर्क ऑर्डर खत्म",
+  "From supplier": "सप्लायर से",
+  "Given to client": "क्लाइंट को दी",
+  Expiring: "जल्द खत्म",
+  "JP helper": "JP सहायक",
+  "Drawing reader": "ड्रॉइंग रीडर",
+  "Contract expert": "कॉन्ट्रैक्ट विशेषज्ञ",
+  "BOQ and estimates": "BOQ और अनुमान",
+  "Site engineer": "साइट इंजीनियर",
+  "Safety officer": "सेफ्टी ऑफिसर",
+  "Accounts and GST": "अकाउंट्स और GST",
+  "Daily work coach": "रोज़ के काम का कोच",
+  "Store keeper": "स्टोर कीपर",
+  "Water supply O&M": "जल आपूर्ति O&M",
+  "Anything about your sites, approvals and screens":
+    "आपकी साइट, मंज़ूरी और स्क्रीन के बारे में कुछ भी",
+  "Reads plans, sections and elevations: rooms, sizes, areas, quantities":
+    "नक्शे, सेक्शन, एलिवेशन पढ़ता है: कमरे, नाप, क्षेत्रफल, मात्रा",
+  "Agreements and work orders: scope, money, time, penalties, risks":
+    "एग्रीमेंट और वर्क ऑर्डर: काम, पैसा, समय, जुर्माना, जोखिम",
+  "Quantities, rates and cost checks for BOQ items": "BOQ आइटम की मात्रा, दर और लागत जाँच",
+  "Method, quality checks, curing, tests and good practice":
+    "काम का तरीका, गुणवत्ता जाँच, क्योरिंग, टेस्ट",
+  "Hazards, PPE, permits, toolbox talks": "खतरे, PPE, परमिट, टूलबॉक्स टॉक",
+  "Bills, GST, TDS, retention, payroll dues": "बिल, GST, TDS, रिटेंशन, वेतन देय",
+  "Daily reports, labour plans, tomorrow's work": "रोज़ की रिपोर्ट, मज़दूर योजना, कल का काम",
+  "Stock, reorder, receipts and reconciliation": "स्टॉक, दोबारा मँगाना, रसीद, मिलान",
+  "Overhead tanks, pumps, valves, chlorination, village supply":
+    "ओवरहेड टैंक, पंप, वाल्व, क्लोरीनेशन, गाँव की सप्लाई",
+  "Tasks, bills due, warranties, work orders": "काम, देय बिल, वारंटी, वर्क ऑर्डर",
+  "Warranty cards, expiry and claims": "वारंटी कार्ड, समाप्ति और दावे",
+  "AI experts": "AI विशेषज्ञ",
+  "Drawing reader, contract expert, engineer, safety, accounts":
+    "ड्रॉइंग रीडर, कॉन्ट्रैक्ट विशेषज्ञ, इंजीनियर, सेफ्टी, अकाउंट्स",
 };
 
 export const or: Dictionary = {
@@ -3049,18 +3128,97 @@ export const or: Dictionary = {
   "This person also works for another company. Ask the Super Admin to reset it.":
     "ଏହି ବ୍ୟକ୍ତି ଅନ୍ୟ କମ୍ପାନୀରେ ମଧ୍ୟ କାମ କରନ୍ତି। ରିସେଟ୍ ପାଇଁ ସୁପର ଆଡମିନ୍‌ଙ୍କୁ କୁହନ୍ତୁ।",
   // Sample data
-  "{removed} sample records removed. {kept} stay because real records use them.": "{removed} ସାମ୍ପଲ ରେକର୍ଡ ହଟାଗଲା। {kept} ରହିଲା କାରଣ ଅସଲ ରେକର୍ଡ ସେଗୁଡିକୁ ବ୍ୟବହାର କରେ।",
+  "{removed} sample records removed. {kept} stay because real records use them.":
+    "{removed} ସାମ୍ପଲ ରେକର୍ଡ ହଟାଗଲା। {kept} ରହିଲା କାରଣ ଅସଲ ରେକର୍ଡ ସେଗୁଡିକୁ ବ୍ୟବହାର କରେ।",
   "All {removed} sample records removed.": "ସମସ୍ତ {removed} ସାମ୍ପଲ ରେକର୍ଡ ହଟାଗଲା।",
   "Remove all sample data?": "ସବୁ ସାମ୍ପଲ ଡାଟା ହଟାଇବେ?",
-  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.": "SAMPLE ଲେଖାଥିବା ପ୍ରତି ରେକର୍ଡ (ଉଦାହରଣ କାମ, ରିପୋର୍ଟ, ବିଲ୍, ବେତନ ଓ ଉଦାହରଣ ଆକାଉଣ୍ଟସ୍ ଲଗଇନ୍) ସମସ୍ତଙ୍କ ପାଇଁ ହଟିଯିବ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଆପଣ ଦେଇଥିବା ସବୁ ରହିବ। ଏହା ଫେରିବ ନାହିଁ।",
+  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.":
+    "SAMPLE ଲେଖାଥିବା ପ୍ରତି ରେକର୍ଡ (ଉଦାହରଣ କାମ, ରିପୋର୍ଟ, ବିଲ୍, ବେତନ ଓ ଉଦାହରଣ ଆକାଉଣ୍ଟସ୍ ଲଗଇନ୍) ସମସ୍ତଙ୍କ ପାଇଁ ହଟିଯିବ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଆପଣ ଦେଇଥିବା ସବୁ ରହିବ। ଏହା ଫେରିବ ନାହିଁ।",
   "Sample data": "ସାମ୍ପଲ ଡାଟା",
-  "Example records that show how each form is filled.": "ଉଦାହରଣ ରେକର୍ଡ ଯାହା ଦେଖାଏ ପ୍ରତି ଫର୍ମ କିପରି ପୂରଣ ହୁଏ।",
+  "Example records that show how each form is filled.":
+    "ଉଦାହରଣ ରେକର୍ଡ ଯାହା ଦେଖାଏ ପ୍ରତି ଫର୍ମ କିପରି ପୂରଣ ହୁଏ।",
   "Leaders only": "କେବଳ ଲିଡରଙ୍କ ପାଇଁ",
-  "Only the Super Admin, Owner, Director or Admin can remove sample data.": "କେବଳ ସୁପର ଆଡମିନ୍, ମାଲିକ, ଡାଇରେକ୍ଟର ବା ଆଡମିନ୍ ସାମ୍ପଲ ଡାଟା ହଟାଇପାରିବେ।",
+  "Only the Super Admin, Owner, Director or Admin can remove sample data.":
+    "କେବଳ ସୁପର ଆଡମିନ୍, ମାଲିକ, ଡାଇରେକ୍ଟର ବା ଆଡମିନ୍ ସାମ୍ପଲ ଡାଟା ହଟାଇପାରିବେ।",
   "sample records in the app": "ଆପରେ ସାମ୍ପଲ ରେକର୍ଡ",
-  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.": "ଆପଣଙ୍କ ଟିମ୍ ଫର୍ମ ଶିଖିଗଲେ, ଗୋଟିଏ ଟ୍ୟାପରେ ଉଦାହରଣ ହଟାନ୍ତୁ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଟିମ୍ ଦେଇଥିବା ସବୁ ରହିବ।",
+  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.":
+    "ଆପଣଙ୍କ ଟିମ୍ ଫର୍ମ ଶିଖିଗଲେ, ଗୋଟିଏ ଟ୍ୟାପରେ ଉଦାହରଣ ହଟାନ୍ତୁ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଟିମ୍ ଦେଇଥିବା ସବୁ ରହିବ।",
   "Remove all sample data": "ସବୁ ସାମ୍ପଲ ଡାଟା ହଟାନ୍ତୁ",
   "Remove all example records in one tap": "ଗୋଟିଏ ଟ୍ୟାପରେ ସବୁ ଉଦାହରଣ ରେକର୍ଡ ହଟାନ୍ତୁ",
+  // Warranties, calendar, AI experts
+  "Handover and after": "ହସ୍ତାନ୍ତର ଏବଂ ପରେ",
+  Warranties: "ୱାରେଣ୍ଟି",
+  "What is covered, by whom and until when; claims in one place.":
+    "କଣ କଭର, କାହା ତରଫରୁ ଓ କେବେ ପର୍ଯ୍ୟନ୍ତ; ଦାବି ଗୋଟିଏ ସ୍ଥାନରେ।",
+  "Add warranty": "ୱାରେଣ୍ଟି ଯୋଡନ୍ତୁ",
+  "No warranties here": "ଏଠାରେ କୌଣସି ୱାରେଣ୍ଟି ନାହିଁ",
+  "Add the warranty cards of equipment, doors, pumps and your defect liability.":
+    "ଉପକରଣ, କବାଟ, ପମ୍ପର ୱାରେଣ୍ଟି କାର୍ଡ ଓ ନିଜ ଡିଫେକ୍ଟ ଲାୟାବିଲିଟି ଯୋଡନ୍ତୁ।",
+  "{days} days left": "{days} ଦିନ ବାକି",
+  "ended {days} days ago": "{days} ଦିନ ପୂର୍ବରୁ ସରିଛି",
+  "{count} open claims": "{count} ଖୋଲା ଦାବି",
+  Category: "ଶ୍ରେଣୀ",
+  "For example: submersible pump 1.5 HP": "ଯେମିତି: ସବମର୍ସିବଲ୍ ପମ୍ପ 1.5 HP",
+  "Bill, serial or model": "ବିଲ୍, ସିରିଆଲ୍ ବା ମଡେଲ୍",
+  "Start date": "ଆରମ୍ଭ ତାରିଖ",
+  Years: "ବର୍ଷ",
+  "Ends on {date}": "{date} ରେ ସରିବ",
+  "What is covered": "କଣ କଭର",
+  "Service phone": "ସର୍ଭିସ୍ ଫୋନ୍",
+  "Until {date}": "{date} ପର୍ଯ୍ୟନ୍ତ",
+  Claims: "ଦାବି",
+  "No claims yet.": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଦାବି ନାହିଁ।",
+  "New claim: what went wrong?": "ନୂଆ ଦାବି: କଣ ଖରାପ ହେଲା?",
+  "Raise claim": "ଦାବି କରନ୍ତୁ",
+  "Close warranty": "ୱାରେଣ୍ଟି ବନ୍ଦ କରନ୍ତୁ",
+  Plan: "ଯୋଜନା",
+  Calendar: "କ୍ୟାଲେଣ୍ଡର",
+  "Tasks, bills due, warranties and work orders on every site you can see.":
+    "ଆପଣଙ୍କ ପ୍ରତି ସାଇଟର କାମ, ଦେୟ ବିଲ୍, ୱାରେଣ୍ଟି ଓ ୱର୍କ ଅର୍ଡର।",
+  "Previous month": "ପୂର୍ବ ମାସ",
+  "Next month": "ପରବର୍ତ୍ତୀ ମାସ",
+  "Nothing on this day": "ଏହି ଦିନ କିଛି ନାହିଁ",
+  "Pick another day, or another month.": "ଅନ୍ୟ ଦିନ ବା ମାସ ବାଛନ୍ତୁ।",
+  done: "ସମ୍ପୂର୍ଣ୍ଣ",
+  Expert: "ବିଶେଷଜ୍ଞ",
+  "Task starts": "କାମ ଆରମ୍ଭ",
+  "Task due": "କାମର ଶେଷ ତାରିଖ",
+  "Bill due": "ବିଲ୍ ଦେୟ",
+  "Warranty ends": "ୱାରେଣ୍ଟି ଶେଷ",
+  "Work order ends": "ୱର୍କ ଅର୍ଡର ଶେଷ",
+  "From supplier": "ସପ୍ଲାୟରଙ୍କଠାରୁ",
+  "Given to client": "କ୍ଲାଏଣ୍ଟଙ୍କୁ ଦିଆଯାଇଛି",
+  Expiring: "ଶୀଘ୍ର ସରିବ",
+  "JP helper": "JP ସହାୟକ",
+  "Drawing reader": "ଡ୍ରଇଂ ରିଡର",
+  "Contract expert": "ଚୁକ୍ତିନାମା ବିଶେଷଜ୍ଞ",
+  "BOQ and estimates": "BOQ ଓ ଆକଳନ",
+  "Site engineer": "ସାଇଟ୍ ଇଞ୍ଜିନିୟର",
+  "Safety officer": "ସେଫ୍ଟି ଅଫିସର",
+  "Accounts and GST": "ଆକାଉଣ୍ଟସ୍ ଓ GST",
+  "Daily work coach": "ଦୈନିକ କାମ କୋଚ୍",
+  "Store keeper": "ଷ୍ଟୋର କିପର",
+  "Water supply O&M": "ଜଳ ଯୋଗାଣ O&M",
+  "Anything about your sites, approvals and screens":
+    "ଆପଣଙ୍କ ସାଇଟ୍, ଅନୁମୋଦନ ଓ ସ୍କ୍ରିନ୍ ବିଷୟରେ ଯାହା ବି",
+  "Reads plans, sections and elevations: rooms, sizes, areas, quantities":
+    "ନକ୍ସା, ସେକ୍ସନ୍, ଏଲିଭେସନ୍ ପଢେ: ରୁମ୍, ମାପ, କ୍ଷେତ୍ରଫଳ, ପରିମାଣ",
+  "Agreements and work orders: scope, money, time, penalties, risks":
+    "ଚୁକ୍ତିନାମା ଓ ୱର୍କ ଅର୍ଡର: କାମ, ଟଙ୍କା, ସମୟ, ଜରିମାନା, ବିପଦ",
+  "Quantities, rates and cost checks for BOQ items": "BOQ ଆଇଟମର ପରିମାଣ, ଦର ଓ ଖର୍ଚ୍ଚ ଯାଞ୍ଚ",
+  "Method, quality checks, curing, tests and good practice":
+    "କାମର ପଦ୍ଧତି, ଗୁଣବତ୍ତା ଯାଞ୍ଚ, କ୍ୟୁରିଂ, ଟେଷ୍ଟ",
+  "Hazards, PPE, permits, toolbox talks": "ବିପଦ, PPE, ପର୍ମିଟ୍, ଟୁଲବକ୍ସ ଟକ୍",
+  "Bills, GST, TDS, retention, payroll dues": "ବିଲ୍, GST, TDS, ରିଟେନସନ୍, ବେତନ ଦେୟ",
+  "Daily reports, labour plans, tomorrow's work": "ଦୈନିକ ରିପୋର୍ଟ, ଶ୍ରମିକ ଯୋଜନା, କାଲିର କାମ",
+  "Stock, reorder, receipts and reconciliation": "ଷ୍ଟକ୍, ପୁଣି ମଗାଇବା, ରସିଦ, ମିଳାନ",
+  "Overhead tanks, pumps, valves, chlorination, village supply":
+    "ଓଭରହେଡ୍ ଟ୍ୟାଙ୍କ, ପମ୍ପ, ଭାଲଭ୍, କ୍ଲୋରିନେସନ୍, ଗାଁ ଯୋଗାଣ",
+  "Tasks, bills due, warranties, work orders": "କାମ, ଦେୟ ବିଲ୍, ୱାରେଣ୍ଟି, ୱର୍କ ଅର୍ଡର",
+  "Warranty cards, expiry and claims": "ୱାରେଣ୍ଟି କାର୍ଡ, ସମାପ୍ତି ଓ ଦାବି",
+  "AI experts": "AI ବିଶେଷଜ୍ଞ",
+  "Drawing reader, contract expert, engineer, safety, accounts":
+    "ଡ୍ରଇଂ ରିଡର, ଚୁକ୍ତିନାମା ବିଶେଷଜ୍ଞ, ଇଞ୍ଜିନିୟର, ସେଫ୍ଟି, ଆକାଉଣ୍ଟସ୍",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

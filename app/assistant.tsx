@@ -39,6 +39,7 @@ import {
 import { formatBytes } from "@/lib/jp/attachment-policy";
 import type { AssistantAction } from "@/lib/jp/assistant-catalog";
 import { trpc } from "@/lib/trpc";
+import { EXPERT_KEYS, expertFor, type ExpertKey } from "@/lib/jp/assistant-experts";
 
 const LANGUAGES = { "od-IN": "ଓଡ଼ିଆ", "hi-IN": "हिन्दी", "en-IN": "English" } as const;
 type Lang = keyof typeof LANGUAGES;
@@ -82,6 +83,8 @@ export default function AssistantScreen() {
   const [attached, setAttached] = useState<Attached[]>([]);
   const [attachOpen, setAttachOpen] = useState(false);
   const [recording, setRecording] = useState(false);
+  const params = useLocalSearchParams<{ expert?: string }>();
+  const [expertKey, setExpertKey] = useState<ExpertKey>(expertFor(params.expert).key);
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const player = useRef<AudioPlayer | null>(null);
@@ -183,6 +186,7 @@ export default function AssistantScreen() {
         text,
         history,
         siteId,
+        expert: expertKey,
         files: files.map(({ name, base64 }) => ({ name, base64 })),
       });
       setMessages((prev) => [
@@ -233,7 +237,7 @@ export default function AssistantScreen() {
   };
 
   // Opened from the home mic: start listening straight away, once.
-  const { listen } = useLocalSearchParams<{ listen?: string }>();
+  const { listen } = useLocalSearchParams<{ listen?: string; expert?: string }>();
   const autoListened = useRef(false);
   useEffect(() => {
     if (listen !== "1" || autoListened.current) return;
@@ -274,6 +278,30 @@ export default function AssistantScreen() {
                 detail="The server needs a GEMINI_API_KEY or SARVAM_API_KEY."
               />
             ) : null}
+            <ChipGroup
+              label={t("Expert")}
+              options={EXPERT_KEYS}
+              value={expertKey}
+              onChange={setExpertKey}
+              format={(key) => t(expertFor(key).title)}
+            />
+            <Text style={[styles.expertAbout, { color: colors.muted }]}>
+              {t(expertFor(expertKey).about)}
+            </Text>
+            <View style={styles.expertExamples}>
+              {expertFor(expertKey).examples.map((example) => (
+                <Pressable
+                  key={example}
+                  accessibilityRole="button"
+                  onPress={() => setInput(t(example))}
+                  style={[styles.expertExample, { borderColor: colors.border }]}
+                >
+                  <Text style={[styles.expertExampleText, { color: colors.primary }]}>
+                    {t(example)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
             <ChipGroup
               label="Language"
               options={Object.keys(LANGUAGES) as Lang[]}
@@ -565,6 +593,10 @@ export default function AssistantScreen() {
 }
 
 const styles = StyleSheet.create({
+  expertAbout: { fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 8 },
+  expertExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
+  expertExample: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  expertExampleText: { fontSize: 12, fontWeight: "600" },
   flex: { flex: 1 },
   content: { paddingBottom: 24, gap: 10 },
   live: {

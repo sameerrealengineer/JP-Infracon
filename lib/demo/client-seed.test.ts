@@ -62,6 +62,16 @@ describe("client seed", () => {
     expect(bills.length).toBeGreaterThanOrEqual(3);
     expect(bills.every((bill) => bill.receivedMinor === bill.netReceivableMinor)).toBe(true);
 
+    // Warranties, one expiring soon; the calendar shows this month's dates.
+    const cards = await boss.jp.warranties.list({});
+    expect(cards.rows.length).toBe(8);
+    expect(cards.counts.expiring).toBeGreaterThanOrEqual(1);
+    const month = new Date().toISOString().slice(0, 7);
+    const events = await boss.jp.calendar.range({ from: `${month}-01`, to: `${month}-28` });
+    expect(events.length).toBeGreaterThan(0);
+    // The drawing reader and contract expert are offered.
+    expect((await boss.jp.assistant.status()).available).toBeDefined();
+
     // One step removes every SAMPLE record; real people, suppliers, sites and logins stay.
     const organizationId = aska.organizationId;
     const before = await boss.jp.sampleData.status({ organizationId });

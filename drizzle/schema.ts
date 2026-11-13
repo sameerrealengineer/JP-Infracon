@@ -3196,3 +3196,66 @@ export const sampleRecords = mysqlTable(
     rowUnique: uniqueIndex("sample_records_row_uq").on(table.tableName, table.rowId),
   }),
 );
+
+/**
+ * Warranties and guarantees: received from suppliers (UPVC, pump, waterproofing) or given to
+ * the client (defect liability on a handed-over work). Expiring ones show in the inbox.
+ */
+export const warranties = mysqlTable(
+  "warranties",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    direction: mysqlEnum("direction", ["Received", "Given"]).notNull(),
+    itemName: varchar("itemName", { length: 180 }).notNull(),
+    category: varchar("category", { length: 64 }).notNull(),
+    vendorId: varchar("vendorId", { length: 36 }).references(() => vendors.id, {
+      onDelete: "restrict",
+    }),
+    partyName: varchar("partyName", { length: 180 }),
+    reference: varchar("reference", { length: 120 }),
+    startDate: date("startDate", { mode: "string" }).notNull(),
+    endDate: date("endDate", { mode: "string" }).notNull(),
+    terms: text("terms"),
+    contactPhone: varchar("contactPhone", { length: 40 }),
+    status: mysqlEnum("status", ["Active", "Closed"]).default("Active").notNull(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    siteEndIndex: index("warranty_site_end_idx").on(table.siteId, table.endDate),
+    orgEndIndex: index("warranty_org_end_idx").on(table.organizationId, table.endDate),
+  }),
+);
+
+export const warrantyClaims = mysqlTable(
+  "warranty_claims",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    warrantyId: varchar("warrantyId", { length: 36 })
+      .notNull()
+      .references(() => warranties.id, { onDelete: "restrict" }),
+    claimDate: date("claimDate", { mode: "string" }).notNull(),
+    problem: text("problem").notNull(),
+    status: mysqlEnum("status", ["Open", "Resolved", "Rejected"]).default("Open").notNull(),
+    resolution: text("resolution"),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    resolvedBy: int("resolvedBy").references(() => users.id, { onDelete: "restrict" }),
+    resolvedAt: timestamp("resolvedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    warrantyIndex: index("warranty_claim_warranty_idx").on(table.warrantyId, table.status),
+  }),
+);

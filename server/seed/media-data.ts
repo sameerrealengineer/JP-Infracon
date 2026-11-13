@@ -324,3 +324,112 @@ export async function addSampleMedia(boss: SeedCaller, ids: Ids) {
     "method statement, safety",
   );
 }
+
+/** SAMPLE: warranty cards for both projects, with one claim. */
+export async function addSampleWarranties(
+  boss: SeedCaller,
+  ids: Ids,
+  vendorsBySite: Record<string, { id: string; legalName: string }[]>,
+  today: string,
+) {
+  const vendor = (siteId: string, name: string) =>
+    vendorsBySite[siteId]?.find((row) => row.legalName === name)?.id ?? null;
+  const back = (days: number) => {
+    const date = new Date(`${today}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - days);
+    return date.toISOString().slice(0, 10);
+  };
+  const plusYears = (start: string, years: number) => {
+    const date = new Date(`${start}T12:00:00Z`);
+    date.setUTCFullYear(date.getUTCFullYear() + years);
+    date.setUTCDate(date.getUTCDate() - 1);
+    return date.toISOString().slice(0, 10);
+  };
+  const k = ids.kalyan.siteId;
+  const handover = back(1);
+  const cards = [
+    {
+      siteId: k,
+      direction: "Received" as const,
+      itemName: "UPVC doors and windows (32 nos)",
+      category: "Doors and windows" as const,
+      vendorId: vendor(k, "Rajdhani UPVC"),
+      reference: "SAMPLE-RU-0118",
+      startDate: handover,
+      endDate: plusYears(handover, 10),
+      terms:
+        "Profile and hardware against warping, discolouring and fittings failure; glass breakage not covered.",
+    },
+    {
+      siteId: k,
+      direction: "Received" as const,
+      itemName: "Submersible pump 1.5 HP with starter panel",
+      category: "Equipment" as const,
+      vendorId: vendor(k, "Bhagabati Enterprises"),
+      reference: "SAMPLE-BE-0477",
+      startDate: handover,
+      endDate: plusYears(handover, 2),
+      terms: "Motor and pump end; burnt winding from low voltage not covered.",
+    },
+    {
+      siteId: k,
+      direction: "Received" as const,
+      itemName: "FR copper wiring and switchgear",
+      category: "Electrical" as const,
+      vendorId: vendor(k, "Bhagabati Enterprises"),
+      reference: "SAMPLE-BE-0451",
+      startDate: back(40),
+      endDate: plusYears(back(40), 1),
+      terms: "Manufacturing defects in wire and MCBs.",
+    },
+    {
+      siteId: k,
+      direction: "Given" as const,
+      itemName: "Defect liability: Kalyan Mandap building",
+      category: "Defect liability" as const,
+      partyName: "Block Development Office, Aska (Sample)",
+      startDate: handover,
+      endDate: plusYears(handover, 1),
+      terms:
+        "Contractor repairs any defect in the work at own cost for 12 months from handover; 5% retention held till then.",
+    },
+    ...ids.sheragada.siteIds
+      .slice(0, 3)
+      .map((siteId, index) => ({
+        siteId,
+        direction: "Given" as const,
+        itemName: `Inside epoxy coating, OHT-0${index + 1}`,
+        category: "Painting and coating" as const,
+        partyName: "RWS & S Division, Berhampur",
+        startDate: back(20 - index * 3),
+        endDate: plusYears(back(20 - index * 3), 3),
+        terms: "Coating peeling or blistering repaired free for 3 years.",
+      })),
+    {
+      siteId: ids.sheragada.siteIds[0]!,
+      direction: "Received" as const,
+      itemName: "Sluice valves 100 mm (12 nos)",
+      category: "Plumbing" as const,
+      vendorId: vendor(ids.sheragada.siteIds[0]!, "Bhagabati Enterprises"),
+      reference: "SAMPLE-BE-DC-301",
+      startDate: back(24),
+      endDate: back(24 - 30),
+      terms: "Gland leak and spindle failure. Short warranty: ends soon, to show the reminder.",
+    },
+  ];
+  let pump = "";
+  for (const card of cards) {
+    const made = await boss.jp.warranties.create({ ...card, clientMutationId: id() });
+    if (card.itemName.startsWith("Submersible")) pump = made.id;
+  }
+  const claim = await boss.jp.warranties.addClaim({
+    warrantyId: pump,
+    claimDate: today,
+    problem: "SAMPLE · Starter trips after 10 minutes of running.",
+  });
+  await boss.jp.warranties.resolveClaim({
+    claimId: claim.id,
+    status: "Resolved",
+    resolution: "Overload relay set right by Bhagabati's electrician.",
+  });
+}

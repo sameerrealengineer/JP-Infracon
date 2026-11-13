@@ -14,6 +14,7 @@ import {
   organizationMemberships,
   projects,
   sampleRecords,
+  warranties,
   siteAssignments,
   sites,
   userCredentials,
@@ -28,7 +29,7 @@ import {
   markKalyanMandapCompleted,
   sheragadaWork,
 } from "./more-data";
-import { addRealPhotos, addSampleMedia } from "./media-data";
+import { addRealPhotos, addSampleMedia, addSampleWarranties } from "./media-data";
 import { newRows, registerSample, snapshot } from "./sample-registry";
 
 /** Tables whose every row is real (company structure, people, suppliers, settings). */
@@ -205,6 +206,27 @@ export async function runClientSeed(superAdminUsername: string) {
     const added = newRows(before, await snapshot(db));
     notes.push(`${await registerSample(db, added)} photo and document rows listed as SAMPLE.`);
     if (wasCompleted) await setStatus("Completed", "Work complete and handed over.");
+  }
+  // 5. Warranty cards (once: when there are none).
+  const [anyWarranty] = await db.select({ id: warranties.id }).from(warranties).limit(1);
+  if (kalyan && water && !anyWarranty) {
+    const tanks = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(like(sites.siteCode, "SHG-OHT%"))
+      .orderBy(asc(sites.siteCode));
+    const ids = {
+      kalyan: { projectId: kalyan.projectId, siteId: kalyan.id },
+      sheragada: { projectId: water.id, siteIds: tanks.map((row: { id: string }) => row.id) },
+    };
+    const vendorsBySite: Record<string, { id: string; legalName: string }[]> = {};
+    for (const siteId of [kalyan.id, ids.sheragada.siteIds[0]!])
+      vendorsBySite[siteId] = (await boss.jp.finance.listVendors({ siteId })).rows;
+    const before = await snapshot(db);
+    await addSampleWarranties(boss, ids, vendorsBySite, new Date().toISOString().slice(0, 10));
+    notes.push(
+      `${await registerSample(db, newRows(before, await snapshot(db)))} warranty rows listed as SAMPLE.`,
+    );
   }
   return { notes, logins };
 }

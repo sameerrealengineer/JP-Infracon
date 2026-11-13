@@ -62,6 +62,8 @@ export async function getSiteScope(
   user: User,
   siteId: string,
   permissionKey = "site.view",
+  /** After-handover records (warranties, claims) may be written on a Completed site. */
+  options: { allowCompletedSite?: boolean } = {},
 ): Promise<SiteScope> {
   assertActiveAccount(user);
   const db = await getDb();
@@ -136,7 +138,8 @@ export async function getSiteScope(
 
   {
     const readOnlyPermission = permissionKey.endsWith(".view");
-    if (!readOnlyPermission && siteRow.siteStatus !== "Active") {
+    const completedAllowed = options.allowCompletedSite && siteRow.siteStatus === "Completed";
+    if (!readOnlyPermission && siteRow.siteStatus !== "Active" && !completedAllowed) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "This site is not accepting routine changes.",
