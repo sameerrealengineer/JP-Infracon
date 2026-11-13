@@ -68,6 +68,7 @@ export function prettyRole(role: string | null | undefined): string {
   if (role === "super_admin") return "Super Admin";
   if (role === "admin") return "Contractor / Admin";
   if (role === "director") return "Director / Partner";
+  if (role === "supervisor") return "Site Supervisor";
   return role.replaceAll("_", " ").replace(/\b\w/g, (part) => part.toUpperCase());
 }
 

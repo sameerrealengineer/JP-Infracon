@@ -92,8 +92,10 @@ describe("worker app", () => {
         pin: "123456",
       }),
     ).rejects.toThrow(/in a row/);
+    // Site supervisors manage the mistri logins of their own site; a storekeeper cannot.
+    await supervisor.jp.worker.update({ siteId, personId: rameshId, features: ["money"] });
     await expect(
-      supervisor.jp.worker.update({ siteId, personId: rameshId, features: ["money"] }),
+      store.jp.worker.update({ siteId, personId: rameshId, features: ["money"] }),
     ).rejects.toThrow();
     await manager.jp.worker.update({ siteId, personId: rameshId, features: ["attendance"] });
     const worker = await workerCaller(DEMO_WORKER.mobile, DEMO_WORKER.pin);

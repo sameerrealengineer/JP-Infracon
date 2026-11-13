@@ -10,8 +10,8 @@ import {
 } from "expo-audio";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -202,9 +202,10 @@ export default function AssistantScreen() {
     try {
       await recorder.stop();
       const uri = recorder.uri;
-      if (!uri || !siteId) throw new Error("No recording was captured.");
+      if (!uri) throw new Error("No recording was captured.");
+      // Voice works for everyone signed in, also before any site exists.
       const result = await transcribe.mutateAsync({
-        siteId,
+        siteId: siteId ?? undefined,
         ...(await readRecording(uri)),
         language,
       });
@@ -230,6 +231,18 @@ export default function AssistantScreen() {
       setError(cause instanceof Error ? cause.message : "Recording could not start.");
     }
   };
+
+  // Opened from the home mic: start listening straight away, once.
+  const { listen } = useLocalSearchParams<{ listen?: string }>();
+  const autoListened = useRef(false);
+  useEffect(() => {
+    if (listen !== "1" || autoListened.current) return;
+    autoListened.current = true;
+    const id = setTimeout(() => void start(), 400);
+    return () => clearTimeout(id);
+    // Runs once for the link; start() reads the latest state when it fires.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listen]);
 
   const unavailable = status.data && !status.data.available;
 
@@ -268,7 +281,7 @@ export default function AssistantScreen() {
               onChange={setLanguage}
               format={(key) => LANGUAGES[key]}
             />
-            {status.data?.voice && status.data.speech && siteId ? (
+            {status.data?.voice && status.data.speech ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("Live talk")}
@@ -519,7 +532,7 @@ export default function AssistantScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={recording ? "Stop and send" : "Speak"}
-                  disabled={busy || !siteId}
+                  disabled={busy}
                   onPress={() => void (recording ? stop() : start())}
                   style={[
                     styles.round,

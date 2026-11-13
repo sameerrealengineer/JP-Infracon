@@ -111,6 +111,8 @@ export const organizationMemberships = mysqlTable(
       "accounts",
       "storekeeper",
       "auditor",
+      // Added 13 Nov 2026 at the end so existing values keep their positions.
+      "site_engineer",
     ]).notNull(),
     status: mysqlEnum("status", ["Invited", "Active", "Suspended", "Deactivated"])
       .default("Active")
@@ -1550,6 +1552,7 @@ export const registrationInvites = mysqlTable(
       "accounts",
       "storekeeper",
       "auditor",
+      "site_engineer",
     ]).notNull(),
     siteId: varchar("siteId", { length: 36 }).references(() => sites.id, { onDelete: "restrict" }),
     status: mysqlEnum("status", ["Active", "Used", "Revoked"]).default("Active").notNull(),

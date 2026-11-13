@@ -255,7 +255,10 @@ export default function MoreScreen() {
       detail: "Logins, roles, site access",
       tone: "info",
       route: "/users",
-      show: workspace.canManageAccounts,
+      // Leaders manage the company; PM, Site Engineer and Supervisor manage their own sites.
+      show:
+        workspace.canManageAccounts ||
+        ["project_manager", "site_engineer", "supervisor"].includes(workspace.role ?? ""),
     },
     {
       icon: "document-scanner",

@@ -98,7 +98,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setInviteCode("");
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : t("Account could not be created. Check the code."),
+        error instanceof Error
+          ? t(error.message)
+          : t("Account could not be created. Check the code."),
       );
     } finally {
       setSubmitting(false);
@@ -112,7 +114,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       const result = await loginMutation.mutateAsync({ username: username.trim(), password });
       await completeSignIn(result);
     } catch {
-      setFormError("Username or password is incorrect, or sign-in is temporarily unavailable.");
+      setFormError(t("Username or password is incorrect, or sign-in is temporarily unavailable."));
     } finally {
       setSubmitting(false);
     }
@@ -133,8 +135,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     } catch (error) {
       setFormError(
         error instanceof Error
-          ? error.message
-          : "Super Admin setup failed. Verify the supplied setup key and try again.",
+          ? t(error.message)
+          : t("Super Admin setup failed. Verify the supplied setup key and try again."),
       );
     } finally {
       setSubmitting(false);
@@ -145,7 +147,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     setSubmitting(true);
     setFormError(null);
     if (newPassword !== confirmPassword) {
-      setFormError("The new passwords do not match.");
+      setFormError(t("The new passwords do not match."));
       setSubmitting(false);
       return;
     }
@@ -158,8 +160,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     } catch (error) {
       setFormError(
         error instanceof Error && error.message.includes("Current password")
-          ? "The current password is incorrect."
-          : "Password update failed. Use at least 12 characters and try again.",
+          ? t("The current password is incorrect.")
+          : t("Password update failed. Use at least 12 characters and try again."),
       );
     } finally {
       setSubmitting(false);
@@ -171,7 +173,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       <View style={[styles.state, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} />
         <Text style={[styles.detail, { color: colors.muted }]}>
-          Checking your JP Infracon account…
+          {t("Checking your JP Infracon account…")}
         </Text>
       </View>
     );
@@ -189,7 +191,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return (
       <View style={[styles.state, { backgroundColor: colors.background }]}>
         <ActivityIndicator color={colors.primary} />
-        <Text style={[styles.detail, { color: colors.muted }]}>Checking secure account setup…</Text>
+        <Text style={[styles.detail, { color: colors.muted }]}>
+          {t("Checking secure account setup…")}
+        </Text>
       </View>
     );
 
@@ -248,12 +252,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <Image
               source={companyLogo}
               resizeMode="contain"
-              accessibilityLabel="JP Infracon company logo"
+              accessibilityLabel={t("JP Infracon company logo")}
               style={styles.logo}
             />
           </View>
           <Text style={styles.title}>JP INFRACON</Text>
-          <Text style={styles.tagline}>BUILDING TODAY. SHAPING TOMORROW.</Text>
+          <Text style={styles.tagline}>{t("BUILDING TODAY. SHAPING TOMORROW.")}</Text>
           {workerMode && !firstRun && !mustChangePassword ? (
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <WorkerSignIn onSignedIn={completeSignIn} onBack={() => setWorkerMode(false)} />
@@ -262,9 +266,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[styles.cardTitle, { color: colors.foreground }]}>
                 {mustChangePassword
-                  ? "Set a new password"
+                  ? t("Set a new password")
                   : firstRun
-                    ? "Create the Super Admin"
+                    ? t("Create the Super Admin")
                     : registering
                       ? t("Create your account")
                       : t("Welcome back")}
@@ -272,14 +276,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
               {mustChangePassword ? (
                 <>
                   <Text style={[styles.detail, { color: colors.muted }]}>
-                    Change the temporary password before continuing. Your prior sessions will be
-                    revoked.
+                    {t(
+                      "Change the temporary password before continuing. Your prior sessions will be revoked.",
+                    )}
                   </Text>
                   <TextInput
-                    accessibilityLabel="Temporary password"
+                    accessibilityLabel={t("Temporary password")}
                     value={currentPassword}
                     onChangeText={setCurrentPassword}
-                    placeholder="Temporary password"
+                    placeholder={t("Temporary password")}
                     placeholderTextColor={colors.muted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -295,10 +300,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="New password"
+                    accessibilityLabel={t("New password")}
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="New password (12+ characters)"
+                    placeholder={t("New password (12+ characters)")}
                     placeholderTextColor={colors.muted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -314,10 +319,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Confirm new password"
+                    accessibilityLabel={t("Confirm new password")}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
+                    placeholder={t("Confirm new password")}
                     placeholderTextColor={colors.muted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -336,14 +341,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
               ) : firstRun ? (
                 <>
                   <Text style={[styles.detail, { color: colors.muted }]}>
-                    Create the first Super Admin account. Use this app’s configured one-time setup
-                    key—not your login password. Leading and trailing spaces are ignored.
+                    {t(
+                      "Create the first Super Admin account. Use this app’s configured one-time setup key—not your login password. Leading and trailing spaces are ignored.",
+                    )}
                   </Text>
                   <TextInput
-                    accessibilityLabel="Super Admin display name"
+                    accessibilityLabel={t("Super Admin display name")}
                     value={displayName}
                     onChangeText={setDisplayName}
-                    placeholder="Full name"
+                    placeholder={t("Full name")}
                     placeholderTextColor={colors.muted}
                     autoCapitalize="words"
                     autoComplete="name"
@@ -357,10 +363,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Choose username"
+                    accessibilityLabel={t("Choose username")}
                     value={username}
                     onChangeText={setUsername}
-                    placeholder="Choose username"
+                    placeholder={t("Choose username")}
                     placeholderTextColor={colors.muted}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -375,10 +381,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Choose password"
+                    accessibilityLabel={t("Choose password")}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="Choose password (12+ characters)"
+                    placeholder={t("Choose password (12+ characters)")}
                     placeholderTextColor={colors.muted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -394,10 +400,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="One-time Super Admin setup key"
+                    accessibilityLabel={t("One-time Super Admin setup key")}
                     value={bootstrapSecret}
                     onChangeText={setBootstrapSecret}
-                    placeholder="One-time setup key"
+                    placeholder={t("One-time setup key")}
                     placeholderTextColor={colors.muted}
                     secureTextEntry
                     autoCapitalize="none"
@@ -424,7 +430,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     )}
                   </Text>
                   <TextInput
-                    accessibilityLabel="Invite code"
+                    accessibilityLabel={t("Invite code")}
                     value={inviteCode}
                     onChangeText={setInviteCode}
                     placeholder={t("Invite code (e.g. ABCDE-FGH23)")}
@@ -442,7 +448,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Choose username"
+                    accessibilityLabel={t("Choose username")}
                     value={username}
                     onChangeText={setUsername}
                     placeholder={t("Choose a username")}
@@ -460,7 +466,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Choose password"
+                    accessibilityLabel={t("Choose password")}
                     value={password}
                     onChangeText={setPassword}
                     placeholder={t("Password (12+ characters)")}
@@ -479,7 +485,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Confirm password"
+                    accessibilityLabel={t("Confirm password")}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     placeholder={t("Confirm password")}
@@ -504,7 +510,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     {t("Sign in with the username and password your administrator gave you.")}
                   </Text>
                   <TextInput
-                    accessibilityLabel="Username"
+                    accessibilityLabel={t("Username")}
                     value={username}
                     onChangeText={setUsername}
                     placeholder={t("Username")}
@@ -522,7 +528,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
                     ]}
                   />
                   <TextInput
-                    accessibilityLabel="Password"
+                    accessibilityLabel={t("Password")}
                     value={password}
                     onChangeText={setPassword}
                     placeholder={t("Password")}
@@ -587,9 +593,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 ) : (
                   <Text style={[styles.loginText, { color: colors.background }]}>
                     {mustChangePassword
-                      ? "Update password"
+                      ? t("Update password")
                       : firstRun
-                        ? "Create Super Admin account"
+                        ? t("Create Super Admin account")
                         : registering
                           ? t("Create account")
                           : t("Sign in")}
@@ -654,7 +660,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             />
           )}
           <Text style={styles.leadership}>
-            Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.
+            {t("Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.")}
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -820,11 +826,14 @@ function DemoAccounts({
   selected: string;
   onPick: (username: string) => void;
 }) {
+  const { t } = useT();
   return (
     <View style={styles.demoBox}>
-      <Text style={styles.demoTitle}>Demo accounts</Text>
+      <Text style={styles.demoTitle}>{t("Demo accounts")}</Text>
       <Text style={styles.demoHint}>
-        Tap a role to sign in as that person. Password for all: {DEMO_PASSWORD}
+        {t("Tap a role to sign in as that person. Password for all: {password}", {
+          password: DEMO_PASSWORD,
+        })}
       </Text>
       <View style={styles.demoGrid}>
         {DEMO_ACCOUNTS.map((account) => {
@@ -848,7 +857,7 @@ function DemoAccounts({
         })}
       </View>
       <Text style={styles.demoHint}>
-        Everything is stored on this phone only. Nothing is sent to a server.
+        {t("Everything is stored on this phone only. Nothing is sent to a server.")}
       </Text>
     </View>
   );
@@ -856,6 +865,7 @@ function DemoAccounts({
 
 /** Shows which server the app talks to; lets the user point an installed APK at their server. */
 function ServerAddress({ onChanged }: { onChanged: () => void }) {
+  const { t } = useT();
   // An APK built without a server address opens this box so the address can be entered.
   const [editing, setEditing] = useState(() => Platform.OS !== "web" && !getApiBaseUrl());
   const [value, setValue] = useState("");
@@ -870,7 +880,7 @@ function ServerAddress({ onChanged }: { onChanged: () => void }) {
       setEditing(false);
       onChanged();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Not saved.");
+      setError(cause instanceof Error ? t(cause.message) : t("Not saved."));
     } finally {
       setBusy(false);
     }
@@ -879,13 +889,14 @@ function ServerAddress({ onChanged }: { onChanged: () => void }) {
     <View style={styles.serverBox}>
       <Pressable accessibilityRole="button" onPress={() => setEditing((v) => !v)} hitSlop={8}>
         <Text style={styles.serverText}>
-          Server · {current.replace(/^https?:\/\//, "")} · {editing ? "Close" : "Change"}
+          {t("Server")} · {current.replace(/^https?:\/\//, "")} ·{" "}
+          {editing ? t("Close") : t("Change")}
         </Text>
       </Pressable>
       {editing ? (
         <>
           <TextInput
-            accessibilityLabel="Server address"
+            accessibilityLabel={t("Server address")}
             value={value}
             onChangeText={setValue}
             placeholder="https://api.your-company.com"
@@ -905,7 +916,7 @@ function ServerAddress({ onChanged }: { onChanged: () => void }) {
             {busy ? (
               <ActivityIndicator color="#0E1A26" />
             ) : (
-              <Text style={styles.serverSaveText}>Check & save</Text>
+              <Text style={styles.serverSaveText}>{t("Check & save")}</Text>
             )}
           </Pressable>
         </>

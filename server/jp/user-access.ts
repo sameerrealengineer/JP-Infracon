@@ -44,6 +44,7 @@ const LEADER_ORDER: BusinessRole[] = [
   "director",
   "admin",
   "project_manager",
+  "site_engineer",
   "accounts",
   "supervisor",
   "storekeeper",

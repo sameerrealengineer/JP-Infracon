@@ -1,0 +1,2 @@
+ALTER TABLE `organization_memberships` MODIFY COLUMN `businessRole` enum('owner','director','admin','project_manager','supervisor','accounts','storekeeper','auditor','site_engineer') NOT NULL;--> statement-breakpoint
+ALTER TABLE `registration_invites` MODIFY COLUMN `businessRole` enum('director','admin','project_manager','supervisor','accounts','storekeeper','auditor','site_engineer') NOT NULL;

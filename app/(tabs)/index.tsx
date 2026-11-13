@@ -118,6 +118,7 @@ export default function HomeScreen() {
           eyebrow={t(greeting())}
           title={t("Hello, {name}", { name: firstName })}
           subtitle={`${prettyRole(workspace.role)} · ${today}`}
+          showAssistant={false}
         />
         <OfflineBanner
           pendingCount={pending.length}
@@ -192,9 +193,16 @@ export default function HomeScreen() {
             <Text style={[styles.askText, { color: colors.muted }]} numberOfLines={1}>
               {t("Ask, speak or share a file…")}
             </Text>
-            <View style={[styles.askMic, { backgroundColor: colors.primary }]}>
+            {/* The mic opens the assistant already listening. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("Speak to the AI assistant")}
+              hitSlop={6}
+              onPress={() => router.push("/assistant?listen=1" as never)}
+              style={[styles.askMic, { backgroundColor: colors.primary }]}
+            >
               <MaterialIcons name="mic" size={18} color={colors.background} />
-            </View>
+            </Pressable>
           </Pressable>
         ) : null}
 
@@ -366,7 +374,7 @@ export default function HomeScreen() {
         <View style={styles.footer}>
           <MaterialIcons name="verified-user" size={14} color={colors.accent} />
           <Text style={[styles.footerText, { color: colors.muted }]}>
-            JP Infracon · access checked on every request
+            {t("JP Infracon · access checked on every request")}
           </Text>
         </View>
       </ScrollView>
@@ -761,8 +769,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     marginTop: 10,
+    marginBottom: 24,
+    paddingHorizontal: 8,
   },
   delegatedTitle: { fontSize: 14, fontWeight: "800" },
   delegatedText: { fontSize: 12, marginTop: 3 },
-  footerText: { fontSize: 11 },
+  footerText: { fontSize: 11, flexShrink: 1, textAlign: "center" },
 });

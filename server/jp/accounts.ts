@@ -33,12 +33,15 @@ import {
   assignableBusinessRoles,
   mayManageMembershipRoles,
   mayManageRole,
+  roleRank,
   rolesAssignableBy,
+  siteChoiceProblem,
+  siteManagerRoles,
+  type ManagerRole,
 } from "../../lib/jp/account-role-policy";
 import { formatInviteCode, inviteCodeFromBytes } from "../../lib/jp/invite-code";
 import { effectiveNow } from "../../lib/jp/effective-time";
 
-const organizationWideRoles = new Set<BusinessRole>(["admin", "director"]);
 const newAccountSchema = z.object({
   organizationId: z.string().uuid(),
   displayName: z.string().trim().min(2).max(120),
@@ -129,6 +132,7 @@ async function manageableOrganizations(user: typeof users.$inferSelect) {
         ).map((organization) => ({
           ...organization,
           assignableRoles: rolesAssignableBy("super_admin"),
+          managerSiteIds: null as string[] | null,
         }))
       : await (async () => {
           const memberships = await db
@@ -155,10 +159,11 @@ async function manageableOrganizations(user: typeof users.$inferSelect) {
           const accepted = [];
           for (const organization of candidates) {
             try {
-              const access = await assertCanManageOrganization(user, organization.id);
+              const access = await accountManagerScope(user, organization.id);
               accepted.push({
                 ...organization,
                 assignableRoles: rolesAssignableBy(access.managerRole),
+                managerSiteIds: access.siteIds,
               });
             } catch {
               /* keep other authorised organisations */
@@ -190,7 +195,13 @@ async function manageableOrganizations(user: typeof users.$inferSelect) {
     .limit(1000);
   return rows.map((organization) => ({
     ...organization,
-    sites: siteRows.filter((site) => site.organizationId === organization.id),
+    // Site managers can give access only to their own sites, so only those are offered.
+    sites: siteRows.filter(
+      (site) =>
+        site.organizationId === organization.id &&
+        (!organization.managerSiteIds || organization.managerSiteIds.includes(site.id)),
+    ),
+    wholeCompany: !organization.managerSiteIds,
   }));
 }
 
@@ -225,6 +236,157 @@ async function assertTargetInOrganization(userId: number, organizationId: string
       message: "This privileged account cannot be managed from an organization account list.",
     });
   return { memberships, target };
+}
+
+/**
+ * Who is managing accounts here and over which sites. Owner, Director, Admin (with
+ * `user.manage`) and the Super Admin manage the whole company (`siteIds` null). Project
+ * Managers, Site Engineers and Site Supervisors manage only people on their own active sites.
+ */
+export async function accountManagerScope(
+  user: typeof users.$inferSelect,
+  organizationId: string,
+): Promise<{
+  organization: { id: string; status: string };
+  managerRole: ManagerRole;
+  siteIds: string[] | null;
+}> {
+  try {
+    const access = await assertCanManageOrganization(user, organizationId);
+    return { ...access, siteIds: null };
+  } catch (error) {
+    if (!(error instanceof TRPCError) || error.code !== "FORBIDDEN") throw error;
+  }
+  const db = requireDb(await getDb());
+  const memberships = await db
+    .select({ businessRole: organizationMemberships.businessRole })
+    .from(organizationMemberships)
+    .where(
+      and(
+        eq(organizationMemberships.organizationId, organizationId),
+        eq(organizationMemberships.userId, user.id),
+        eq(organizationMemberships.status, "Active"),
+      ),
+    )
+    .limit(20);
+  const managerRole = memberships
+    .map((row) => row.businessRole as BusinessRole)
+    .filter((role) => siteManagerRoles.includes(role))
+    .sort((a, b) => roleRank(b) - roleRank(a))[0];
+  if (!managerRole)
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Your role does not include managing accounts.",
+    });
+  const now = new Date();
+  const own = await db
+    .select({ siteId: siteAssignments.siteId })
+    .from(siteAssignments)
+    .innerJoin(sites, eq(siteAssignments.siteId, sites.id))
+    .where(
+      and(
+        eq(siteAssignments.userId, user.id),
+        eq(siteAssignments.status, "Active"),
+        eq(sites.organizationId, organizationId),
+        lte(siteAssignments.effectiveFrom, now),
+        or(isNull(siteAssignments.effectiveTo), gte(siteAssignments.effectiveTo, now)),
+      ),
+    );
+  const siteIds = [...new Set(own.map((row) => row.siteId))];
+  if (!siteIds.length)
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You are not on any site yet, so you cannot manage accounts.",
+    });
+  const [organization] = await db
+    .select({ id: organizations.id, status: organizations.status })
+    .from(organizations)
+    .where(eq(organizations.id, organizationId))
+    .limit(1);
+  if (!organization) throw new TRPCError({ code: "NOT_FOUND", message: "Organization not found." });
+  return { organization, managerRole, siteIds };
+}
+
+/** Active site assignments of a person in one company. */
+async function activeSitesOf(userId: number, organizationId: string) {
+  const db = requireDb(await getDb());
+  const now = new Date();
+  const rows = await db
+    .select({ id: siteAssignments.id, siteId: siteAssignments.siteId })
+    .from(siteAssignments)
+    .innerJoin(sites, eq(siteAssignments.siteId, sites.id))
+    .where(
+      and(
+        eq(siteAssignments.userId, userId),
+        eq(siteAssignments.status, "Active"),
+        eq(sites.organizationId, organizationId),
+        lte(siteAssignments.effectiveFrom, now),
+        or(isNull(siteAssignments.effectiveTo), gte(siteAssignments.effectiveTo, now)),
+      ),
+    );
+  return rows;
+}
+
+/**
+ * The manager may act on this person: never themselves, never a Super Admin, only roles below
+ * their own, and (site managers) only someone on one of their sites.
+ */
+async function assertMayManageTarget(
+  manager: typeof users.$inferSelect,
+  scope: Awaited<ReturnType<typeof accountManagerScope>>,
+  organizationId: string,
+  targetUserId: number,
+) {
+  if (targetUserId === manager.id)
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Use your own profile to change your account.",
+    });
+  const { memberships, target } = await assertTargetInOrganization(targetUserId, organizationId);
+  if (
+    !mayManageMembershipRoles(
+      scope.managerRole,
+      memberships.map((membership) => membership.businessRole as BusinessRole),
+    )
+  )
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Only someone above this person's role can change this account.",
+    });
+  const targetSites = await activeSitesOf(targetUserId, organizationId);
+  if (scope.siteIds) {
+    const own = new Set(scope.siteIds);
+    if (!targetSites.some((row) => own.has(row.siteId)))
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "This person is not on any of your sites.",
+      });
+  }
+  return { memberships, target, targetSites };
+}
+
+async function validateSites(organizationId: string, siteIds: readonly string[]) {
+  if (!siteIds.length) return;
+  const db = requireDb(await getDb());
+  const rows = await db
+    .select({ id: sites.id })
+    .from(sites)
+    .where(
+      and(
+        eq(sites.organizationId, organizationId),
+        inArray(sites.id, [...siteIds]),
+        eq(sites.status, "Active"),
+      ),
+    );
+  if (rows.length !== siteIds.length)
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Every chosen site must be active and belong to this company.",
+    });
+}
+
+function badSites(problem: string | null) {
+  if (problem) throw new TRPCError({ code: "BAD_REQUEST", message: problem });
 }
 
 async function createAudit(
@@ -262,10 +424,8 @@ export const accountsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { organization, managerRole } = await assertCanManageOrganization(
-        ctx.user,
-        input.organizationId,
-      );
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      const { organization, managerRole } = scope;
       if (!rolesAssignableBy(managerRole).includes(input.businessRole))
         throw new TRPCError({
           code: "FORBIDDEN",
@@ -276,17 +436,14 @@ export const accountsRouter = router({
           code: "PRECONDITION_FAILED",
           message: "The organisation is not active.",
         });
-      const broad = organizationWideRoles.has(input.businessRole);
-      if (broad && input.siteId)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Director and Admin roles cover every site; do not pick one.",
-        });
-      if (!broad && !input.siteId)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Choose the site this person will work on.",
-        });
+      badSites(
+        siteChoiceProblem({
+          managerRole,
+          managerSiteIds: scope.siteIds ?? [],
+          targetRole: input.businessRole,
+          siteIds: input.siteId ? [input.siteId] : [],
+        }),
+      );
       const db = requireDb(await getDb());
       if (input.siteId) {
         const [site] = await db
@@ -341,15 +498,16 @@ export const accountsRouter = router({
   listInvites: protectedProcedure
     .input(z.object({ organizationId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      await assertCanManageOrganization(ctx.user, input.organizationId);
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
       const db = requireDb(await getDb());
       try {
-        return await db
+        const rows = await db
           .select({
             id: registrationInvites.id,
             inviteeName: registrationInvites.inviteeName,
             businessRole: registrationInvites.businessRole,
             siteName: sites.name,
+            siteId: registrationInvites.siteId,
             codeHint: registrationInvites.codeHint,
             status: registrationInvites.status,
             expiresAt: registrationInvites.expiresAt,
@@ -361,6 +519,12 @@ export const accountsRouter = router({
           .where(eq(registrationInvites.organizationId, input.organizationId))
           .orderBy(desc(registrationInvites.createdAt))
           .limit(100);
+        // Site managers see only invites for their own sites.
+        if (!scope.siteIds) return rows.map(({ siteId: _siteId, ...row }) => row);
+        const own = new Set(scope.siteIds);
+        return rows
+          .filter((row) => row.siteId && own.has(row.siteId))
+          .map(({ siteId: _siteId, ...row }) => row);
       } catch {
         return [];
       }
@@ -376,7 +540,12 @@ export const accountsRouter = router({
         .where(eq(registrationInvites.id, input.inviteId))
         .limit(1);
       if (!invite) throw new TRPCError({ code: "NOT_FOUND", message: "Invite not found." });
-      await assertCanManageOrganization(ctx.user, invite.organizationId);
+      const scope = await accountManagerScope(ctx.user, invite.organizationId);
+      if (scope.siteIds && !(invite.siteId && scope.siteIds.includes(invite.siteId)))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can cancel only invites for your own sites.",
+        });
       if (invite.status !== "Active") return { id: invite.id };
       await db.transaction(async (tx) => {
         await tx
@@ -400,7 +569,7 @@ export const accountsRouter = router({
   list: protectedProcedure
     .input(z.object({ organizationId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      await assertCanManageOrganization(ctx.user, input.organizationId);
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
       const db = requireDb(await getDb());
       const rows = await db
         .select({
@@ -442,10 +611,26 @@ export const accountsRouter = router({
               ),
             )
         : [];
-      return rows.map((row) => ({
-        ...row,
-        assignedSites: assignments.filter((assignment) => assignment.userId === row.id),
-      }));
+      const own = scope.siteIds ? new Set(scope.siteIds) : null;
+      return rows
+        .map((row) => {
+          const assignedSites = assignments.filter((assignment) => assignment.userId === row.id);
+          return {
+            ...row,
+            assignedSites,
+            // The server decides; the screen only shows or hides the buttons.
+            manageable:
+              row.id !== ctx.user.id &&
+              mayManageRole(scope.managerRole, row.businessRole as BusinessRole) &&
+              (!own || assignedSites.some((site) => own.has(site.siteId))),
+          };
+        })
+        .filter(
+          (row) =>
+            !own ||
+            row.id === ctx.user.id ||
+            row.assignedSites.some((site) => own.has(site.siteId)),
+        );
     }),
 
   create: protectedProcedure.input(newAccountSchema).mutation(async ({ ctx, input }) => {
@@ -455,53 +640,28 @@ export const accountsRouter = router({
         code: "BAD_REQUEST",
         message: "Use 3–32 letters, numbers, dot, dash, or underscore for the username.",
       });
-    const { organization, managerRole } = await assertCanManageOrganization(
-      ctx.user,
-      input.organizationId,
-    );
+    const scope = await accountManagerScope(ctx.user, input.organizationId);
+    const { organization, managerRole } = scope;
     if (!rolesAssignableBy(managerRole).includes(input.businessRole))
       throw new TRPCError({
         code: "FORBIDDEN",
-        message:
-          "Your role cannot assign this organization role. A higher-authority organization administrator must do it.",
+        message: "Your role cannot give this role. Someone above you must do it.",
       });
     if (organization.status !== "Active")
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "Accounts cannot be added to an inactive organization.",
       });
-    const broadRole = organizationWideRoles.has(input.businessRole);
-    if (broadRole && input.siteIds.length > 0)
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message:
-          "Contractor/Admin and Director/Partner roles are organization-scoped; do not add site-only assignments.",
-      });
-    if (!broadRole && input.siteIds.length === 0)
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Select at least one active site for this site-scoped role.",
-      });
-    if (new Set(input.siteIds).size !== input.siteIds.length)
-      throw new TRPCError({ code: "BAD_REQUEST", message: "A site may be selected only once." });
+    badSites(
+      siteChoiceProblem({
+        managerRole,
+        managerSiteIds: scope.siteIds ?? [],
+        targetRole: input.businessRole,
+        siteIds: input.siteIds,
+      }),
+    );
     const db = requireDb(await getDb());
-    if (input.siteIds.length) {
-      const validatedSites = await db
-        .select({ id: sites.id })
-        .from(sites)
-        .where(
-          and(
-            eq(sites.organizationId, input.organizationId),
-            inArray(sites.id, input.siteIds),
-            eq(sites.status, "Active"),
-          ),
-        );
-      if (validatedSites.length !== input.siteIds.length)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Every selected site must be active and belong to the selected organization.",
-        });
-    }
+    await validateSites(input.organizationId, input.siteIds);
     const temporaryPassword = generateTemporaryPassword();
     const passwordHash = await hashPassword(temporaryPassword);
     const openId = `local_${randomUUID().replaceAll("-", "")}`;
@@ -592,35 +752,35 @@ export const accountsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { managerRole } = await assertCanManageOrganization(ctx.user, input.organizationId);
-      if (managerRole !== "super_admin")
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Credential resets affect this person's single application-wide login and may only be performed by the platform Super Admin.",
-        });
-      if (input.userId === ctx.user.id)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Use Change Password for your own account.",
-        });
-      const { memberships, target } = await assertTargetInOrganization(
-        input.userId,
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      const { target } = await assertMayManageTarget(
+        ctx.user,
+        scope,
         input.organizationId,
+        input.userId,
       );
+      const db = requireDb(await getDb());
+      // One login works across companies: if this person is in another company too, only the
+      // Super Admin may reset it.
+      const otherCompanies = await db
+        .select({ organizationId: organizationMemberships.organizationId })
+        .from(organizationMemberships)
+        .where(
+          and(
+            eq(organizationMemberships.userId, target.id),
+            eq(organizationMemberships.status, "Active"),
+          ),
+        );
       if (
-        !mayManageMembershipRoles(
-          managerRole,
-          memberships.map((membership) => membership.businessRole as BusinessRole),
-        )
+        scope.managerRole !== "super_admin" &&
+        otherCompanies.some((row) => row.organizationId !== input.organizationId)
       )
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "The target account holds an equal-or-higher organization role.",
+          message: "This person also works for another company. Ask the Super Admin to reset it.",
         });
-      const db = requireDb(await getDb());
       const [credential] = await db
-        .select({ id: userCredentials.id })
+        .select({ id: userCredentials.id, username: userCredentials.username })
         .from(userCredentials)
         .where(eq(userCredentials.userId, target.id))
         .limit(1);
@@ -651,7 +811,7 @@ export const accountsRouter = router({
           afterSummary: JSON.stringify({ usernameReset: true, mustChangePassword: true }),
         });
       });
-      return { userId: target.id, temporaryPassword };
+      return { userId: target.id, username: credential.username, temporaryPassword };
     }),
 
   setStatus: protectedProcedure
@@ -663,24 +823,15 @@ export const accountsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { managerRole } = await assertCanManageOrganization(ctx.user, input.organizationId);
-      if (input.userId === ctx.user.id)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "You cannot remove your own organization access from this screen.",
-        });
-      const { memberships } = await assertTargetInOrganization(input.userId, input.organizationId);
-      if (
-        !mayManageMembershipRoles(
-          managerRole,
-          memberships.map((membership) => membership.businessRole as BusinessRole),
-        )
-      )
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "A higher-authority organization administrator must manage this account.",
-        });
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      const { memberships } = await assertMayManageTarget(
+        ctx.user,
+        scope,
+        input.organizationId,
+        input.userId,
+      );
       const db = requireDb(await getDb());
+      const now = new Date();
       await db.transaction(async (tx) => {
         await tx
           .update(organizationMemberships)
@@ -691,6 +842,12 @@ export const accountsRouter = router({
               eq(organizationMemberships.userId, input.userId),
             ),
           );
+        // A suspended or removed person is signed out everywhere at once.
+        if (input.status !== "Active")
+          await tx
+            .update(authSessions)
+            .set({ revokedAt: now })
+            .where(and(eq(authSessions.userId, input.userId), isNull(authSessions.revokedAt)));
         await createAudit(tx, {
           organizationId: input.organizationId,
           actorUserId: ctx.user.id,
@@ -707,5 +864,247 @@ export const accountsRouter = router({
         });
       });
       return { success: true as const, status: input.status };
+    }),
+
+  /**
+   * Edit a person: name, role and sites. Site managers change only their own sites; the
+   * person's other sites stay as they are.
+   */
+  update: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string().uuid(),
+        userId: z.number().int().positive(),
+        displayName: z.string().trim().min(2).max(120),
+        businessRole: z.enum(assignableBusinessRoles),
+        siteIds: z.array(z.string().uuid()).max(100),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      const { memberships, targetSites } = await assertMayManageTarget(
+        ctx.user,
+        scope,
+        input.organizationId,
+        input.userId,
+      );
+      if (memberships.length > 1)
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This person holds several roles. Remove the extra role first.",
+        });
+      const beforeRole = memberships[0]!.businessRole as BusinessRole;
+      if (
+        input.businessRole !== beforeRole &&
+        !rolesAssignableBy(scope.managerRole).includes(input.businessRole)
+      )
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Your role cannot give this role. Someone above you must do it.",
+        });
+      // Sites outside the manager's reach are kept; the manager decides only their own.
+      const own = scope.siteIds ? new Set(scope.siteIds) : null;
+      const kept = own ? targetSites.filter((row) => !own.has(row.siteId)) : [];
+      const wanted = [...new Set([...input.siteIds, ...kept.map((row) => row.siteId)])];
+      badSites(
+        siteChoiceProblem({
+          managerRole: scope.managerRole,
+          managerSiteIds: scope.siteIds ?? [],
+          targetRole: input.businessRole,
+          siteIds: input.siteIds,
+        }),
+      );
+      await validateSites(input.organizationId, input.siteIds);
+      const db = requireDb(await getDb());
+      const now = effectiveNow();
+      const current = new Set(targetSites.map((row) => row.siteId));
+      const toEnd = targetSites.filter((row) => !wanted.includes(row.siteId));
+      const toAdd = wanted.filter((siteId) => !current.has(siteId));
+      await db.transaction(async (tx) => {
+        await tx.update(users).set({ name: input.displayName }).where(eq(users.id, input.userId));
+        if (input.businessRole !== beforeRole)
+          await tx
+            .update(organizationMemberships)
+            .set({ businessRole: input.businessRole })
+            .where(
+              and(
+                eq(organizationMemberships.organizationId, input.organizationId),
+                eq(organizationMemberships.userId, input.userId),
+              ),
+            );
+        if (toEnd.length)
+          await tx
+            .update(siteAssignments)
+            .set({ status: "Revoked", effectiveTo: now })
+            .where(
+              inArray(
+                siteAssignments.id,
+                toEnd.map((row) => row.id),
+              ),
+            );
+        if (toAdd.length)
+          await tx.insert(siteAssignments).values(
+            toAdd.map((siteId) => ({
+              id: randomUUID(),
+              siteId,
+              userId: input.userId,
+              assignmentRole: input.businessRole,
+              effectiveFrom: now,
+              status: "Active" as const,
+              assignedBy: ctx.user.id,
+            })),
+          );
+        if (input.businessRole !== beforeRole)
+          await tx
+            .update(siteAssignments)
+            .set({ assignmentRole: input.businessRole })
+            .where(
+              and(eq(siteAssignments.userId, input.userId), eq(siteAssignments.status, "Active")),
+            );
+        await createAudit(tx, {
+          organizationId: input.organizationId,
+          actorUserId: ctx.user.id,
+          action: "account.updated",
+          entityType: "user_account",
+          entityId: String(input.userId),
+          beforeSummary: JSON.stringify({
+            businessRole: beforeRole,
+            siteIds: targetSites.map((row) => row.siteId),
+          }),
+          afterSummary: JSON.stringify({
+            displayName: input.displayName,
+            businessRole: input.businessRole,
+            siteIds: wanted,
+          }),
+        });
+      });
+      return { success: true as const };
+    }),
+
+  /**
+   * Remove a person. Company leaders remove them from the company: membership ended, all sites
+   * ended, signed out, login switched off. Site managers remove them from their own sites only;
+   * when no site is left, the membership ends too. Records the person made stay for history.
+   */
+  remove: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string().uuid(),
+        userId: z.number().int().positive(),
+        reason: z.string().trim().min(3).max(300),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      const { memberships, targetSites } = await assertMayManageTarget(
+        ctx.user,
+        scope,
+        input.organizationId,
+        input.userId,
+      );
+      const own = scope.siteIds ? new Set(scope.siteIds) : null;
+      const toEnd = own ? targetSites.filter((row) => own.has(row.siteId)) : targetSites;
+      const leavesCompany = !own || toEnd.length === targetSites.length;
+      const db = requireDb(await getDb());
+      const now = effectiveNow();
+      await db.transaction(async (tx) => {
+        if (toEnd.length)
+          await tx
+            .update(siteAssignments)
+            .set({ status: "Revoked", effectiveTo: now })
+            .where(
+              inArray(
+                siteAssignments.id,
+                toEnd.map((row) => row.id),
+              ),
+            );
+        if (leavesCompany) {
+          await tx
+            .update(organizationMemberships)
+            .set({ status: "Deactivated" })
+            .where(
+              and(
+                eq(organizationMemberships.organizationId, input.organizationId),
+                eq(organizationMemberships.userId, input.userId),
+              ),
+            );
+          const [stillActive] = await tx
+            .select({ id: organizationMemberships.id })
+            .from(organizationMemberships)
+            .where(
+              and(
+                eq(organizationMemberships.userId, input.userId),
+                eq(organizationMemberships.status, "Active"),
+              ),
+            )
+            .limit(1);
+          // No company left: the login itself is switched off.
+          if (!stillActive)
+            await tx
+              .update(users)
+              .set({ accountStatus: "Deactivated" })
+              .where(eq(users.id, input.userId));
+          await tx
+            .update(authSessions)
+            .set({ revokedAt: now })
+            .where(and(eq(authSessions.userId, input.userId), isNull(authSessions.revokedAt)));
+        }
+        await createAudit(tx, {
+          organizationId: input.organizationId,
+          actorUserId: ctx.user.id,
+          action: "account.removed",
+          entityType: "user_account",
+          entityId: String(input.userId),
+          beforeSummary: JSON.stringify({
+            businessRoles: memberships.map((membership) => membership.businessRole),
+            siteIds: targetSites.map((row) => row.siteId),
+          }),
+          afterSummary: JSON.stringify({
+            removedSiteIds: toEnd.map((row) => row.siteId),
+            leftCompany: leavesCompany,
+            reason: input.reason,
+          }),
+        });
+      });
+      return { success: true as const, leftCompany: leavesCompany };
+    }),
+
+  /** Bring back a removed person (company leaders), with their old role and no sites yet. */
+  restore: protectedProcedure
+    .input(
+      z.object({
+        organizationId: z.string().uuid(),
+        userId: z.number().int().positive(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = await accountManagerScope(ctx.user, input.organizationId);
+      if (scope.siteIds)
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only a company leader can bring back a removed account.",
+        });
+      await assertMayManageTarget(ctx.user, scope, input.organizationId, input.userId);
+      const db = requireDb(await getDb());
+      await db.transaction(async (tx) => {
+        await tx
+          .update(organizationMemberships)
+          .set({ status: "Active" })
+          .where(
+            and(
+              eq(organizationMemberships.organizationId, input.organizationId),
+              eq(organizationMemberships.userId, input.userId),
+            ),
+          );
+        await tx.update(users).set({ accountStatus: "Active" }).where(eq(users.id, input.userId));
+        await createAudit(tx, {
+          organizationId: input.organizationId,
+          actorUserId: ctx.user.id,
+          action: "account.restored",
+          entityType: "user_account",
+          entityId: String(input.userId),
+        });
+      });
+      return { success: true as const };
     }),
 });

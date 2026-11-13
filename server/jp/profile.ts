@@ -42,6 +42,7 @@ const ROLE_RANK = [
   "director",
   "admin",
   "project_manager",
+  "site_engineer",
   "accounts",
   "supervisor",
   "storekeeper",

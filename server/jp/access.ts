@@ -22,6 +22,7 @@ const businessRoles: readonly BusinessRole[] = [
   "director",
   "admin",
   "project_manager",
+  "site_engineer",
   "supervisor",
   "accounts",
   "storekeeper",

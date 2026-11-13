@@ -426,7 +426,7 @@ export const workerRouter = router({
         ctx.user,
         input.siteId,
         input.personId,
-        "workforce.review",
+        "workforce.manage",
       );
       const mobile = normalizeIndianMobile(input.mobile);
       if (!mobile) bad("Enter a 10-digit Indian mobile number.");
@@ -527,7 +527,7 @@ export const workerRouter = router({
         ctx.user,
         input.siteId,
         input.personId,
-        "workforce.review",
+        "workforce.manage",
       );
       if (!account) bad("This worker has no app login yet.");
       await db.transaction(async (tx) => {

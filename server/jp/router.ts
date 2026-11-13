@@ -244,6 +244,7 @@ export const jpRouter = router({
         "director",
         "admin",
         "project_manager",
+        "site_engineer",
         "accounts",
         "supervisor",
         "storekeeper",

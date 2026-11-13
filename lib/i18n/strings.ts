@@ -1366,6 +1366,170 @@ export const hi: Dictionary = {
   "App permissions": "ऐप अनुमतियाँ",
   SETTINGS: "सेटिंग्स",
   "Camera, microphone, location, files and alerts": "कैमरा, माइक्रोफ़ोन, लोकेशन, फ़ाइलें और अलर्ट",
+  // Sign-in screens
+  "Username or password is incorrect, or sign-in is temporarily unavailable.":
+    "यूज़रनेम या पासवर्ड गलत है, या साइन इन अभी उपलब्ध नहीं है।",
+  "Super Admin setup failed. Verify the supplied setup key and try again.":
+    "सुपर एडमिन सेटअप नहीं हुआ। सेटअप की जाँचें और फिर कोशिश करें।",
+  "The new passwords do not match.": "नए पासवर्ड मेल नहीं खाते।",
+  "The current password is incorrect.": "मौजूदा पासवर्ड गलत है।",
+  "Password update failed. Use at least 12 characters and try again.":
+    "पासवर्ड नहीं बदला। कम से कम 12 अक्षर रखें और फिर कोशिश करें।",
+  "Checking your JP Infracon account…": "आपका JP Infracon खाता जाँच रहे हैं…",
+  "Checking secure account setup…": "सुरक्षित खाता सेटअप जाँच रहे हैं…",
+  "JP Infracon company logo": "JP Infracon कंपनी लोगो",
+  "BUILDING TODAY. SHAPING TOMORROW.": "आज निर्माण। कल का आकार।",
+  "Set a new password": "नया पासवर्ड बनाएँ",
+  "Create the Super Admin": "सुपर एडमिन बनाएँ",
+  "Change the temporary password before continuing. Your prior sessions will be revoked.":
+    "आगे बढ़ने से पहले अस्थायी पासवर्ड बदलें। पुराने साइन इन बंद हो जाएँगे।",
+  "Temporary password": "अस्थायी पासवर्ड",
+  "New password": "नया पासवर्ड",
+  "New password (12+ characters)": "नया पासवर्ड (12+ अक्षर)",
+  "Confirm new password": "नया पासवर्ड दोबारा लिखें",
+  "Create the first Super Admin account. Use this app’s configured one-time setup key—not your login password. Leading and trailing spaces are ignored.":
+    "पहला सुपर एडमिन खाता बनाएँ। इस ऐप की एक बार वाली सेटअप की डालें—अपना लॉगिन पासवर्ड नहीं। आगे-पीछे के खाली स्थान नहीं गिने जाते।",
+  "Super Admin display name": "सुपर एडमिन का नाम",
+  "Full name": "पूरा नाम",
+  "Choose username": "यूज़रनेम चुनें",
+  "Choose password": "पासवर्ड चुनें",
+  "Choose password (12+ characters)": "पासवर्ड चुनें (12+ अक्षर)",
+  "One-time Super Admin setup key": "सुपर एडमिन की एक बार वाली सेटअप की",
+  "One-time setup key": "एक बार वाली सेटअप की",
+  "Invite code": "इनवाइट कोड",
+  "Update password": "पासवर्ड बदलें",
+  "Create Super Admin account": "सुपर एडमिन खाता बनाएँ",
+  "Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.":
+    "नेतृत्व: जितेंद्र कुमार पंडा, मैनेजिंग पार्टनर, और रामबाबू कुमार सिंह, पार्टनर।",
+  "Demo accounts": "डेमो खाते",
+  "Tap a role to sign in as that person. Password for all: {password}":
+    "उस व्यक्ति के रूप में साइन इन करने के लिए भूमिका पर टैप करें। सबका पासवर्ड: {password}",
+  "Everything is stored on this phone only. Nothing is sent to a server.":
+    "सब कुछ सिर्फ़ इसी फ़ोन में रहता है। कुछ भी सर्वर पर नहीं जाता।",
+  "Not saved.": "सेव नहीं हुआ।",
+  Change: "बदलें",
+  "Server address": "सर्वर पता",
+  "Check & save": "जाँचें और सेव करें",
+  "JP Infracon · access checked on every request":
+    "JP Infracon · हर अनुरोध पर अनुमति जाँची जाती है",
+  "Account setup failed.": "खाता सेटअप नहीं हुआ।",
+  "Account setup is temporarily unavailable.": "खाता सेटअप अभी उपलब्ध नहीं है।",
+  "Current password is incorrect.": "मौजूदा पासवर्ड गलत है।",
+  "Enter a valid account display name.": "खाते का सही नाम डालें।",
+  "First Super Admin setup has already been completed.": "पहला सुपर एडमिन पहले ही बन चुका है।",
+  "Password service is temporarily unavailable.": "पासवर्ड सेवा अभी उपलब्ध नहीं है।",
+  "Sign-in is temporarily unavailable.": "साइन इन अभी उपलब्ध नहीं है।",
+  "Sign-up failed.": "खाता नहीं बना।",
+  "Sign-up failed. Try again.": "खाता नहीं बना। फिर कोशिश करें।",
+  "Sign-up is temporarily unavailable.": "खाता बनाना अभी उपलब्ध नहीं है।",
+  "Super Admin setup is unavailable or the setup key is invalid.":
+    "सुपर एडमिन सेटअप उपलब्ध नहीं है या सेटअप की गलत है।",
+  "That username is already in use.": "यह यूज़रनेम पहले से लिया हुआ है।",
+  "The invited site is not active.": "इनवाइट वाली साइट चालू नहीं है।",
+  "This account is not active.": "यह खाता चालू नहीं है।",
+  "Use a password between 12 and 128 characters.": "12 से 128 अक्षर का पासवर्ड रखें।",
+  "Use a password of at least 12 characters.": "कम से कम 12 अक्षर का पासवर्ड रखें।",
+  "Username must be 3–32 characters using letters, numbers, dot, dash, or underscore.":
+    "यूज़रनेम 3–32 अक्षर का हो: अक्षर, अंक, डॉट, डैश या अंडरस्कोर।",
+  "This invite code is not valid, has expired, or was already used.":
+    "यह इनवाइट कोड गलत है, खत्म हो गया है या पहले ही इस्तेमाल हो चुका है।",
+  // Home
+  "Speak to the AI assistant": "AI असिस्टेंट से बोलें",
+  // Team accounts
+  "Give this password to the person yourself. It is shown only once; they must change it at first sign-in.":
+    "यह पासवर्ड खुद उस व्यक्ति को दें। यह सिर्फ़ एक बार दिखता है; पहली बार साइन इन पर उन्हें इसे बदलना होगा।",
+  "Account created.": "खाता बन गया।",
+  "Account could not be created.": "खाता नहीं बना।",
+  "Reset password?": "पासवर्ड रीसेट करें?",
+  "{name} gets a new temporary password and is signed out everywhere.":
+    "{name} को नया अस्थायी पासवर्ड मिलेगा और हर जगह से साइन आउट होंगे।",
+  "Reset password": "पासवर्ड रीसेट करें",
+  "New temporary password for {name}. Shown only once.":
+    "{name} के लिए नया अस्थायी पासवर्ड। सिर्फ़ एक बार दिखेगा।",
+  "Password reset. Old sign-ins were closed.": "पासवर्ड रीसेट हुआ। पुराने साइन इन बंद हो गए।",
+  "Password reset failed.": "पासवर्ड रीसेट नहीं हुआ।",
+  "Activate account?": "खाता चालू करें?",
+  "Suspend account?": "खाता रोकें?",
+  "{name} can sign in and work again.": "{name} फिर से साइन इन करके काम कर सकेंगे।",
+  "{name} is signed out and cannot sign in until activated again.":
+    "{name} साइन आउट होंगे और दोबारा चालू होने तक साइन इन नहीं कर पाएँगे।",
+  Activate: "चालू करें",
+  Suspend: "रोकें",
+  "Account active.": "खाता चालू है।",
+  "Account suspended.": "खाता रोका गया।",
+  "Account brought back. Give it sites with Edit.": "खाता वापस आ गया। Edit से साइट दें।",
+  "Unnamed account": "बिना नाम का खाता",
+  "no username": "यूज़रनेम नहीं",
+  "Whole company": "पूरी कंपनी",
+  Removed: "हटाया गया",
+  Suspended: "रोका गया",
+  "Bring back": "वापस लाएँ",
+  Delete: "हटाएँ",
+  Administration: "प्रशासन",
+  "Create logins, change roles and sites, reset passwords, remove people.":
+    "लॉगिन बनाएँ, भूमिका और साइट बदलें, पासवर्ड रीसेट करें, लोगों को हटाएँ।",
+  "No account management": "खाते संभालने की अनुमति नहीं",
+  "Owners, Directors and Admins manage the whole company. Project Managers, Site Engineers and Site Supervisors manage people on their own sites.":
+    "मालिक, डायरेक्टर और एडमिन पूरी कंपनी संभालते हैं। प्रोजेक्ट मैनेजर, साइट इंजीनियर और साइट सुपरवाइज़र अपनी साइट के लोगों को संभालते हैं।",
+  "You manage people on your own sites only, and only roles below yours.":
+    "आप सिर्फ़ अपनी साइट के लोगों को और सिर्फ़ अपने से नीचे की भूमिकाओं को संभालते हैं।",
+  "New account": "नया खाता",
+  "Person’s full name": "व्यक्ति का पूरा नाम",
+  "Username (letters, numbers, . _ -)": "यूज़रनेम (अक्षर, अंक, . _ -)",
+  "Login details": "लॉगिन विवरण",
+  "Creating…": "बन रहा है…",
+  "{count} accounts": "{count} खाते",
+  Refresh: "रीफ़्रेश",
+  "Search by name, username or role": "नाम, यूज़रनेम या भूमिका से खोजें",
+  "No accounts yet": "अभी कोई खाता नहीं",
+  "People you create appear here with their role and sites.":
+    "आप जो खाते बनाएँगे वे यहाँ भूमिका और साइट के साथ दिखेंगे।",
+  "Each person has their own login. Passwords are shown only once when made and are stored only as a secure hash. Every change is written to the audit history.":
+    "हर व्यक्ति का अपना लॉगिन है। पासवर्ड बनते समय सिर्फ़ एक बार दिखता है और सुरक्षित हैश के रूप में ही रखा जाता है। हर बदलाव ऑडिट इतिहास में लिखा जाता है।",
+  "Changes saved.": "बदलाव सेव हो गए।",
+  "Account removed. The person is signed out.": "खाता हटा दिया। व्यक्ति साइन आउट हो गए।",
+  "Removed from your sites.": "आपकी साइटों से हटा दिया।",
+  "No active site yet. Create a site first, then give people access to it.":
+    "अभी कोई चालू साइट नहीं। पहले साइट बनाएँ, फिर लोगों को उसकी अनुमति दें।",
+  "Edit account": "खाता बदलें",
+  "Saving…": "सेव हो रहा है…",
+  "Save changes": "बदलाव सेव करें",
+  "Could not remove.": "हटा नहीं सके।",
+  "Delete account": "खाता हटाएँ",
+  "The person is removed from the company and all sites, signed out, and cannot sign in. Reports, bills and attendance they made stay in the history. A leader can bring the account back later.":
+    "व्यक्ति कंपनी और सभी साइटों से हट जाएँगे, साइन आउट होंगे और साइन इन नहीं कर पाएँगे। उनकी रिपोर्ट, बिल और हाज़िरी इतिहास में रहेंगे। बाद में कोई लीडर खाता वापस ला सकता है।",
+  "The person is removed from your sites. If they have no other site left, they are removed from the company and cannot sign in.":
+    "व्यक्ति आपकी साइटों से हट जाएँगे। अगर कोई और साइट नहीं बची, तो कंपनी से भी हट जाएँगे और साइन इन नहीं कर पाएँगे।",
+  Reason: "कारण",
+  "For example: left the job": "जैसे: नौकरी छोड़ दी",
+  "Super Admin": "सुपर एडमिन",
+  "Director / Partner": "डायरेक्टर / पार्टनर",
+  Admin: "एडमिन",
+  "Project Manager": "प्रोजेक्ट मैनेजर",
+  "Site Engineer": "साइट इंजीनियर",
+  "Site Supervisor": "साइट सुपरवाइज़र",
+  Storekeeper: "स्टोरकीपर",
+  Auditor: "ऑडिटर",
+  "Whole company: every site, money and approvals": "पूरी कंपनी: हर साइट, पैसा और मंज़ूरी",
+  "Whole company: users, sites, purchase, payroll": "पूरी कंपनी: यूज़र, साइट, खरीद, वेतन",
+  "Their projects' sites: plans, approvals, team": "अपने प्रोजेक्ट की साइटें: योजना, मंज़ूरी, टीम",
+  "Their sites: work, reports, measurements, team": "अपनी साइटें: काम, रिपोर्ट, नाप, टीम",
+  "Their site: daily work, attendance, materials": "अपनी साइट: रोज़ का काम, हाज़िरी, सामान",
+  "Their sites: bills, payments, payroll": "अपनी साइटें: बिल, भुगतान, वेतन",
+  "Their sites: stock in and out": "अपनी साइटें: स्टॉक आना-जाना",
+  "Their sites: read only, audit history": "अपनी साइटें: सिर्फ़ देखना, ऑडिट इतिहास",
+  "Your role does not include managing accounts.": "आपकी भूमिका में खाते संभालना शामिल नहीं है।",
+  "You are not on any site yet, so you cannot manage accounts.":
+    "आप अभी किसी साइट पर नहीं हैं, इसलिए खाते नहीं संभाल सकते।",
+  "Only someone above this person's role can change this account.":
+    "इस खाते को सिर्फ़ इस व्यक्ति से ऊपर की भूमिका वाला ही बदल सकता है।",
+  "This person is not on any of your sites.": "यह व्यक्ति आपकी किसी साइट पर नहीं है।",
+  "You can give access only to your own sites.": "आप सिर्फ़ अपनी साइटों की अनुमति दे सकते हैं।",
+  "Choose at least one site for this role.": "इस भूमिका के लिए कम से कम एक साइट चुनें।",
+  "Your role cannot give this role. Someone above you must do it.":
+    "आपकी भूमिका यह भूमिका नहीं दे सकती। आपसे ऊपर वाला यह करेगा।",
+  "This person also works for another company. Ask the Super Admin to reset it.":
+    "यह व्यक्ति दूसरी कंपनी में भी काम करते हैं। रीसेट के लिए सुपर एडमिन से कहें।",
 };
 
 export const or: Dictionary = {
@@ -2707,6 +2871,170 @@ export const or: Dictionary = {
   "App permissions": "ଆପ୍ ଅନୁମତି",
   SETTINGS: "ସେଟିଂସ୍",
   "Camera, microphone, location, files and alerts": "କ୍ୟାମେରା, ମାଇକ୍ରୋଫୋନ୍, ଲୋକେସନ୍, ଫାଇଲ୍ ଓ ଆଲର୍ଟ",
+  // Sign-in screens
+  "Username or password is incorrect, or sign-in is temporarily unavailable.":
+    "ୟୁଜରନେମ୍ ବା ପାସୱାର୍ଡ ଭୁଲ୍, ବା ସାଇନ୍ ଇନ୍ ଏବେ ଉପଲବ୍ଧ ନାହିଁ।",
+  "Super Admin setup failed. Verify the supplied setup key and try again.":
+    "ସୁପର ଆଡମିନ୍ ସେଟଅପ୍ ହେଲା ନାହିଁ। ସେଟଅପ୍ କି ଯାଞ୍ଚ କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "The new passwords do not match.": "ନୂଆ ପାସୱାର୍ଡ ମେଳ ଖାଉନାହିଁ।",
+  "The current password is incorrect.": "ବର୍ତ୍ତମାନର ପାସୱାର୍ଡ ଭୁଲ୍।",
+  "Password update failed. Use at least 12 characters and try again.":
+    "ପାସୱାର୍ଡ ବଦଳିଲା ନାହିଁ। ଅତି କମରେ 12 ଅକ୍ଷର ରଖି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "Checking your JP Infracon account…": "ଆପଣଙ୍କ JP Infracon ଖାତା ଯାଞ୍ଚ ହେଉଛି…",
+  "Checking secure account setup…": "ସୁରକ୍ଷିତ ଖାତା ସେଟଅପ୍ ଯାଞ୍ଚ ହେଉଛି…",
+  "JP Infracon company logo": "JP Infracon କମ୍ପାନୀ ଲୋଗୋ",
+  "BUILDING TODAY. SHAPING TOMORROW.": "ଆଜି ନିର୍ମାଣ। କାଲିର ଆକାର।",
+  "Set a new password": "ନୂଆ ପାସୱାର୍ଡ ଦିଅନ୍ତୁ",
+  "Create the Super Admin": "ସୁପର ଆଡମିନ୍ ତିଆରି କରନ୍ତୁ",
+  "Change the temporary password before continuing. Your prior sessions will be revoked.":
+    "ଆଗକୁ ଯିବା ପୂର୍ବରୁ ଅସ୍ଥାୟୀ ପାସୱାର୍ଡ ବଦଳାନ୍ତୁ। ପୁରୁଣା ସାଇନ୍ ଇନ୍ ବନ୍ଦ ହୋଇଯିବ।",
+  "Temporary password": "ଅସ୍ଥାୟୀ ପାସୱାର୍ଡ",
+  "New password": "ନୂଆ ପାସୱାର୍ଡ",
+  "New password (12+ characters)": "ନୂଆ ପାସୱାର୍ଡ (12+ ଅକ୍ଷର)",
+  "Confirm new password": "ନୂଆ ପାସୱାର୍ଡ ପୁଣି ଲେଖନ୍ତୁ",
+  "Create the first Super Admin account. Use this app’s configured one-time setup key—not your login password. Leading and trailing spaces are ignored.":
+    "ପ୍ରଥମ ସୁପର ଆଡମିନ୍ ଖାତା ତିଆରି କରନ୍ତୁ। ଏହି ଆପର ଥରେ ମାତ୍ର ସେଟଅପ୍ କି ଦିଅନ୍ତୁ—ଲଗଇନ୍ ପାସୱାର୍ଡ ନୁହେଁ। ଆଗପଛ ଖାଲି ସ୍ଥାନ ଗଣାଯାଏ ନାହିଁ।",
+  "Super Admin display name": "ସୁପର ଆଡମିନ୍‌ଙ୍କ ନାମ",
+  "Full name": "ପୂରା ନାମ",
+  "Choose username": "ୟୁଜରନେମ୍ ବାଛନ୍ତୁ",
+  "Choose password": "ପାସୱାର୍ଡ ବାଛନ୍ତୁ",
+  "Choose password (12+ characters)": "ପାସୱାର୍ଡ ବାଛନ୍ତୁ (12+ ଅକ୍ଷର)",
+  "One-time Super Admin setup key": "ସୁପର ଆଡମିନ୍‌ର ଥରେ ମାତ୍ର ସେଟଅପ୍ କି",
+  "One-time setup key": "ଥରେ ମାତ୍ର ସେଟଅପ୍ କି",
+  "Invite code": "ଇନଭାଇଟ୍ କୋଡ୍",
+  "Update password": "ପାସୱାର୍ଡ ବଦଳାନ୍ତୁ",
+  "Create Super Admin account": "ସୁପର ଆଡମିନ୍ ଖାତା ତିଆରି କରନ୍ତୁ",
+  "Led by Jeetendra Kumar Panda, Managing Partner, and Rambabu Kumar Singh, Partner.":
+    "ନେତୃତ୍ୱ: ଜିତେନ୍ଦ୍ର କୁମାର ପଣ୍ଡା, ମ୍ୟାନେଜିଂ ପାର୍ଟନର, ଏବଂ ରାମବାବୁ କୁମାର ସିଂହ, ପାର୍ଟନର।",
+  "Demo accounts": "ଡେମୋ ଖାତା",
+  "Tap a role to sign in as that person. Password for all: {password}":
+    "ସେହି ବ୍ୟକ୍ତି ଭାବେ ସାଇନ୍ ଇନ୍ ପାଇଁ ଭୂମିକା ଟ୍ୟାପ୍ କରନ୍ତୁ। ସମସ୍ତଙ୍କ ପାସୱାର୍ଡ: {password}",
+  "Everything is stored on this phone only. Nothing is sent to a server.":
+    "ସବୁ କିଛି କେବଳ ଏହି ଫୋନରେ ରହେ। କିଛି ସର୍ଭରକୁ ଯାଏ ନାହିଁ।",
+  "Not saved.": "ସେଭ୍ ହେଲା ନାହିଁ।",
+  Change: "ବଦଳାନ୍ତୁ",
+  "Server address": "ସର୍ଭର ଠିକଣା",
+  "Check & save": "ଯାଞ୍ଚ କରି ସେଭ୍ କରନ୍ତୁ",
+  "JP Infracon · access checked on every request": "JP Infracon · ପ୍ରତି ଅନୁରୋଧରେ ଅନୁମତି ଯାଞ୍ଚ ହୁଏ",
+  "Account setup failed.": "ଖାତା ସେଟଅପ୍ ହେଲା ନାହିଁ।",
+  "Account setup is temporarily unavailable.": "ଖାତା ସେଟଅପ୍ ଏବେ ଉପଲବ୍ଧ ନାହିଁ।",
+  "Current password is incorrect.": "ବର୍ତ୍ତମାନର ପାସୱାର୍ଡ ଭୁଲ୍।",
+  "Enter a valid account display name.": "ଖାତାର ଠିକ୍ ନାମ ଦିଅନ୍ତୁ।",
+  "First Super Admin setup has already been completed.":
+    "ପ୍ରଥମ ସୁପର ଆଡମିନ୍ ପୂର୍ବରୁ ତିଆରି ହୋଇସାରିଛି।",
+  "Password service is temporarily unavailable.": "ପାସୱାର୍ଡ ସେବା ଏବେ ଉପଲବ୍ଧ ନାହିଁ।",
+  "Sign-in is temporarily unavailable.": "ସାଇନ୍ ଇନ୍ ଏବେ ଉପଲବ୍ଧ ନାହିଁ।",
+  "Sign-up failed.": "ଖାତା ତିଆରି ହେଲା ନାହିଁ।",
+  "Sign-up failed. Try again.": "ଖାତା ତିଆରି ହେଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "Sign-up is temporarily unavailable.": "ଖାତା ତିଆରି ଏବେ ଉପଲବ୍ଧ ନାହିଁ।",
+  "Super Admin setup is unavailable or the setup key is invalid.":
+    "ସୁପର ଆଡମିନ୍ ସେଟଅପ୍ ଉପଲବ୍ଧ ନାହିଁ ବା ସେଟଅପ୍ କି ଭୁଲ୍।",
+  "That username is already in use.": "ଏହି ୟୁଜରନେମ୍ ପୂର୍ବରୁ ବ୍ୟବହୃତ।",
+  "The invited site is not active.": "ଇନଭାଇଟ୍ ସାଇଟ୍ ସକ୍ରିୟ ନାହିଁ।",
+  "This account is not active.": "ଏହି ଖାତା ସକ୍ରିୟ ନାହିଁ।",
+  "Use a password between 12 and 128 characters.": "12 ରୁ 128 ଅକ୍ଷରର ପାସୱାର୍ଡ ରଖନ୍ତୁ।",
+  "Use a password of at least 12 characters.": "ଅତି କମରେ 12 ଅକ୍ଷରର ପାସୱାର୍ଡ ରଖନ୍ତୁ।",
+  "Username must be 3–32 characters using letters, numbers, dot, dash, or underscore.":
+    "ୟୁଜରନେମ୍ 3–32 ଅକ୍ଷର ହେଉ: ଅକ୍ଷର, ସଂଖ୍ୟା, ଡଟ୍, ଡ୍ୟାସ୍ ବା ଅଣ୍ଡରସ୍କୋର୍।",
+  "This invite code is not valid, has expired, or was already used.":
+    "ଏହି ଇନଭାଇଟ୍ କୋଡ୍ ଭୁଲ୍, ମିଆଦ ସରିଛି ବା ପୂର୍ବରୁ ବ୍ୟବହୃତ।",
+  // Home
+  "Speak to the AI assistant": "AI ସହାୟକଙ୍କ ସହ କୁହନ୍ତୁ",
+  // Team accounts
+  "Give this password to the person yourself. It is shown only once; they must change it at first sign-in.":
+    "ଏହି ପାସୱାର୍ଡ ନିଜେ ସେହି ବ୍ୟକ୍ତିଙ୍କୁ ଦିଅନ୍ତୁ। ଏହା କେବଳ ଥରେ ଦେଖାଯାଏ; ପ୍ରଥମ ସାଇନ୍ ଇନ୍‌ରେ ସେ ଏହାକୁ ବଦଳାଇବେ।",
+  "Account created.": "ଖାତା ତିଆରି ହେଲା।",
+  "Account could not be created.": "ଖାତା ତିଆରି ହେଲା ନାହିଁ।",
+  "Reset password?": "ପାସୱାର୍ଡ ରିସେଟ୍ କରିବେ?",
+  "{name} gets a new temporary password and is signed out everywhere.":
+    "{name} ନୂଆ ଅସ୍ଥାୟୀ ପାସୱାର୍ଡ ପାଇବେ ଏବଂ ସବୁଠୁ ସାଇନ୍ ଆଉଟ୍ ହେବେ।",
+  "Reset password": "ପାସୱାର୍ଡ ରିସେଟ୍ କରନ୍ତୁ",
+  "New temporary password for {name}. Shown only once.":
+    "{name} ପାଇଁ ନୂଆ ଅସ୍ଥାୟୀ ପାସୱାର୍ଡ। କେବଳ ଥରେ ଦେଖାଯିବ।",
+  "Password reset. Old sign-ins were closed.": "ପାସୱାର୍ଡ ରିସେଟ୍ ହେଲା। ପୁରୁଣା ସାଇନ୍ ଇନ୍ ବନ୍ଦ ହେଲା।",
+  "Password reset failed.": "ପାସୱାର୍ଡ ରିସେଟ୍ ହେଲା ନାହିଁ।",
+  "Activate account?": "ଖାତା ଚାଲୁ କରିବେ?",
+  "Suspend account?": "ଖାତା ବନ୍ଦ ରଖିବେ?",
+  "{name} can sign in and work again.": "{name} ପୁଣି ସାଇନ୍ ଇନ୍ କରି କାମ କରିପାରିବେ।",
+  "{name} is signed out and cannot sign in until activated again.":
+    "{name} ସାଇନ୍ ଆଉଟ୍ ହେବେ ଏବଂ ପୁଣି ଚାଲୁ ନହେବା ପର୍ଯ୍ୟନ୍ତ ସାଇନ୍ ଇନ୍ କରିପାରିବେ ନାହିଁ।",
+  Activate: "ଚାଲୁ କରନ୍ତୁ",
+  Suspend: "ବନ୍ଦ ରଖନ୍ତୁ",
+  "Account active.": "ଖାତା ଚାଲୁ ଅଛି।",
+  "Account suspended.": "ଖାତା ବନ୍ଦ ରଖାଗଲା।",
+  "Account brought back. Give it sites with Edit.": "ଖାତା ଫେରିଲା। Edit ରୁ ସାଇଟ୍ ଦିଅନ୍ତୁ।",
+  "Unnamed account": "ନାମ ନଥିବା ଖାତା",
+  "no username": "ୟୁଜରନେମ୍ ନାହିଁ",
+  "Whole company": "ପୂରା କମ୍ପାନୀ",
+  Removed: "ହଟାଗଲା",
+  Suspended: "ବନ୍ଦ ରଖାଯାଇଛି",
+  "Bring back": "ଫେରାଇ ଆଣନ୍ତୁ",
+  Delete: "ହଟାନ୍ତୁ",
+  Administration: "ପ୍ରଶାସନ",
+  "Create logins, change roles and sites, reset passwords, remove people.":
+    "ଲଗଇନ୍ ତିଆରି, ଭୂମିକା ଓ ସାଇଟ୍ ବଦଳ, ପାସୱାର୍ଡ ରିସେଟ୍, ଲୋକଙ୍କୁ ହଟାନ୍ତୁ।",
+  "No account management": "ଖାତା ପରିଚାଳନା ଅନୁମତି ନାହିଁ",
+  "Owners, Directors and Admins manage the whole company. Project Managers, Site Engineers and Site Supervisors manage people on their own sites.":
+    "ମାଲିକ, ଡାଇରେକ୍ଟର ଓ ଆଡମିନ୍ ପୂରା କମ୍ପାନୀ ପରିଚାଳନା କରନ୍ତି। ପ୍ରୋଜେକ୍ଟ ମ୍ୟାନେଜର, ସାଇଟ୍ ଇଞ୍ଜିନିୟର ଓ ସାଇଟ୍ ସୁପରଭାଇଜର ନିଜ ସାଇଟର ଲୋକଙ୍କୁ ପରିଚାଳନା କରନ୍ତି।",
+  "You manage people on your own sites only, and only roles below yours.":
+    "ଆପଣ କେବଳ ନିଜ ସାଇଟର ଲୋକଙ୍କୁ ଏବଂ ନିଜ ତଳର ଭୂମିକାକୁ ପରିଚାଳନା କରନ୍ତି।",
+  "New account": "ନୂଆ ଖାତା",
+  "Person’s full name": "ବ୍ୟକ୍ତିଙ୍କ ପୂରା ନାମ",
+  "Username (letters, numbers, . _ -)": "ୟୁଜରନେମ୍ (ଅକ୍ଷର, ସଂଖ୍ୟା, . _ -)",
+  "Login details": "ଲଗଇନ୍ ବିବରଣୀ",
+  "Creating…": "ତିଆରି ହେଉଛି…",
+  "{count} accounts": "{count} ଖାତା",
+  Refresh: "ରିଫ୍ରେସ୍",
+  "Search by name, username or role": "ନାମ, ୟୁଜରନେମ୍ ବା ଭୂମିକାରେ ଖୋଜନ୍ତୁ",
+  "No accounts yet": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଖାତା ନାହିଁ",
+  "People you create appear here with their role and sites.":
+    "ଆପଣ ତିଆରି କରିଥିବା ଖାତା ଏଠାରେ ଭୂମିକା ଓ ସାଇଟ୍ ସହ ଦେଖାଯିବ।",
+  "Each person has their own login. Passwords are shown only once when made and are stored only as a secure hash. Every change is written to the audit history.":
+    "ପ୍ରତି ବ୍ୟକ୍ତିଙ୍କ ନିଜ ଲଗଇନ୍। ପାସୱାର୍ଡ ତିଆରି ବେଳେ କେବଳ ଥରେ ଦେଖାଯାଏ ଏବଂ ସୁରକ୍ଷିତ ହ୍ୟାସ୍ ଭାବେ ରଖାଯାଏ। ପ୍ରତି ବଦଳ ଅଡିଟ୍ ଇତିହାସରେ ଲେଖାଯାଏ।",
+  "Changes saved.": "ବଦଳ ସେଭ୍ ହେଲା।",
+  "Account removed. The person is signed out.": "ଖାତା ହଟାଗଲା। ବ୍ୟକ୍ତି ସାଇନ୍ ଆଉଟ୍ ହେଲେ।",
+  "Removed from your sites.": "ଆପଣଙ୍କ ସାଇଟରୁ ହଟାଗଲା।",
+  "No active site yet. Create a site first, then give people access to it.":
+    "ଏପର୍ଯ୍ୟନ୍ତ ସକ୍ରିୟ ସାଇଟ୍ ନାହିଁ। ପ୍ରଥମେ ସାଇଟ୍ ତିଆରି କରି ଲୋକଙ୍କୁ ଅନୁମତି ଦିଅନ୍ତୁ।",
+  "Edit account": "ଖାତା ବଦଳାନ୍ତୁ",
+  "Saving…": "ସେଭ୍ ହେଉଛି…",
+  "Save changes": "ବଦଳ ସେଭ୍ କରନ୍ତୁ",
+  "Could not remove.": "ହଟାଇ ପାରିଲା ନାହିଁ।",
+  "Delete account": "ଖାତା ହଟାନ୍ତୁ",
+  "The person is removed from the company and all sites, signed out, and cannot sign in. Reports, bills and attendance they made stay in the history. A leader can bring the account back later.":
+    "ବ୍ୟକ୍ତି କମ୍ପାନୀ ଓ ସବୁ ସାଇଟରୁ ହଟିଯିବେ, ସାଇନ୍ ଆଉଟ୍ ହେବେ ଏବଂ ସାଇନ୍ ଇନ୍ କରିପାରିବେ ନାହିଁ। ସେମାନଙ୍କ ରିପୋର୍ଟ, ବିଲ୍ ଓ ହାଜିରା ଇତିହାସରେ ରହିବ। ପରେ ଜଣେ ଲିଡର ଖାତା ଫେରାଇ ପାରିବେ।",
+  "The person is removed from your sites. If they have no other site left, they are removed from the company and cannot sign in.":
+    "ବ୍ୟକ୍ତି ଆପଣଙ୍କ ସାଇଟରୁ ହଟିଯିବେ। ଅନ୍ୟ କୌଣସି ସାଇଟ୍ ନଥିଲେ କମ୍ପାନୀରୁ ମଧ୍ୟ ହଟିଯିବେ ଏବଂ ସାଇନ୍ ଇନ୍ କରିପାରିବେ ନାହିଁ।",
+  Reason: "କାରଣ",
+  "For example: left the job": "ଯେମିତି: ଚାକିରି ଛାଡିଦେଲେ",
+  "Super Admin": "ସୁପର ଆଡମିନ୍",
+  "Director / Partner": "ଡାଇରେକ୍ଟର / ପାର୍ଟନର",
+  Admin: "ଆଡମିନ୍",
+  "Project Manager": "ପ୍ରୋଜେକ୍ଟ ମ୍ୟାନେଜର",
+  "Site Engineer": "ସାଇଟ୍ ଇଞ୍ଜିନିୟର",
+  "Site Supervisor": "ସାଇଟ୍ ସୁପରଭାଇଜର",
+  Storekeeper: "ଷ୍ଟୋରକିପର",
+  Auditor: "ଅଡିଟର",
+  "Whole company: every site, money and approvals": "ପୂରା କମ୍ପାନୀ: ସବୁ ସାଇଟ୍, ଟଙ୍କା ଓ ଅନୁମୋଦନ",
+  "Whole company: users, sites, purchase, payroll": "ପୂରା କମ୍ପାନୀ: ୟୁଜର, ସାଇଟ୍, କ୍ରୟ, ବେତନ",
+  "Their projects' sites: plans, approvals, team": "ନିଜ ପ୍ରୋଜେକ୍ଟର ସାଇଟ୍: ଯୋଜନା, ଅନୁମୋଦନ, ଟିମ୍",
+  "Their sites: work, reports, measurements, team": "ନିଜ ସାଇଟ୍: କାମ, ରିପୋର୍ଟ, ମାପ, ଟିମ୍",
+  "Their site: daily work, attendance, materials": "ନିଜ ସାଇଟ୍: ଦୈନିକ କାମ, ହାଜିରା, ସାମଗ୍ରୀ",
+  "Their sites: bills, payments, payroll": "ନିଜ ସାଇଟ୍: ବିଲ୍, ପେମେଣ୍ଟ, ବେତନ",
+  "Their sites: stock in and out": "ନିଜ ସାଇଟ୍: ଷ୍ଟକ୍ ଆସିବା-ଯିବା",
+  "Their sites: read only, audit history": "ନିଜ ସାଇଟ୍: କେବଳ ଦେଖିବା, ଅଡିଟ୍ ଇତିହାସ",
+  "Your role does not include managing accounts.": "ଆପଣଙ୍କ ଭୂମିକାରେ ଖାତା ପରିଚାଳନା ନାହିଁ।",
+  "You are not on any site yet, so you cannot manage accounts.":
+    "ଆପଣ ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସାଇଟରେ ନାହାନ୍ତି, ତେଣୁ ଖାତା ପରିଚାଳନା କରିପାରିବେ ନାହିଁ।",
+  "Only someone above this person's role can change this account.":
+    "ଏହି ଖାତାକୁ କେବଳ ଏହି ବ୍ୟକ୍ତିଙ୍କ ଉପର ଭୂମିକାର ଲୋକ ବଦଳାଇପାରିବେ।",
+  "This person is not on any of your sites.": "ଏହି ବ୍ୟକ୍ତି ଆପଣଙ୍କ କୌଣସି ସାଇଟରେ ନାହାନ୍ତି।",
+  "You can give access only to your own sites.": "ଆପଣ କେବଳ ନିଜ ସାଇଟର ଅନୁମତି ଦେଇପାରିବେ।",
+  "Choose at least one site for this role.": "ଏହି ଭୂମିକା ପାଇଁ ଅତି କମରେ ଗୋଟିଏ ସାଇଟ୍ ବାଛନ୍ତୁ।",
+  "Your role cannot give this role. Someone above you must do it.":
+    "ଆପଣଙ୍କ ଭୂମିକା ଏହି ଭୂମିକା ଦେଇପାରିବ ନାହିଁ। ଆପଣଙ୍କ ଉପରେ ଥିବା ଲୋକ କରିବେ।",
+  "This person also works for another company. Ask the Super Admin to reset it.":
+    "ଏହି ବ୍ୟକ୍ତି ଅନ୍ୟ କମ୍ପାନୀରେ ମଧ୍ୟ କାମ କରନ୍ତି। ରିସେଟ୍ ପାଇଁ ସୁପର ଆଡମିନ୍‌ଙ୍କୁ କୁହନ୍ତୁ।",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

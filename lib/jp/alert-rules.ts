@@ -11,6 +11,7 @@ export const ALERT_ROLES = [
   "director",
   "admin",
   "project_manager",
+  "site_engineer",
   "supervisor",
   "accounts",
   "storekeeper",

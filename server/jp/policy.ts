@@ -6,7 +6,8 @@ export type BusinessRole =
   | "supervisor"
   | "accounts"
   | "storekeeper"
-  | "auditor";
+  | "auditor"
+  | "site_engineer";
 
 export type PermissionScope = "organization" | "project" | "site";
 export type PermissionEffect = "allow" | "deny";
@@ -156,6 +157,29 @@ const roleDefaults: Record<BusinessRole, readonly string[]> = {
   ],
   storekeeper: ["site.view", "task.view", "material.request.view", "material.request"],
   auditor: ["site.view", "audit.view", "workforce.view", "compensation.view"],
+  // Site Engineer: technical lead of their sites; runs the work like a project manager on site.
+  site_engineer: [
+    "site.view",
+    "task.view",
+    "task.manage",
+    "task.status.update",
+    "dpr.view",
+    "dpr.create",
+    "dpr.submit",
+    "dpr.review",
+    "dlr.view",
+    "dlr.create",
+    "dlr.submit",
+    "dlr.review",
+    "material.request.view",
+    "material.request",
+    "material.review",
+    "audit.view",
+    "workforce.view",
+    "workforce.manage",
+    "workforce.kyc.view",
+    "workforce.review",
+  ],
 };
 
 const inventoryRoleDefaults: Record<BusinessRole, readonly string[]> = {
@@ -172,6 +196,7 @@ const inventoryRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["inventory.view"],
   storekeeper: ["inventory.view", "inventory.transact"],
   auditor: ["inventory.view"],
+  site_engineer: ["inventory.view", "inventory.transact", "inventory.review"],
 };
 
 const financeRoleDefaults: Record<BusinessRole, readonly string[]> = {
@@ -246,6 +271,14 @@ const financeRoleDefaults: Record<BusinessRole, readonly string[]> = {
   ],
   storekeeper: [],
   auditor: ["vendor.view", "finance.invoice.view", "finance.payment.view"],
+  // Engineers check supplier bills against work done; payments stay with managers and accounts.
+  site_engineer: [
+    "vendor.view",
+    "finance.invoice.view",
+    "finance.invoice.create",
+    "finance.invoice.submit",
+    "finance.invoice.review",
+  ],
 };
 
 const pettyCashRoleDefaults: Record<BusinessRole, readonly string[]> = {
@@ -297,6 +330,12 @@ const pettyCashRoleDefaults: Record<BusinessRole, readonly string[]> = {
   ],
   storekeeper: [],
   auditor: ["finance.cash.view"],
+  site_engineer: [
+    "finance.cash.view",
+    "finance.cash.movement.create",
+    "finance.cash.movement.submit",
+    "finance.cash.movement.cancel",
+  ],
 };
 
 const fullAttendance = ["attendance.view", "attendance.mark", "attendance.approve"];
@@ -309,6 +348,7 @@ const issueRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["issue.view", "attendance.view"],
   storekeeper: ["issue.view", "issue.create"],
   auditor: ["issue.view", "attendance.view"],
+  site_engineer: ["issue.view", "issue.create", "issue.manage", "issue.close", ...fullAttendance],
 };
 
 const documentLeaders = ["document.view", "document.upload", "document.manage"];
@@ -321,6 +361,7 @@ const documentRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["document.view", "document.upload"],
   storekeeper: ["document.view", "document.upload"],
   auditor: ["document.view"],
+  site_engineer: documentLeaders,
 };
 
 const budgetRoleDefaults: Record<BusinessRole, readonly string[]> = {
@@ -332,6 +373,7 @@ const budgetRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["budget.view"],
   storekeeper: [],
   auditor: ["budget.view"],
+  site_engineer: ["budget.view"],
 };
 
 /** CRM (clients, leads, quotations) and client billing (contracts, RA bills, receipts). */
@@ -358,6 +400,8 @@ const commercialRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["crm.view", "billing.view", "billing.create", "billing.receipt"],
   storekeeper: [],
   auditor: ["crm.view", "billing.view"],
+  // Engineers prepare client RA bills from measured work; a leader approves them.
+  site_engineer: ["billing.view", "billing.create"],
 };
 
 /** Purchase orders, goods receipts and bill matching (site scoped). */
@@ -371,6 +415,7 @@ const purchaseRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["purchase.view", "purchase.create"],
   storekeeper: ["purchase.view", "purchase.receive"],
   auditor: ["purchase.view"],
+  site_engineer: ["purchase.view", "purchase.create", "purchase.receive"],
 };
 
 /** Subcontractor work orders, measurement book and RA bills (site scoped). */
@@ -389,6 +434,7 @@ const subcontractRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["subcontract.view", "subcontract.create"],
   storekeeper: [],
   auditor: ["subcontract.view"],
+  site_engineer: ["subcontract.view", "subcontract.create", "subcontract.measure"],
 };
 
 /** Payroll (site scoped): accounts prepares, a manager or leader approves. */
@@ -405,6 +451,7 @@ const payrollRoleDefaults: Record<BusinessRole, readonly string[]> = {
   accounts: ["payroll.view", "payroll.prepare", "payroll.advance", ...allAccounts],
   storekeeper: [],
   auditor: ["payroll.view", "accounts.view"],
+  site_engineer: ["payroll.view", "payroll.advance"],
 };
 
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {

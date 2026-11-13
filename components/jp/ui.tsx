@@ -103,12 +103,15 @@ export function IconButton({
   onPress,
   badge,
   variant = "surface",
+  size = 42,
 }: {
   icon: IconName;
   label: string;
   onPress?: () => void;
   badge?: number;
   variant?: "surface" | "glass";
+  /** Smaller on narrow phones so the header row fits. */
+  size?: number;
 }) {
   const colors = useColors();
   const glass = variant === "glass";
@@ -120,13 +123,18 @@ export function IconButton({
       hitSlop={4}
       style={({ pressed }) => [
         styles.iconButton,
+        { width: size, height: size, borderRadius: size / 2 },
         glass
           ? { backgroundColor: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.18)" }
           : { backgroundColor: colors.surface, borderColor: colors.border },
         pressed && styles.pressed,
       ]}
     >
-      <MaterialIcons name={icon} size={21} color={glass ? "#F6F1E6" : colors.foreground} />
+      <MaterialIcons
+        name={icon}
+        size={size < 40 ? 19 : 21}
+        color={glass ? "#F6F1E6" : colors.foreground}
+      />
       {typeof badge === "number" && badge > 0 ? (
         <View style={[styles.badge, { backgroundColor: colors.accent }]}>
           <Text style={[styles.badgeText, { color: "#0E1A26" }]}>{badge > 9 ? "9+" : badge}</Text>
@@ -165,6 +173,7 @@ export function AppHeader({
   userInitials,
   right,
   manual,
+  showAssistant = true,
 }: {
   eyebrow?: string;
   title: string;
@@ -174,6 +183,8 @@ export function AppHeader({
   right?: ReactNode;
   /** The manual page for the form on this screen; without it the book opens this module. */
   manual?: string;
+  /** Off where the screen has its own assistant bar (home), so it is not shown twice. */
+  showAssistant?: boolean;
 }) {
   const router = useRouter();
   const colors = useColors();
@@ -189,39 +200,50 @@ export function AppHeader({
     retry: false,
     staleTime: 10 * 60_000,
   });
+  // Narrow phones: smaller round buttons and only the logo, so the profile button never
+  // slips off the edge of the screen.
+  const { width } = useWindowDimensions();
+  const button = width < 400 ? 34 : width < 440 ? 38 : 42;
+  const showBrandName = width >= 400;
   return (
     <View style={styles.header}>
       <View style={styles.headerTopRow}>
         {inTabs ? (
-          <View style={styles.brandRow}>
+          <View style={[styles.brandRow, { flexShrink: 1 }]}>
             <Image
               source={require("../../assets/images/icon.png")}
               style={styles.brandLogo}
               accessibilityLabel="JP Infracon"
             />
-            <View>
-              <Text style={[styles.brandName, { color: colors.foreground }]}>JP INFRACON</Text>
-              <Text style={[styles.brandTag, { color: colors.accent }]}>
-                {t("Build with certainty")}
-              </Text>
-            </View>
+            {showBrandName ? (
+              <View style={{ flexShrink: 1 }}>
+                <Text style={[styles.brandName, { color: colors.foreground }]} numberOfLines={1}>
+                  JP INFRACON
+                </Text>
+                <Text style={[styles.brandTag, { color: colors.accent }]} numberOfLines={1}>
+                  {t("Build with certainty")}
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : (
           <BackButton />
         )}
-        <View style={styles.headerActions}>
+        <View style={[styles.headerActions, { gap: width < 400 ? 5 : 9 }]}>
           {right}
           {segments[0] !== "manual" ? (
-            <ManualButton form={manual} module={manualModuleForSegments(segments)} />
+            <ManualButton form={manual} module={manualModuleForSegments(segments)} size={button} />
           ) : null}
-          {assistant.data?.available && segments[0] !== "assistant" ? (
+          {showAssistant && assistant.data?.available && segments[0] !== "assistant" ? (
             <IconButton
+              size={button}
               icon="auto-awesome"
               label={t("Ask the AI assistant")}
               onPress={() => router.push("/assistant" as never)}
             />
           ) : null}
           <IconButton
+            size={button}
             icon="notifications-none"
             label={t("Open notifications")}
             badge={notificationCount ?? inboxCount}
@@ -233,14 +255,14 @@ export function AppHeader({
             onPress={() => router.push("/profile" as never)}
             style={({ pressed }) => [
               styles.avatar,
-              { backgroundColor: colors.primary },
+              { backgroundColor: colors.primary, width: button, height: button },
               pressed && styles.pressed,
             ]}
           >
             {photo ? (
               <PhotoImage
                 source={{ uri: photo }}
-                style={styles.avatarPhoto}
+                style={[styles.avatarPhoto, { width: button, height: button }]}
                 contentFit="cover"
                 cachePolicy="memory-disk"
               />
@@ -1062,7 +1084,7 @@ export const styles = StyleSheet.create({
   eyebrow: { fontSize: 11, letterSpacing: 1.8, fontWeight: "800", marginBottom: 6 },
   headerTitle: { fontSize: 30, lineHeight: 37, fontFamily: displayFont, letterSpacing: -0.2 },
   headerSubtitle: { fontSize: 13, lineHeight: 19, marginTop: 6 },
-  headerActions: { flexDirection: "row", alignItems: "center", gap: 9 },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 9, flexShrink: 0 },
   iconButton: {
     width: 42,
     height: 42,

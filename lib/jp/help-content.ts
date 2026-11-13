@@ -446,7 +446,7 @@ export const START_PATHS: Readonly<Record<string, readonly StartStep[]>> = {
 export function startPathFor(role: string | null) {
   if (role === "owner" || role === "director" || role === "admin" || role === "super_admin")
     return "leader";
-  if (role === "project_manager") return "manager";
+  if (role === "project_manager" || role === "site_engineer") return "manager";
   if (role === "accounts") return "accounts";
   if (role === "storekeeper") return "store";
   return "supervisor";
