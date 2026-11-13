@@ -1530,6 +1530,19 @@ export const hi: Dictionary = {
     "आपकी भूमिका यह भूमिका नहीं दे सकती। आपसे ऊपर वाला यह करेगा।",
   "This person also works for another company. Ask the Super Admin to reset it.":
     "यह व्यक्ति दूसरी कंपनी में भी काम करते हैं। रीसेट के लिए सुपर एडमिन से कहें।",
+  // Sample data
+  "{removed} sample records removed. {kept} stay because real records use them.": "{removed} सैंपल रिकॉर्ड हटाए गए। {kept} बचे हैं क्योंकि असली रिकॉर्ड उनका उपयोग करते हैं।",
+  "All {removed} sample records removed.": "सभी {removed} सैंपल रिकॉर्ड हटा दिए गए।",
+  "Remove all sample data?": "सारा सैंपल डेटा हटाएँ?",
+  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.": "SAMPLE लिखा हर रिकॉर्ड (उदाहरण काम, रिपोर्ट, बिल, वेतन और उदाहरण अकाउंट्स लॉगिन) सबके लिए हट जाएगा। असली लोग, सप्लायर, साइट और आपकी डाली हर चीज़ बची रहेगी। यह वापस नहीं होगा।",
+  "Sample data": "सैंपल डेटा",
+  "Example records that show how each form is filled.": "उदाहरण रिकॉर्ड जो दिखाते हैं कि हर फ़ॉर्म कैसे भरा जाता है।",
+  "Leaders only": "सिर्फ़ लीडर के लिए",
+  "Only the Super Admin, Owner, Director or Admin can remove sample data.": "सिर्फ़ सुपर एडमिन, मालिक, डायरेक्टर या एडमिन सैंपल डेटा हटा सकते हैं।",
+  "sample records in the app": "ऐप में सैंपल रिकॉर्ड",
+  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.": "जब आपकी टीम फ़ॉर्म सीख ले, तो एक टैप में उदाहरण हटा दें। असली लोग, सप्लायर, साइट और आपकी टीम की डाली हर चीज़ बची रहेगी।",
+  "Remove all sample data": "सारा सैंपल डेटा हटाएँ",
+  "Remove all example records in one tap": "एक टैप में सारे उदाहरण रिकॉर्ड हटाएँ",
 };
 
 export const or: Dictionary = {
@@ -3035,6 +3048,19 @@ export const or: Dictionary = {
     "ଆପଣଙ୍କ ଭୂମିକା ଏହି ଭୂମିକା ଦେଇପାରିବ ନାହିଁ। ଆପଣଙ୍କ ଉପରେ ଥିବା ଲୋକ କରିବେ।",
   "This person also works for another company. Ask the Super Admin to reset it.":
     "ଏହି ବ୍ୟକ୍ତି ଅନ୍ୟ କମ୍ପାନୀରେ ମଧ୍ୟ କାମ କରନ୍ତି। ରିସେଟ୍ ପାଇଁ ସୁପର ଆଡମିନ୍‌ଙ୍କୁ କୁହନ୍ତୁ।",
+  // Sample data
+  "{removed} sample records removed. {kept} stay because real records use them.": "{removed} ସାମ୍ପଲ ରେକର୍ଡ ହଟାଗଲା। {kept} ରହିଲା କାରଣ ଅସଲ ରେକର୍ଡ ସେଗୁଡିକୁ ବ୍ୟବହାର କରେ।",
+  "All {removed} sample records removed.": "ସମସ୍ତ {removed} ସାମ୍ପଲ ରେକର୍ଡ ହଟାଗଲା।",
+  "Remove all sample data?": "ସବୁ ସାମ୍ପଲ ଡାଟା ହଟାଇବେ?",
+  "Every record marked SAMPLE (example tasks, reports, bills, payroll and the example accounts login) is deleted for everyone. Real people, suppliers, sites and anything you entered stay. This cannot be undone.": "SAMPLE ଲେଖାଥିବା ପ୍ରତି ରେକର୍ଡ (ଉଦାହରଣ କାମ, ରିପୋର୍ଟ, ବିଲ୍, ବେତନ ଓ ଉଦାହରଣ ଆକାଉଣ୍ଟସ୍ ଲଗଇନ୍) ସମସ୍ତଙ୍କ ପାଇଁ ହଟିଯିବ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଆପଣ ଦେଇଥିବା ସବୁ ରହିବ। ଏହା ଫେରିବ ନାହିଁ।",
+  "Sample data": "ସାମ୍ପଲ ଡାଟା",
+  "Example records that show how each form is filled.": "ଉଦାହରଣ ରେକର୍ଡ ଯାହା ଦେଖାଏ ପ୍ରତି ଫର୍ମ କିପରି ପୂରଣ ହୁଏ।",
+  "Leaders only": "କେବଳ ଲିଡରଙ୍କ ପାଇଁ",
+  "Only the Super Admin, Owner, Director or Admin can remove sample data.": "କେବଳ ସୁପର ଆଡମିନ୍, ମାଲିକ, ଡାଇରେକ୍ଟର ବା ଆଡମିନ୍ ସାମ୍ପଲ ଡାଟା ହଟାଇପାରିବେ।",
+  "sample records in the app": "ଆପରେ ସାମ୍ପଲ ରେକର୍ଡ",
+  "When your team has learned the forms, remove the examples with one tap. Real people, suppliers, sites and everything your team entered stay.": "ଆପଣଙ୍କ ଟିମ୍ ଫର୍ମ ଶିଖିଗଲେ, ଗୋଟିଏ ଟ୍ୟାପରେ ଉଦାହରଣ ହଟାନ୍ତୁ। ଅସଲ ଲୋକ, ସପ୍ଲାୟର, ସାଇଟ୍ ଓ ଟିମ୍ ଦେଇଥିବା ସବୁ ରହିବ।",
+  "Remove all sample data": "ସବୁ ସାମ୍ପଲ ଡାଟା ହଟାନ୍ତୁ",
+  "Remove all example records in one tap": "ଗୋଟିଏ ଟ୍ୟାପରେ ସବୁ ଉଦାହରଣ ରେକର୍ଡ ହଟାନ୍ତୁ",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

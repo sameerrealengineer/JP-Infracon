@@ -6,6 +6,7 @@ export type SiteLifecycleStatus = (typeof siteStatuses)[number];
 /** Roles that are granted per site. Owner/Director/Admin already see every site in the organisation. */
 export const siteAssignableRoles = [
   "project_manager",
+  "site_engineer",
   "supervisor",
   "accounts",
   "storekeeper",

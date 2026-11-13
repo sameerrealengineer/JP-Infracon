@@ -3179,3 +3179,20 @@ export const crewDeployments = mysqlTable(
     crewDeployCrewDateIndex: index("crew_deploy_crew_date_idx").on(table.crewId, table.workDate),
   }),
 );
+
+/**
+ * Rows that are example data (put in by the client start-data seed). Super Admin and company
+ * leaders can remove them all in one step (`jp.sampleData.remove`); real records never go here.
+ */
+export const sampleRecords = mysqlTable(
+  "sample_records",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    tableName: varchar("tableName", { length: 64 }).notNull(),
+    rowId: varchar("rowId", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    rowUnique: uniqueIndex("sample_records_row_uq").on(table.tableName, table.rowId),
+  }),
+);

@@ -12,7 +12,8 @@ const { createNodeDriver } = await import("./testing/node-driver");
 const { getDb } = await import("../../server/db");
 const { systemBootstrap, userCredentials, users } = await import("../../drizzle/schema");
 const { hashPassword } = await import("../../server/_core/credential-auth");
-const { seedClientData, SEED_SITE_CODE } = await import("../../server/seed/client-data");
+const { SEED_SITE_CODE } = await import("../../server/seed/client-data");
+const { runClientSeed } = await import("../../server/seed/run");
 const { callerForUserId } = await import("../../server/seed/caller");
 
 describe("client seed", () => {
@@ -39,21 +40,47 @@ describe("client seed", () => {
       passwordChangedAt: new Date(),
     });
     const boss = await callerForUserId(admin!.id);
-    const result = await seedClientData({ boss, callerFor: callerForUserId });
+    const first = await runClientSeed("sameer");
+    expect(first.logins.map((login) => login.username)).toEqual(["sipun.gouda", "accounts.sample"]);
+    // Running again adds nothing.
+    expect((await runClientSeed("sameer")).notes).toEqual([]);
 
-    expect(result.logins.map((login) => login.username)).toEqual([
-      "sipun.gouda",
-      "accounts.sample",
-    ]);
     const sites = await boss.jp.workspace.mySites();
-    expect(sites.find((site) => site.code === SEED_SITE_CODE)?.name).toContain("Kalyan Mandap");
-    const found = await boss.jp.people.search({ query: "" });
-    const names = JSON.stringify(found.people);
+    expect(sites.find((site) => site.code === SEED_SITE_CODE)?.status).toBe("Completed");
+    expect(sites.filter((site) => site.code.startsWith("SHG-OHT"))).toHaveLength(10);
+    const names = JSON.stringify((await boss.jp.people.search({ query: "" })).people);
     for (const name of ["Sipun Gouda", "Musha Behera", "Pahalad", "Rabindra Ku Nayak"])
       expect(names).toContain(name);
-    const vendors = await boss.jp.finance.listVendors({ siteId: result.siteId });
-    const vendorNames = JSON.stringify(vendors);
-    expect(vendorNames).toContain("Bhagabati Enterprises");
-    expect(vendorNames).toContain("Rajdhani UPVC");
-  }, 240_000);
+    const aska = sites.find((site) => site.code === SEED_SITE_CODE)!;
+    const tasks = await boss.jp.tasks.list({ siteId: aska.id });
+    expect(tasks.every((task) => task.status === "Completed")).toBe(true);
+
+    // Kalyan Mandap: the whole BOQ billed and every bill fully received.
+    const contract = await boss.jp.billing.contract.get({ projectId: aska.projectId });
+    expect(contract.items.every((row) => BigInt(row.balanceThousandths) === 0n)).toBe(true);
+    const bills = await boss.jp.billing.bills.list({ projectId: aska.projectId });
+    expect(bills.length).toBeGreaterThanOrEqual(3);
+    expect(bills.every((bill) => bill.receivedMinor === bill.netReceivableMinor)).toBe(true);
+
+    // One step removes every SAMPLE record; real people, suppliers, sites and logins stay.
+    const organizationId = aska.organizationId;
+    const before = await boss.jp.sampleData.status({ organizationId });
+    expect(before.total).toBeGreaterThan(300);
+    const removed = await boss.jp.sampleData.remove({
+      organizationId,
+      confirm: "REMOVE SAMPLE DATA",
+    });
+    expect(removed.kept).toBe(0);
+    expect((await boss.jp.sampleData.status({ organizationId })).total).toBe(0);
+    expect(await boss.jp.tasks.list({ siteId: aska.id })).toEqual([]);
+    const after = JSON.stringify((await boss.jp.people.search({ query: "" })).people);
+    for (const name of ["Sipun Gouda", "Musha Behera", "Pahalad", "Rabindra Ku Nayak"])
+      expect(after).toContain(name);
+    const vendors = JSON.stringify(await boss.jp.finance.listVendors({ siteId: aska.id }));
+    for (const name of ["Bhagabati Enterprises", "Rajdhani UPVC", "Pahalad Mason Works"])
+      expect(vendors).toContain(name);
+    expect((await boss.jp.workspace.mySites()).length).toBe(11);
+    const accounts = await boss.jp.accounts.list({ organizationId });
+    expect(accounts.map((row) => row.username).sort()).toEqual(["sameer", "sipun.gouda"]);
+  }, 600_000);
 });

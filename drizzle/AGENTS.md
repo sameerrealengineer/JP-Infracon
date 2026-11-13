@@ -38,6 +38,7 @@ pnpm db:push   # drizzle-kit generate + migrate against DATABASE_URL in one step
 - Migration 0030 (6 November 2026) adds two nullable columns to `work_tasks`: `assigneeUserId` (users) and `crewId` (crews). Additive only.
 - Migration 0031 (7 November 2026) adds `web_push_subscriptions` (browser push for the web app; new table only). Code reading it catches a missing table.
 - Migration 0032 (13 November 2026) adds `site_engineer` at the end of the `businessRole` enums on `organization_memberships` and `registration_invites` (existing values keep their positions).
+- Migration 0033 (14 November 2026) adds `sample_records` (new table only): rows that are example data, removable in one step (`jp.sampleData.remove`, `server/seed/sample-registry.ts`).
 - Do not run `pnpm db:push` casually: it generates and migrates against whatever `DATABASE_URL` points at in one step. Production migrations go through a deploy, never `db:push`.
 - `RUN_MIGRATIONS=true` (`server/_core/migrate.ts`) applies every pending migration in `drizzle/` when the API starts. Production sets it in `deploy/docker-compose.yml`, and `scripts/deploy-azure.sh` takes a backup first. Use it elsewhere only on a database you have backed up.
 - The database exposes no CHECK constraints, so value rules live in the API.

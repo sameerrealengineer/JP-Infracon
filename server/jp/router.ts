@@ -55,6 +55,7 @@ import { advancesRouter } from "./advances";
 import { trackingRouter } from "./tracking";
 import { crewsRouter } from "./crews";
 import { userAccessRouter } from "./user-access";
+import { sampleDataRouter } from "./sample-data";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -207,6 +208,7 @@ export const jpRouter = router({
   tracking: trackingRouter,
   crews: crewsRouter,
   userAccess: userAccessRouter,
+  sampleData: sampleDataRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

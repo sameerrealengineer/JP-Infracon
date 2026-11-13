@@ -218,6 +218,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "delete-sweep",
+      title: "Sample data",
+      detail: "Remove all example records in one tap",
+      tone: "warning",
+      route: "/sample-data",
+      show: workspace.canManageAccounts,
+    },
+    {
       icon: "health-and-safety",
       title: "System check",
       detail: "Test AI, voice, scan, uploads, WhatsApp",

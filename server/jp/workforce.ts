@@ -858,10 +858,76 @@ const reviewEngagement = protectedProcedure
     };
   });
 
+/**
+ * Adds an existing person to one more site (a mistri moving to the next job), so attendance,
+ * rates and crews work there too. Needs workforce.manage on that site; audited.
+ */
+const assignToSite = protectedProcedure
+  .input(
+    z.object({
+      siteId: uuidSchema,
+      personId: uuidSchema,
+      clientMutationId: mutationIdSchema,
+    }),
+  )
+  .mutation(async ({ ctx, input }) => {
+    const { scope, db } = await scopedPermission(ctx.user, input.siteId, "workforce.manage");
+    const prior = await findMutationEvent(db, ctx.user.id, input.clientMutationId);
+    if (prior) return { personId: input.personId, siteId: scope.siteId, replayed: true };
+    const [person] = await db
+      .select({ id: people.id, organizationId: people.organizationId, status: people.status })
+      .from(people)
+      .where(eq(people.id, input.personId))
+      .limit(1);
+    if (!person || person.organizationId !== scope.organizationId)
+      throw new TRPCError({ code: "NOT_FOUND", message: "Person not found in this company." });
+    const [existing] = await db
+      .select()
+      .from(personSiteAssignments)
+      .where(
+        and(
+          eq(personSiteAssignments.personId, input.personId),
+          eq(personSiteAssignments.siteId, scope.siteId),
+        ),
+      )
+      .limit(1);
+    if (existing?.status === "Active")
+      throw new TRPCError({ code: "CONFLICT", message: "This person is already on this site." });
+    await db.transaction(async (tx) => {
+      if (existing)
+        await tx
+          .update(personSiteAssignments)
+          .set({ status: "Active", assignedBy: ctx.user.id })
+          .where(eq(personSiteAssignments.id, existing.id));
+      else
+        await tx.insert(personSiteAssignments).values({
+          id: randomUUID(),
+          organizationId: scope.organizationId,
+          personId: input.personId,
+          siteId: scope.siteId,
+          status: "Active",
+          assignedBy: ctx.user.id,
+        });
+      await writeAudit(tx, {
+        organizationId: scope.organizationId,
+        siteId: scope.siteId,
+        actorUserId: ctx.user.id,
+        action: "workforce.person.site_added",
+        entityType: "person",
+        entityId: input.personId,
+        clientMutationId: input.clientMutationId,
+        afterSummary: jsonSummary({ siteId: scope.siteId }),
+        reason: "Person added to another site of the company.",
+      });
+    });
+    return { personId: input.personId, siteId: scope.siteId, replayed: false };
+  });
+
 export const workforceRouter = router({
   list: personList,
   createPerson,
   reviewPerson,
+  assignToSite,
   rates: engagementList,
   proposeRate: proposeEngagement,
   reviewRate: reviewEngagement,
