@@ -9,3 +9,4 @@ MANIFEST.sha256
 
 # Markdown docs are edited line by line by the workflow skills; keep them as written.
 *.md
+server/seed/media.json

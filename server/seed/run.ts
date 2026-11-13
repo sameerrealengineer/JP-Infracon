@@ -7,7 +7,8 @@
  *    10 tank sites (real), the example records (listed as SAMPLE as they are made), then Kalyan
  *    Mandap marked Completed (real).
  */
-import { eq, inArray } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { asc, eq, inArray, like } from "drizzle-orm";
 import {
   auditEvents,
   organizationMemberships,
@@ -27,6 +28,7 @@ import {
   markKalyanMandapCompleted,
   sheragadaWork,
 } from "./more-data";
+import { addRealPhotos, addSampleMedia } from "./media-data";
 import { newRows, registerSample, snapshot } from "./sample-registry";
 
 /** Tables whose every row is real (company structure, people, suppliers, settings). */
@@ -147,6 +149,62 @@ export async function runClientSeed(superAdminUsername: string) {
     notes.push(`${await registerSample(db, added)} second-round rows listed as SAMPLE.`);
     await markKalyanMandapCompleted(ctx, { projectId: site.projectId, siteId: site.id });
     notes.push("Sheragada project with 10 tank sites added; Kalyan Mandap marked Completed.");
+  }
+  // 4. Photos, drawings and documents (once: when the Kalyan Mandap site has no cover yet).
+  const [kalyan] = await db.select().from(sites).where(eq(sites.siteCode, SEED_SITE_CODE)).limit(1);
+  const [water] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(eq(projects.projectCode, SHERAGADA_PROJECT_CODE))
+    .limit(1);
+  if (kalyan && water && !kalyan.coverAttachmentId) {
+    const tanks = await db
+      .select({ id: sites.id })
+      .from(sites)
+      .where(like(sites.siteCode, "SHG-OHT%"))
+      .orderBy(asc(sites.siteCode));
+    const ids = {
+      kalyan: { projectId: kalyan.projectId, siteId: kalyan.id },
+      sheragada: { projectId: water.id, siteIds: tanks.map((row: { id: string }) => row.id) },
+    };
+    // A completed site takes no new records: reopen it for the handover papers, then close it.
+    const wasCompleted = kalyan.status === "Completed";
+    const setStatus = async (status: "Active" | "Completed", reason: string) => {
+      if (status === "Active") {
+        await boss.jp.sitesAdmin.setProjectStatus({
+          projectId: kalyan.projectId,
+          status,
+          reason,
+          clientMutationId: `seed-${randomUUID()}`,
+        });
+        await boss.jp.sitesAdmin.setSiteStatus({
+          siteId: kalyan.id,
+          status,
+          reason,
+          clientMutationId: `seed-${randomUUID()}`,
+        });
+      } else {
+        await boss.jp.sitesAdmin.setSiteStatus({
+          siteId: kalyan.id,
+          status,
+          reason,
+          clientMutationId: `seed-${randomUUID()}`,
+        });
+        await boss.jp.sitesAdmin.setProjectStatus({
+          projectId: kalyan.projectId,
+          status,
+          reason,
+          clientMutationId: `seed-${randomUUID()}`,
+        });
+      }
+    };
+    if (wasCompleted) await setStatus("Active", "Reopened to add photos and handover documents.");
+    await addRealPhotos(boss, ids);
+    const before = await snapshot(db);
+    await addSampleMedia(boss, ids);
+    const added = newRows(before, await snapshot(db));
+    notes.push(`${await registerSample(db, added)} photo and document rows listed as SAMPLE.`);
+    if (wasCompleted) await setStatus("Completed", "Work complete and handed over.");
   }
   return { notes, logins };
 }
