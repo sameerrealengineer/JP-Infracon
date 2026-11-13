@@ -27,8 +27,8 @@ ssh -n "$HOST" "set -e; cd ~/jp-infracon/deploy; \
   docker compose exec -T -e SEED_SUPER_ADMIN='$ADMIN' -e SEED_LOGINS_FILE=/tmp/jp-seed-logins.txt api node /app/jp-seed.mjs; \
   if docker compose exec -T api test -f /tmp/jp-seed-logins.txt; then \
     umask 077; docker compose exec -T api cat /tmp/jp-seed-logins.txt > ~/jp-seed-logins.txt; \
-    docker compose exec -T api rm -f /tmp/jp-seed-logins.txt; fi; \
-  docker compose exec -T api rm -f /app/jp-seed.mjs"
+    docker compose exec -T -u root api rm -f /tmp/jp-seed-logins.txt; fi; \
+  docker compose exec -T -u root api rm -f /app/jp-seed.mjs"
 rm -rf "$OUT"
 
 echo "== 3/3 Logins =="
