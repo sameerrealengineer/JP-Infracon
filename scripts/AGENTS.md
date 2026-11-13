@@ -10,6 +10,7 @@ Scripts for running the production server on the Azure VM (deploy, watchdog, Wha
 |---|---|
 | `deploy-azure.sh` | Deploy HEAD: refuses uncommitted changes, backs up the database first (stops if the backup looks empty), `git archive HEAD` to `~/jp-infracon`, `docker compose up -d --build` (migrations apply on start), waits up to 3 minutes for `/api/health`, installs the watchdog cron |
 | `reset-production-db.sh` | Wipes and recreates the production `jp_infracon` database after a backup and a typed confirmation phrase; uploaded files are kept |
+| `seed-client-data.sh` | One-time client start data after the Super Admin exists: backup, then bundles `seed-client-data.ts` and runs it in the API container as that Super Admin (`server/seed/client-data.ts`, real procedures: site ASKA-KM1, the client's people and suppliers, SAMPLE records for every module). Stops if the site exists; new logins' temporary passwords go to `~/jp-seed-logins.txt` (mode 600), never the log |
 | `watchdog.sh` | Cron every 2 minutes on the VM: health check, restart after 2 failures, WhatsApp alert to `WATCHDOG_ALERT_PHONE`, disk and backup age warnings |
 | `setup-openwa.sh` | Starts OpenWA (compose profile `openwa`), links the sending WhatsApp number by pairing code, writes `OPENWA_*` into `deploy/.env` |
 | `setup-whatsapp-bot.sh` | Turns the WhatsApp bot on or off (webhook secret, `WHATSAPP_BOT=on`); run after `setup-openwa.sh` |
