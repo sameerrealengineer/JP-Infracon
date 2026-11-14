@@ -31,7 +31,11 @@ import { clampPageIndex, resolveSelectedId } from "@/lib/jp/selection";
 import { useSiteParam } from "@/hooks/use-site-param";
 import { trpc } from "@/lib/trpc";
 
-const MOVEMENT_TYPES: { value: InventoryMovementType; label: string; description: string }[] = [
+const MOVEMENT_TYPES: {
+  value: Exclude<InventoryMovementType, "Return to Supplier">;
+  label: string;
+  description: string;
+}[] = [
   {
     value: "Receipt/Inward",
     label: "Receipt / inward",
@@ -120,7 +124,9 @@ export default function InventoryScreen() {
   const [reorderThreshold, setReorderThreshold] = useState("");
   const [itemMutationId, setItemMutationId] = useState(() => createClientMutationId());
 
-  const [movementType, setMovementType] = useState<InventoryMovementType>("Receipt/Inward");
+  // "Return to Supplier" is made only by an approved purchase return, never typed here.
+  const [movementType, setMovementType] =
+    useState<Exclude<InventoryMovementType, "Return to Supplier">>("Receipt/Inward");
   const [movementItemId, setMovementItemId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [sourceReference, setSourceReference] = useState("");

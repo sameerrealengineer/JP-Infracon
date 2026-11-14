@@ -58,6 +58,8 @@ import { userAccessRouter } from "./user-access";
 import { sampleDataRouter } from "./sample-data";
 import { warrantiesRouter } from "./warranties";
 import { calendarRouter } from "./calendar";
+import { leaveRouter } from "./leave";
+import { purchaseReturnsRouter } from "./purchase-returns";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -213,6 +215,8 @@ export const jpRouter = router({
   sampleData: sampleDataRouter,
   warranties: warrantiesRouter,
   calendar: calendarRouter,
+  leave: leaveRouter,
+  purchaseReturns: purchaseReturnsRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

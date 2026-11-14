@@ -226,6 +226,22 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "event-busy",
+      title: "Leave",
+      detail: "Apply, approve, cancel leave",
+      tone: "info",
+      route: "/leave",
+      show: true,
+    },
+    {
+      icon: "assignment-return",
+      title: "Returns and refunds",
+      detail: "Goods back to suppliers, refund or credit",
+      tone: "accent",
+      route: "/returns",
+      show: can("purchase.view"),
+    },
+    {
       icon: "verified",
       title: "Warranties",
       detail: "Warranty cards, expiry and claims",

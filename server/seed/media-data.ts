@@ -393,18 +393,16 @@ export async function addSampleWarranties(
       terms:
         "Contractor repairs any defect in the work at own cost for 12 months from handover; 5% retention held till then.",
     },
-    ...ids.sheragada.siteIds
-      .slice(0, 3)
-      .map((siteId, index) => ({
-        siteId,
-        direction: "Given" as const,
-        itemName: `Inside epoxy coating, OHT-0${index + 1}`,
-        category: "Painting and coating" as const,
-        partyName: "RWS & S Division, Berhampur",
-        startDate: back(20 - index * 3),
-        endDate: plusYears(back(20 - index * 3), 3),
-        terms: "Coating peeling or blistering repaired free for 3 years.",
-      })),
+    ...ids.sheragada.siteIds.slice(0, 3).map((siteId, index) => ({
+      siteId,
+      direction: "Given" as const,
+      itemName: `Inside epoxy coating, OHT-0${index + 1}`,
+      category: "Painting and coating" as const,
+      partyName: "RWS & S Division, Berhampur",
+      startDate: back(20 - index * 3),
+      endDate: plusYears(back(20 - index * 3), 3),
+      terms: "Coating peeling or blistering repaired free for 3 years.",
+    })),
     {
       siteId: ids.sheragada.siteIds[0]!,
       direction: "Received" as const,

@@ -3,7 +3,8 @@ export type InventoryMovementType =
   | "Issue/Consumption"
   | "Return to Store"
   | "Wastage"
-  | "Damage";
+  | "Damage"
+  | "Return to Supplier";
 export type InventoryDirection = "Inbound" | "Outbound";
 
 const quantityPattern = /^(\d{1,11})(?:\.(\d{1,3}))?$/;

@@ -41,7 +41,6 @@ describe("client seed", () => {
     });
     const boss = await callerForUserId(admin!.id);
     const first = await runClientSeed("sameer");
-    expect(first.logins.map((login) => login.username)).toEqual(["sipun.gouda", "accounts.sample"]);
     // Running again adds nothing.
     expect((await runClientSeed("sameer")).notes).toEqual([]);
 
@@ -84,6 +83,23 @@ describe("client seed", () => {
     // The drawing reader and contract expert are offered.
     expect((await boss.jp.assistant.status()).available).toBeDefined();
 
+    // Every role has a login and work; leave and returns exist.
+    expect(first.logins.map((login) => login.username)).toEqual([
+      "sipun.gouda",
+      "accounts.sample",
+      "director.sample",
+      "admin.sample",
+      "pm.sample",
+      "engineer.sample",
+      "store.sample",
+      "auditor.sample",
+    ]);
+    const leave = await boss.jp.leave.list({ scope: "review" });
+    expect(leave.rows.length).toBe(3);
+    const tank = sites.find((site) => site.code === "SHG-OHT01")!;
+    const returns = await boss.jp.purchaseReturns.list({ siteId: tank.id });
+    expect(returns.map((row) => row.status).sort()).toEqual(["Settled", "Submitted"]);
+
     // One step removes every SAMPLE record; real people, suppliers, sites and logins stay.
     const organizationId = aska.organizationId;
     const before = await boss.jp.sampleData.status({ organizationId });
@@ -103,6 +119,11 @@ describe("client seed", () => {
       expect(vendors).toContain(name);
     expect((await boss.jp.workspace.mySites()).length).toBe(11);
     const accounts = await boss.jp.accounts.list({ organizationId });
-    expect(accounts.map((row) => row.username).sort()).toEqual(["sameer", "sipun.gouda"]);
+    expect(
+      accounts
+        .filter((row) => row.membershipStatus === "Active")
+        .map((row) => row.username)
+        .sort(),
+    ).toEqual(["sameer", "sipun.gouda"]);
   }, 600_000);
 });

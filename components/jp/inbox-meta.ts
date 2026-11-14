@@ -18,6 +18,8 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "issue.verify": { icon: "verified", tone: "success" },
   "purchase.review": { icon: "shopping-cart", tone: "accent" },
   "warranty.expiring": { icon: "verified", tone: "warning" },
+  "leave.review": { icon: "event-busy", tone: "info" },
+  "return.review": { icon: "assignment-return", tone: "accent" },
   "subcontract.review": { icon: "engineering", tone: "accent" },
   "subcontract.check": { icon: "straighten", tone: "warning" },
   "payroll.review": { icon: "payments", tone: "accent" },

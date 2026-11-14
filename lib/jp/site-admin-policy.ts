@@ -106,7 +106,9 @@ export type InboxItem = {
     | "payroll.advance"
     | "accounts.due"
     | "worker.help"
-    | "warranty.expiring";
+    | "warranty.expiring"
+    | "leave.review"
+    | "return.review";
   title: string;
   detail: string;
   siteId: string;

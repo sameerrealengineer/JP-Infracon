@@ -871,6 +871,8 @@ export const inventoryMovements = mysqlTable(
       "Return to Store",
       "Wastage",
       "Damage",
+      // Added 14 Nov 2026 at the end: goods sent back to the supplier (purchase returns).
+      "Return to Supplier",
     ]).notNull(),
     direction: mysqlEnum("direction", ["Inbound", "Outbound"]).notNull(),
     quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
@@ -3259,3 +3261,111 @@ export const warrantyClaims = mysqlTable(
     warrantyIndex: index("warranty_claim_warranty_idx").on(table.warrantyId, table.status),
   }),
 );
+
+/**
+ * Leave applications: staff apply for themselves; a supervisor applies for a worker of their
+ * site. Someone above them (or with workforce review on the site) approves; approved worker
+ * leave shows as Leave in attendance.
+ */
+export const leaveRequests = mysqlTable(
+  "leave_requests",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    applicantUserId: int("applicantUserId").references(() => users.id, { onDelete: "restrict" }),
+    personId: varchar("personId", { length: 36 }).references(() => people.id, {
+      onDelete: "restrict",
+    }),
+    leaveType: mysqlEnum("leaveType", ["Casual", "Sick", "Earned", "Unpaid", "Other"]).notNull(),
+    fromDate: date("fromDate", { mode: "string" }).notNull(),
+    toDate: date("toDate", { mode: "string" }).notNull(),
+    /** Length in half days (a half day is 1). */
+    halfDays: int("halfDays").notNull(),
+    reason: text("reason").notNull(),
+    status: mysqlEnum("status", ["Pending", "Approved", "Rejected", "Cancelled"])
+      .default("Pending")
+      .notNull(),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewNote: text("reviewNote"),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    siteStatusIndex: index("leave_site_status_idx").on(table.siteId, table.status),
+    applicantIndex: index("leave_applicant_idx").on(table.applicantUserId, table.fromDate),
+  }),
+);
+
+/**
+ * Goods sent back to a supplier (damaged, wrong, excess) and how the supplier settled it:
+ * refund, credit note or replacement. Approval sends the stock out through a store movement.
+ */
+export const purchaseReturns = mysqlTable(
+  "purchase_returns",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    vendorId: varchar("vendorId", { length: 36 })
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+    purchaseOrderId: varchar("purchaseOrderId", { length: 36 }).references(
+      () => purchaseOrders.id,
+      { onDelete: "restrict" },
+    ),
+    returnNumber: varchar("returnNumber", { length: 40 }).notNull().unique(),
+    returnDate: date("returnDate", { mode: "string" }).notNull(),
+    reason: text("reason").notNull(),
+    totalMinor: decimal("totalMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    status: mysqlEnum("status", ["Submitted", "Approved", "Rejected", "Settled", "Cancelled"])
+      .default("Submitted")
+      .notNull(),
+    settlement: mysqlEnum("settlement", ["Refund", "Credit note", "Replacement"]),
+    settledMinor: decimal("settledMinor", { precision: 18, scale: 0, mode: "string" }),
+    settlementReference: varchar("settlementReference", { length: 120 }),
+    settledOn: date("settledOn", { mode: "string" }),
+    settledBy: int("settledBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedBy: int("reviewedBy").references(() => users.id, { onDelete: "restrict" }),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewReason: text("reviewReason"),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    siteStatusIndex: index("preturn_site_status_idx").on(table.siteId, table.status),
+  }),
+);
+
+export const purchaseReturnLines = mysqlTable("purchase_return_lines", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  returnId: varchar("returnId", { length: 36 })
+    .notNull()
+    .references(() => purchaseReturns.id, { onDelete: "restrict" }),
+  materialItemId: varchar("materialItemId", { length: 36 }).references(() => materialItems.id, {
+    onDelete: "restrict",
+  }),
+  description: varchar("description", { length: 240 }).notNull(),
+  unitCode: varchar("unitCode", { length: 32 }).notNull(),
+  quantity: decimal("quantity", { precision: 14, scale: 3 }).notNull(),
+  rateMinor: decimal("rateMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+  movementId: varchar("movementId", { length: 36 }),
+});

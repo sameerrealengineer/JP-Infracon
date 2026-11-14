@@ -12,6 +12,7 @@ import { asc, eq, inArray, like } from "drizzle-orm";
 import {
   auditEvents,
   organizationMemberships,
+  leaveRequests,
   projects,
   sampleRecords,
   warranties,
@@ -30,6 +31,7 @@ import {
   sheragadaWork,
 } from "./more-data";
 import { addRealPhotos, addSampleMedia, addSampleWarranties } from "./media-data";
+import { seedRolesAndRequests } from "./roles-data";
 import { newRows, registerSample, snapshot } from "./sample-registry";
 
 /** Tables whose every row is real (company structure, people, suppliers, settings). */
@@ -226,6 +228,25 @@ export async function runClientSeed(superAdminUsername: string) {
     await addSampleWarranties(boss, ids, vendorsBySite, new Date().toISOString().slice(0, 10));
     notes.push(
       `${await registerSample(db, newRows(before, await snapshot(db)))} warranty rows listed as SAMPLE.`,
+    );
+  }
+  // 6. A login for every other role with their work, leave and returns (once).
+  const [anyLeave] = await db.select({ id: leaveRequests.id }).from(leaveRequests).limit(1);
+  const sipunId = await userIdByUsername("sipun.gouda");
+  const accountsId = await userIdByUsername("accounts.sample");
+  if (kalyan && water && !anyLeave && sipunId && accountsId) {
+    const before = await snapshot(db);
+    const result = await seedRolesAndRequests({
+      db,
+      boss,
+      sipun: await callerForUserId(sipunId),
+      acc: await callerForUserId(accountsId),
+      callerFor: callerForUserId,
+      today: new Date().toISOString().slice(0, 10),
+    });
+    logins = [...logins, ...result.logins];
+    notes.push(
+      `${await registerSample(db, newRows(before, await snapshot(db)))} role, leave and return rows listed as SAMPLE.`,
     );
   }
   return { notes, logins };

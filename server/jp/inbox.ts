@@ -21,6 +21,9 @@ import {
   vendors,
   workTasks,
   warranties,
+  leaveRequests,
+  purchaseReturns,
+  users,
 } from "../../drizzle/schema";
 import type { getDb } from "../db";
 import { formatMinorAsRupees } from "../../lib/jp/finance-domain";
@@ -190,6 +193,84 @@ export async function buildInbox(
         siteName: row.siteName,
         occurredAt: iso(row.at),
         route: `/po?siteId=${row.siteId}&id=${row.id}`,
+        severity: "normal",
+      });
+  });
+  await guard("leave", async () => {
+    const siteIds = sitesWith(capabilities, "workforce.review");
+    if (!siteIds.length || (options.inboxVersion ?? 1) < 2) return;
+    const rows = await db
+      .select({
+        id: leaveRequests.id,
+        fromDate: leaveRequests.fromDate,
+        toDate: leaveRequests.toDate,
+        leaveType: leaveRequests.leaveType,
+        createdBy: leaveRequests.createdBy,
+        applicantUserId: leaveRequests.applicantUserId,
+        at: leaveRequests.createdAt,
+        siteId: leaveRequests.siteId,
+        siteName: sites.name,
+        userName: users.name,
+        personName: people.fullName,
+      })
+      .from(leaveRequests)
+      .innerJoin(sites, eq(leaveRequests.siteId, sites.id))
+      .leftJoin(users, eq(leaveRequests.applicantUserId, users.id))
+      .leftJoin(people, eq(leaveRequests.personId, people.id))
+      .where(and(inArray(leaveRequests.siteId, siteIds), eq(leaveRequests.status, "Pending")))
+      .orderBy(asc(leaveRequests.createdAt))
+      .limit(LIMIT);
+    for (const row of rows) {
+      if (row.createdBy === userId || row.applicantUserId === userId) continue;
+      items.push({
+        id: `leave-${row.id}`,
+        kind: "leave.review",
+        title: "Leave waiting for approval",
+        detail: `${row.personName ?? row.userName ?? ""} · ${row.leaveType} · ${row.fromDate} → ${row.toDate}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: "/leave",
+        severity: "normal",
+      });
+    }
+  });
+  await guard("returns", async () => {
+    const siteIds = sitesWith(capabilities, "purchase.approve");
+    if (!siteIds.length || (options.inboxVersion ?? 1) < 2) return;
+    const rows = await db
+      .select({
+        id: purchaseReturns.id,
+        returnNumber: purchaseReturns.returnNumber,
+        totalMinor: purchaseReturns.totalMinor,
+        createdBy: purchaseReturns.createdBy,
+        at: purchaseReturns.createdAt,
+        siteId: purchaseReturns.siteId,
+        siteName: sites.name,
+        vendorName: vendors.legalName,
+      })
+      .from(purchaseReturns)
+      .innerJoin(sites, eq(purchaseReturns.siteId, sites.id))
+      .innerJoin(vendors, eq(purchaseReturns.vendorId, vendors.id))
+      .where(
+        and(
+          inArray(purchaseReturns.siteId, siteIds),
+          eq(purchaseReturns.status, "Submitted"),
+          ne(purchaseReturns.createdBy, userId),
+        ),
+      )
+      .orderBy(asc(purchaseReturns.createdAt))
+      .limit(LIMIT);
+    for (const row of rows)
+      items.push({
+        id: `return-${row.id}`,
+        kind: "return.review",
+        title: "Return to supplier waiting for approval",
+        detail: `${row.returnNumber} · ${row.vendorName} · ${formatMinorAsRupees(row.totalMinor)}`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: iso(row.at),
+        route: `/returns?siteId=${row.siteId}`,
         severity: "normal",
       });
   });
