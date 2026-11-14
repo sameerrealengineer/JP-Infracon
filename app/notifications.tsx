@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
-import { inboxIcon } from "@/components/jp/inbox-meta";
+import { inboxMeta } from "@/components/jp/inbox-meta";
 import {
   AppHeader,
   Card,
@@ -102,8 +102,8 @@ export default function NotificationsScreen() {
                 <View key={item.id}>
                   {index > 0 ? <Divider /> : null}
                   <ListRow
-                    icon={inboxIcon[item.kind].icon}
-                    tone={inboxIcon[item.kind].tone}
+                    icon={inboxMeta(item.kind).icon}
+                    tone={inboxMeta(item.kind).tone}
                     title={item.title}
                     detail={`${item.siteName} · ${item.detail} · ${formatDateTime(item.occurredAt)}`}
                     onPress={() => router.push(siteScopedRoute(item.route, item.siteId) as never)}

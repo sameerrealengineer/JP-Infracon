@@ -145,7 +145,7 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
   const held = new Set([...sitePermissions.values()].flatMap((set) => [...set]));
   const [cards, inbox] = await Promise.all([
     placeCards(user).catch(() => null),
-    buildInbox(db, user.id, capabilities).catch(() => null),
+    buildInbox(db, user.id, capabilities, { inboxVersion: 2 }).catch(() => null),
   ]);
   const defaultSiteId =
     (input.siteId && sitePermissions.has(input.siteId) ? input.siteId : null) ??

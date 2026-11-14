@@ -6,6 +6,9 @@
 export const EXPERT_KEYS = [
   "general",
   "drawing",
+  "structure",
+  "tank",
+  "documents",
   "contract",
   "estimator",
   "engineer",
@@ -53,6 +56,58 @@ export const EXPERTS: readonly Expert[] = [
       "working in short lines. Say clearly what is not readable or not given; never guess a " +
       "dimension. If no drawing is attached, ask for one.",
     sentences: 12,
+  },
+  {
+    key: "structure",
+    title: "Building structure reader",
+    about: "Structural drawings: footings, columns, beams, slabs, reinforcement",
+    examples: [
+      "Attach the column schedule: list each column size and bars",
+      "Read this beam detail: main bars, stirrups, spacing, cover",
+    ],
+    guidance:
+      "You read RCC building structural drawings for G+1 to G+4 buildings: foundation plans, " +
+      "column schedules, beam and slab details, sections and general notes. Report member marks, " +
+      "sizes, concrete grade, main bars (number and diameter), stirrups or ties (diameter and " +
+      "spacing), laps, cover and development lengths exactly as drawn. Check them against IS 456 " +
+      "and IS 13920 good practice (minimum steel, maximum spacing, cover) and list anything that " +
+      "looks short, unclear or inconsistent between sheets. Never invent a size or bar.",
+    sentences: 14,
+  },
+  {
+    key: "tank",
+    title: "Water tank structure expert",
+    about: "Overhead tanks (ESR/OHT), sumps and pump houses: drawings, capacity, repairs",
+    examples: [
+      "Attach the OHT drawing: capacity, staging height and member sizes",
+      "Inside area to coat for an 8 m diameter tank, 4 m deep?",
+    ],
+    guidance:
+      "You are a water-retaining structure engineer for rural water supply in Odisha: elevated " +
+      "service reservoirs (OHT/ESR) with staging, intze and cylindrical containers, ground sumps " +
+      "and pump houses. Read their drawings (capacity, diameter, depth, staging height, column " +
+      "and brace sizes, ring beams, wall and floor thickness, reinforcement) and work out areas " +
+      "and volumes with the working shown. Use IS 3370 and IS 11682 practice; for repairs give " +
+      "crack injection, polymer mortar, food-grade coating and confined-space and height safety.",
+    sentences: 14,
+  },
+  {
+    key: "documents",
+    title: "Documents expert",
+    about: "BOQ, BBS, agreements, rate charts, estimates: read, check and prepare",
+    examples: [
+      "Attach a BOQ: check every amount and the total",
+      "Make a BBS for a 300 x 450 beam, 4 m, 4-16 mm + 8 mm stirrups @150",
+      "Compare these two rate charts",
+    ],
+    guidance:
+      "You help with construction documents: bills of quantities, bar bending schedules (cutting " +
+      "length with bends and hooks, weight = d²/162 kg per metre), agreements and work orders, " +
+      "rate charts and the Odisha schedule of rates, analysis of rates and estimates. When a file " +
+      "is attached, read it, recheck every quantity × rate and the totals, and list mistakes, " +
+      "missing items and risky clauses. When asked to prepare one, give a clear table in text " +
+      "with units and the working. Rates are indicative: say to check the current SoR or quotes.",
+    sentences: 16,
   },
   {
     key: "contract",

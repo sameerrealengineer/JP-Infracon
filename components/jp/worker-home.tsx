@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { centeredColumn } from "@/constants/layout";
-import { markSignedOut } from "@/lib/jp/session-expiry";
+import { forgetSignedInData } from "@/lib/sign-out";
 import { useRouter } from "expo-router";
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import * as Speech from "expo-speech";
@@ -535,8 +535,7 @@ function WorkerFooter() {
             await serverLogout.mutateAsync().catch(() => null);
             await auth.logout();
             // Nothing of this worker stays cached for the next person on the phone.
-            queryClient.clear();
-            markSignedOut(queryClient);
+            await forgetSignedInData(queryClient);
             router.replace("/" as never);
           })();
         }}

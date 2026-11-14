@@ -36,7 +36,7 @@ import { useConnectivity, useSyncQueue } from "@/hooks/use-connectivity";
 import { useWorkspace } from "@/hooks/use-workspace";
 import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
-import { inboxIcon } from "@/components/jp/inbox-meta";
+import { inboxMeta } from "@/components/jp/inbox-meta";
 import { delegationBundles, timeLeft } from "@/lib/jp/delegation-policy";
 import { badgeCounts, quickActions, visibleGroups, type HomeModule } from "@/lib/jp/home-layout";
 import { trpc } from "@/lib/trpc";
@@ -310,8 +310,8 @@ export default function HomeScreen() {
                 style={index > 0 ? [styles.rowDivider, { borderTopColor: colors.border }] : null}
               >
                 <ListRow
-                  icon={inboxIcon[item.kind].icon}
-                  tone={inboxIcon[item.kind].tone}
+                  icon={inboxMeta(item.kind).icon}
+                  tone={inboxMeta(item.kind).tone}
                   title={item.title}
                   detail={`${item.siteName} · ${item.detail}`}
                   onPress={() => router.push(item.route as never)}

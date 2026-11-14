@@ -71,6 +71,16 @@ describe("client seed", () => {
     expect(events.length).toBeGreaterThan(0);
     const inbox = await boss.jp.workspace.inbox();
     expect(inbox.items.some((item) => item.kind === "warranty.expiring")).toBe(true);
+    // Apps before 1.5.15 crash on an inbox kind they do not know: they never get the new one.
+    const { appRouter } = await import("../../server/routers");
+    const [adminRow] = await db.select().from(users).limit(1);
+    const oldApp = appRouter.createCaller({
+      req: { headers: { "x-jp-client-platform": "android" }, ip: "127.0.0.1", socket: {} },
+      res: { cookie: () => undefined, clearCookie: () => undefined },
+      user: { ...adminRow!, mustChangePassword: false },
+    } as never);
+    const oldInbox = await oldApp.jp.workspace.inbox();
+    expect(oldInbox.items.some((item) => item.kind === "warranty.expiring")).toBe(false);
     // The drawing reader and contract expert are offered.
     expect((await boss.jp.assistant.status()).available).toBeDefined();
 

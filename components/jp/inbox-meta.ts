@@ -26,3 +26,8 @@ export const inboxIcon: Record<InboxItem["kind"], { icon: IconName; tone: Tone }
   "accounts.due": { icon: "account-balance", tone: "error" },
   "worker.help": { icon: "support-agent", tone: "warning" },
 };
+
+/** Icon and colour for an inbox item; a kind this app version does not know gets a plain bell. */
+export function inboxMeta(kind: string): { icon: IconName; tone: Tone } {
+  return inboxIcon[kind as InboxItem["kind"]] ?? { icon: "notifications", tone: "info" };
+}

@@ -48,7 +48,16 @@ function iso(value: Date | string | null | undefined) {
  * Work waiting on the caller, derived live from persisted records in their authorised scope.
  * Nothing here is stored: opening an item always rechecks access on its own screen.
  */
-export async function buildInbox(db: Db, userId: number, capabilities: Capability[]) {
+/**
+ * `inboxVersion`: what the asking app understands. Apps before 1.5.15 crash on an item kind
+ * they do not know, so newer kinds (warranty reminders) go only to apps that say version 2.
+ */
+export async function buildInbox(
+  db: Db,
+  userId: number,
+  capabilities: Capability[],
+  options: { inboxVersion?: number } = {},
+) {
   const items: InboxItem[] = [];
   const allSiteIds = capabilities.map((capability) => capability.siteId);
   if (!allSiteIds.length)
@@ -186,7 +195,7 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
   });
   await guard("warranties", async () => {
     const siteIds = sitesWith(capabilities, "document.upload");
-    if (!siteIds.length) return;
+    if (!siteIds.length || (options.inboxVersion ?? 1) < 2) return;
     const soon = new Date(Date.parse(`${today}T00:00:00Z`) + 30 * 86_400_000)
       .toISOString()
       .slice(0, 10);

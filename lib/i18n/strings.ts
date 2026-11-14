@@ -2197,6 +2197,28 @@ export const hi: Dictionary = {
   "e.g. Transferred to another site": "जैसे: दूसरी साइट पर भेजा",
   "e.g. Trench edge not barricaded": "जैसे: खाई के किनारे घेरा नहीं",
   "e.g. Work suspended for monsoon": "जैसे: बारिश के लिए काम रुका",
+  // AI experts 2
+  "Building structure reader": "बिल्डिंग स्ट्रक्चर रीडर",
+  "Structural drawings: footings, columns, beams, slabs, reinforcement":
+    "स्ट्रक्चरल ड्रॉइंग: फ़ुटिंग, कॉलम, बीम, स्लैब, सरिया",
+  "Water tank structure expert": "पानी टंकी स्ट्रक्चर विशेषज्ञ",
+  "Overhead tanks (ESR/OHT), sumps and pump houses: drawings, capacity, repairs":
+    "ओवरहेड टंकी (ESR/OHT), सम्प और पंप हाउस: ड्रॉइंग, क्षमता, मरम्मत",
+  "Documents expert": "दस्तावेज़ विशेषज्ञ",
+  "BOQ, BBS, agreements, rate charts, estimates: read, check and prepare":
+    "BOQ, BBS, एग्रीमेंट, रेट चार्ट, एस्टीमेट: पढ़ें, जाँचें और बनाएँ",
+  "Attach the column schedule: list each column size and bars":
+    "कॉलम शेड्यूल लगाएँ: हर कॉलम का साइज़ और सरिया बताओ",
+  "Read this beam detail: main bars, stirrups, spacing, cover":
+    "इस बीम डिटेल को पढ़ो: मुख्य सरिया, रिंग, दूरी, कवर",
+  "Attach the OHT drawing: capacity, staging height and member sizes":
+    "OHT ड्रॉइंग लगाएँ: क्षमता, स्टेजिंग ऊँचाई और सदस्यों के साइज़",
+  "Inside area to coat for an 8 m diameter tank, 4 m deep?":
+    "8 मी व्यास, 4 मी गहरी टंकी के अंदर कितना क्षेत्र कोट होगा?",
+  "Attach a BOQ: check every amount and the total": "BOQ लगाएँ: हर रकम और कुल जाँचो",
+  "Make a BBS for a 300 x 450 beam, 4 m, 4-16 mm + 8 mm stirrups @150":
+    "300 x 450 बीम, 4 मी, 4-16 मिमी + 8 मिमी रिंग @150 का BBS बनाओ",
+  "Compare these two rate charts": "इन दो रेट चार्ट की तुलना करो",
 };
 
 export const or: Dictionary = {
@@ -4372,6 +4394,28 @@ export const or: Dictionary = {
   "e.g. Transferred to another site": "ଯେମିତି: ଅନ୍ୟ ସାଇଟକୁ ପଠାଗଲା",
   "e.g. Trench edge not barricaded": "ଯେମିତି: ଖାଇ ଧାର ଘେରାଯାଇନାହିଁ",
   "e.g. Work suspended for monsoon": "ଯେମିତି: ବର୍ଷା ପାଇଁ କାମ ବନ୍ଦ",
+  // AI experts 2
+  "Building structure reader": "ବିଲ୍ଡିଂ ଷ୍ଟ୍ରକଚର ରିଡର",
+  "Structural drawings: footings, columns, beams, slabs, reinforcement":
+    "ଷ୍ଟ୍ରକଚରାଲ୍ ଡ୍ରଇଂ: ଫୁଟିଂ, କଲମ୍, ବିମ୍, ସ୍ଲାବ୍, ଛଡ",
+  "Water tank structure expert": "ପାଣି ଟାଙ୍କି ଷ୍ଟ୍ରକଚର ବିଶେଷଜ୍ଞ",
+  "Overhead tanks (ESR/OHT), sumps and pump houses: drawings, capacity, repairs":
+    "ଓଭରହେଡ୍ ଟାଙ୍କି (ESR/OHT), ସମ୍ପ ଓ ପମ୍ପ ହାଉସ୍: ଡ୍ରଇଂ, କ୍ଷମତା, ମରାମତି",
+  "Documents expert": "ଡକ୍ୟୁମେଣ୍ଟ ବିଶେଷଜ୍ଞ",
+  "BOQ, BBS, agreements, rate charts, estimates: read, check and prepare":
+    "BOQ, BBS, ଚୁକ୍ତିନାମା, ଦର ତାଲିକା, ଆକଳନ: ପଢନ୍ତୁ, ଯାଞ୍ଚ ଓ ତିଆରି କରନ୍ତୁ",
+  "Attach the column schedule: list each column size and bars":
+    "କଲମ୍ ସିଡ୍ୟୁଲ୍ ଯୋଡନ୍ତୁ: ପ୍ରତି କଲମର ସାଇଜ୍ ଓ ଛଡ କୁହ",
+  "Read this beam detail: main bars, stirrups, spacing, cover":
+    "ଏହି ବିମ୍ ଡିଟେଲ୍ ପଢ: ମୁଖ୍ୟ ଛଡ, ରିଙ୍ଗ, ଦୂରତା, କଭର",
+  "Attach the OHT drawing: capacity, staging height and member sizes":
+    "OHT ଡ୍ରଇଂ ଯୋଡନ୍ତୁ: କ୍ଷମତା, ଷ୍ଟେଜିଂ ଉଚ୍ଚତା ଓ ସଦସ୍ୟ ସାଇଜ୍",
+  "Inside area to coat for an 8 m diameter tank, 4 m deep?":
+    "8 ମି ବ୍ୟାସ, 4 ମି ଗଭୀର ଟାଙ୍କି ଭିତରେ କେତେ କ୍ଷେତ୍ର କୋଟ୍ ହେବ?",
+  "Attach a BOQ: check every amount and the total": "BOQ ଯୋଡନ୍ତୁ: ପ୍ରତି ରାଶି ଓ ମୋଟ ଯାଞ୍ଚ କର",
+  "Make a BBS for a 300 x 450 beam, 4 m, 4-16 mm + 8 mm stirrups @150":
+    "300 x 450 ବିମ୍, 4 ମି, 4-16 ମିମି + 8 ମିମି ରିଙ୍ଗ @150 ର BBS ତିଆରି କର",
+  "Compare these two rate charts": "ଏହି ଦୁଇ ଦର ତାଲିକା ତୁଳନା କର",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

@@ -220,7 +220,10 @@ export const jpRouter = router({
       assertActiveAccount(ctx.user);
       const db = requireDb(await (await import("../db")).getDb());
       const capabilities = await siteCapabilities(ctx.user, await getAccessibleSites(ctx.user));
-      return buildInbox(db, ctx.user.id, capabilities);
+      const version = Number(ctx.req.headers["x-jp-inbox"] ?? 1);
+      return buildInbox(db, ctx.user.id, capabilities, {
+        inboxVersion: Number.isFinite(version) ? version : 1,
+      });
     }),
 
     mySites: protectedProcedure.query(async ({ ctx }) => getAccessibleSites(ctx.user)),

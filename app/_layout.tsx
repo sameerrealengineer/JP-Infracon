@@ -2,6 +2,7 @@ import "@/global.css";
 import "@/lib/geofence-task";
 import { QueryCache, QueryClient, focusManager } from "@tanstack/react-query";
 import { isSignedOutError, markSignedOut } from "@/lib/jp/session-expiry";
+import { QUERY_CACHE_KEY } from "@/lib/sign-out";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -165,7 +166,10 @@ export default function RootLayout() {
       // person to the sign-in screen instead of a "Please login" error on every card.
       queryCache: new QueryCache({
         onError: (error) => {
-          if (isSignedOutError(error)) markSignedOut(client);
+          if (isSignedOutError(error)) {
+            markSignedOut(client);
+            void AsyncStorage.removeItem(QUERY_CACHE_KEY).catch(() => undefined);
+          }
         },
       }),
       defaultOptions: {
@@ -177,6 +181,10 @@ export default function RootLayout() {
           gcTime: 7 * 24 * 60 * 60 * 1000,
           // Short: screens refetch when opened, so they show what others just changed.
           staleTime: 5_000,
+          // Live: open screens fetch again every 45 s while the app is in front (not in the
+          // background), so approvals and new records from others appear without a refresh.
+          refetchInterval: 45_000,
+          refetchIntervalInBackground: false,
           // Never retry a signed-out refusal; it will not change.
           retry: (count, error) => !isSignedOutError(error) && count < 1,
         },
@@ -199,7 +207,7 @@ export default function RootLayout() {
   const [persister] = useState(() =>
     createAsyncStoragePersister({
       storage: AsyncStorage,
-      key: "jp-infracon.query-cache.v1",
+      key: QUERY_CACHE_KEY,
       serialize: (data) => superjsonStringify(data),
       deserialize: (data) => superjsonParse(data),
       throttleTime: 2000,
@@ -230,9 +238,12 @@ export default function RootLayout() {
             buster: "jp-1",
             dehydrateOptions: {
               // Only successful reads are kept; bootstrap/setup state is always fetched fresh.
+              // The account check is never saved: after sign-out, a reopened app must ask the
+              // server who is signed in instead of showing the last person's screens.
               shouldDehydrateQuery: (query) =>
                 query.state.status === "success" &&
-                !JSON.stringify(query.queryKey).includes("bootstrapStatus"),
+                !JSON.stringify(query.queryKey).includes("bootstrapStatus") &&
+                !JSON.stringify(query.queryKey).includes('"auth","me"'),
             },
           }}
         >

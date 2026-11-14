@@ -104,7 +104,7 @@ export function createCorsMiddleware(
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
     res.header(
       "Access-Control-Allow-Headers",
-      "Content-Type, Accept, Authorization, X-Requested-With, X-JP-Client-Platform",
+      "Content-Type, Accept, Authorization, X-Requested-With, X-JP-Client-Platform, X-JP-Inbox",
     );
     res.header("Access-Control-Allow-Credentials", "true");
     if (req.method === "OPTIONS") {
