@@ -19,6 +19,7 @@ import {
   siteAssignments,
   sites,
   userCredentials,
+  users,
 } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { callerForUserId, userIdByUsername } from "./caller";
@@ -32,7 +33,7 @@ import {
 } from "./more-data";
 import { addRealPhotos, addSampleMedia, addSampleWarranties } from "./media-data";
 import { seedRolesAndRequests } from "./roles-data";
-import { newRows, registerSample, snapshot } from "./sample-registry";
+import { newRows, registerSample, rowsCreatedSince, snapshot } from "./sample-registry";
 
 /** Tables whose every row is real (company structure, people, suppliers, settings). */
 const REAL_TABLES = new Set([
@@ -235,8 +236,16 @@ export async function runClientSeed(superAdminUsername: string) {
   const sipunId = await userIdByUsername("sipun.gouda");
   const accountsId = await userIdByUsername("accounts.sample");
   if (kalyan && water && !anyLeave && sipunId && accountsId) {
+    // An earlier run may have stopped after making the role logins: list its rows too.
+    const [earlier] = await db
+      .select({ createdAt: users.createdAt })
+      .from(users)
+      .innerJoin(userCredentials, eq(userCredentials.userId, users.id))
+      .where(eq(userCredentials.username, "director.sample"))
+      .limit(1);
     const before = await snapshot(db);
     const result = await seedRolesAndRequests({
+      userIdOf: userIdByUsername,
       db,
       boss,
       sipun: await callerForUserId(sipunId),
@@ -245,9 +254,9 @@ export async function runClientSeed(superAdminUsername: string) {
       today: new Date().toISOString().slice(0, 10),
     });
     logins = [...logins, ...result.logins];
-    notes.push(
-      `${await registerSample(db, newRows(before, await snapshot(db)))} role, leave and return rows listed as SAMPLE.`,
-    );
+    const added = newRows(before, await snapshot(db));
+    if (earlier) added.push(...(await rowsCreatedSince(db, new Date(earlier.createdAt))));
+    notes.push(`${await registerSample(db, added)} role, leave and return rows listed as SAMPLE.`);
   }
   return { notes, logins };
 }

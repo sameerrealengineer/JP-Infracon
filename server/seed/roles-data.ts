@@ -29,6 +29,7 @@ function dayFrom(today: string, offset: number): string {
 }
 
 export async function seedRolesAndRequests(ctx: {
+  userIdOf: (username: string) => Promise<number | null>;
   db: Db;
   boss: SeedCaller;
   sipun: SeedCaller;
@@ -36,7 +37,7 @@ export async function seedRolesAndRequests(ctx: {
   callerFor: (userId: number) => Promise<SeedCaller>;
   today: string;
 }) {
-  const { db, boss, sipun, acc, callerFor, today } = ctx;
+  const { db, boss, sipun, acc, callerFor, today, userIdOf } = ctx;
   const day = (offset: number) => dayFrom(today, offset);
   const [company] = await boss.jp.accounts.options();
   const organizationId = company!.id;
@@ -60,6 +61,12 @@ export async function seedRolesAndRequests(ctx: {
     ["storekeeper", "Storekeeper (Sample)", "store.sample", [first]],
     ["auditor", "Auditor (Sample)", "auditor.sample", tankIds],
   ] as const) {
+    // An earlier, interrupted run may have made it already: reuse it.
+    const existing = await userIdOf(username);
+    if (existing) {
+      made[role] = await callerFor(existing);
+      continue;
+    }
     const account = await boss.jp.accounts.create({
       organizationId,
       displayName: name,
@@ -124,7 +131,12 @@ export async function seedRolesAndRequests(ctx: {
     .from(materialItems)
     .where(eq(materialItems.itemCode, "PNT-EXT-WC"))
     .limit(1);
-  if (weather) {
+  const [alreadyIssued] = await db
+    .select({ id: inventoryMovements.id })
+    .from(inventoryMovements)
+    .where(eq(inventoryMovements.reason, `${S}Weather coat issued for OHT-04`))
+    .limit(1);
+  if (weather && !alreadyIssued) {
     const issued = await store.jp.inventory.submitMovement({
       siteId: first,
       materialItemId: weather.id,
@@ -143,16 +155,19 @@ export async function seedRolesAndRequests(ctx: {
   // ── Leave ─────────────────────────────────────────────────────────────────────────────────
   const people = (await boss.jp.people.search({ query: "" })).people;
   const person = (name: string) => people.find((row) => row.fullName.startsWith(name))!.id;
-  await sipun.jp.leave.request({
-    siteId: first,
-    leaveType: "Casual",
-    fromDate: day(5),
-    toDate: day(6),
-    halfDay: false,
-    reason: `${S}Family function at home`,
-    clientMutationId: id(),
-  });
-  const musha = await sipun.jp.leave.request({
+  // Sipun applies on whichever site he is on now; workers' leave is applied by the engineer.
+  const sipunSite = (await sipun.jp.workspace.mySites())[0];
+  if (sipunSite)
+    await sipun.jp.leave.request({
+      siteId: sipunSite.id,
+      leaveType: "Casual",
+      fromDate: day(5),
+      toDate: day(6),
+      halfDay: false,
+      reason: `${S}Family function at home`,
+      clientMutationId: id(),
+    });
+  const musha = await engineer.jp.leave.request({
     siteId: tankIds[3]!,
     personId: person("Musha"),
     leaveType: "Sick",
@@ -163,7 +178,7 @@ export async function seedRolesAndRequests(ctx: {
     clientMutationId: id(),
   });
   await pm.jp.leave.review({ leaveId: musha.id, decision: "Approved", note: "Get well soon" });
-  await sipun.jp.leave.request({
+  await engineer.jp.leave.request({
     siteId: tankIds[3]!,
     personId: person("Rabindra"),
     leaveType: "Casual",

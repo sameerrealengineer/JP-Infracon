@@ -8,7 +8,7 @@
  * (for example a real payment against a sample bill) is kept and reported, never forced out.
  */
 import { randomUUID } from "node:crypto";
-import { inArray, is } from "drizzle-orm";
+import { gte, inArray, is } from "drizzle-orm";
 import { MySqlTable, getTableConfig, type MySqlColumn } from "drizzle-orm/mysql-core";
 import * as schema from "../../drizzle/schema";
 
@@ -245,4 +245,23 @@ export async function removeSample(db: Db) {
     kept: Object.values(kept).reduce((sum, count) => sum + count, 0),
     keptByTable: kept,
   };
+}
+
+/**
+ * Business rows made at or after `since` (tables with a createdAt column). Used to list the
+ * rows of an earlier seed run that stopped before it could list them.
+ */
+export async function rowsCreatedSince(db: Db, since: Date) {
+  const rows: { tableName: string; rowId: string }[] = [];
+  for (const info of businessTables()) {
+    const config = getTableConfig(info.table);
+    const created = config.columns.find((column) => column.name === "createdAt");
+    if (!created) continue;
+    const found: { id: unknown }[] = await db
+      .select({ id: info.pk })
+      .from(info.table)
+      .where(gte(created, since));
+    for (const row of found) rows.push({ tableName: info.name, rowId: String(row.id) });
+  }
+  return rows;
 }
