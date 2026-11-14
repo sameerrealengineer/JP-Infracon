@@ -69,6 +69,8 @@ describe("client seed", () => {
     const month = new Date().toISOString().slice(0, 7);
     const events = await boss.jp.calendar.range({ from: `${month}-01`, to: `${month}-28` });
     expect(events.length).toBeGreaterThan(0);
+    const inbox = await boss.jp.workspace.inbox();
+    expect(inbox.items.some((item) => item.kind === "warranty.expiring")).toBe(true);
     // The drawing reader and contract expert are offered.
     expect((await boss.jp.assistant.status()).available).toBeDefined();
 

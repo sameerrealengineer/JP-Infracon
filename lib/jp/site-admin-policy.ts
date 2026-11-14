@@ -105,7 +105,8 @@ export type InboxItem = {
     | "payroll.profile"
     | "payroll.advance"
     | "accounts.due"
-    | "worker.help";
+    | "worker.help"
+    | "warranty.expiring";
   title: string;
   detail: string;
   siteId: string;

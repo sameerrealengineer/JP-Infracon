@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { WorkerAppCard } from "@/components/jp/worker-app-card";
+import { AddToSite } from "@/components/jp/add-to-site";
 import { Avatar } from "@/components/jp/avatar";
 import {
   AppHeader,
@@ -323,11 +324,16 @@ export default function PersonScreen() {
                 <WorkerAppCard siteId={data.sites[0].siteId} personId={personId} />
               ) : null}
               <SectionHeader title={t("Work by site")} />
+              <AddToSite
+                personId={personId}
+                currentSiteIds={data.sites.map((site) => site.siteId)}
+                onAdded={() => void utils.jp.people.history.invalidate({ personId })}
+              />
               {data.sites.length === 0 ? (
                 <EmptyState
                   icon="location-off"
-                  title="No site work yet"
-                  detail="Sites appear once this person is assigned or given a rate."
+                  title={t("No site work yet")}
+                  detail={t("Sites appear once this person is assigned or given a rate.")}
                 />
               ) : (
                 data.sites.map((site) => (

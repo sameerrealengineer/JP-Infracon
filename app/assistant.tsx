@@ -595,8 +595,14 @@ export default function AssistantScreen() {
 const styles = StyleSheet.create({
   expertAbout: { fontSize: 12, lineHeight: 17, marginTop: -4, marginBottom: 8 },
   expertExamples: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
-  expertExample: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
-  expertExampleText: { fontSize: 12, fontWeight: "600" },
+  expertExample: {
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    maxWidth: "100%",
+  },
+  expertExampleText: { fontSize: 12, fontWeight: "600", flexShrink: 1 },
   flex: { flex: 1 },
   content: { paddingBottom: 24, gap: 10 },
   live: {

@@ -51,6 +51,15 @@ const enter = FadeInDown.duration(420).springify().damping(18).mass(0.8);
 export type IconName = ComponentProps<typeof MaterialIcons>["name"];
 export type Tone = "success" | "warning" | "error" | "info" | "accent";
 
+/**
+ * Shared components show their text in the chosen language. Text without a translation (or
+ * already translated, or made of data) is shown as it is.
+ */
+function useTx() {
+  const { t } = useT();
+  return (value: string | null | undefined) => (value ? t(value) : (value ?? ""));
+}
+
 export function useToneColor(tone: Tone) {
   const colors = useColors();
   return {
@@ -186,6 +195,7 @@ export function AppHeader({
   /** Off where the screen has its own assistant bar (home), so it is not shown twice. */
   showAssistant?: boolean;
 }) {
+  const tx = useTx();
   const router = useRouter();
   const colors = useColors();
   const { t } = useT();
@@ -274,13 +284,15 @@ export function AppHeader({
       </View>
       <View style={styles.headerCopy}>
         {eyebrow ? (
-          <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow.toUpperCase()}</Text>
+          <Text style={[styles.eyebrow, { color: colors.accent }]}>
+            {tx(eyebrow).toUpperCase()}
+          </Text>
         ) : null}
         <Text style={[styles.headerTitle, { color: colors.foreground }]} accessibilityRole="header">
-          {title}
+          {tx(title)}
         </Text>
         {subtitle ? (
-          <Text style={[styles.headerSubtitle, { color: colors.muted }]}>{subtitle}</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.muted }]}>{tx(subtitle)}</Text>
         ) : null}
       </View>
     </View>
@@ -307,10 +319,11 @@ export function HeroCard({ children }: { children: ReactNode }) {
 }
 
 export function HeroStat({ value, label }: { value: string; label: string }) {
+  const tx = useTx();
   return (
     <View style={styles.heroStat}>
       <Text style={styles.heroStatValue}>{value}</Text>
-      <Text style={styles.heroStatLabel}>{label}</Text>
+      <Text style={styles.heroStatLabel}>{tx(label)}</Text>
     </View>
   );
 }
@@ -328,6 +341,7 @@ export function OfflineBanner({
   onRetry?: () => void;
   retrying?: boolean;
 }) {
+  const tx = useTx();
   const colors = useColors();
   const { t } = useT();
   if (connected === true && pendingCount === 0) {
@@ -380,8 +394,8 @@ export function OfflineBanner({
         color={tone}
       />
       <View style={styles.offlineCopy}>
-        <Text style={[styles.offlineTitle, { color: colors.foreground }]}>{title}</Text>
-        <Text style={[styles.offlineDetail, { color: colors.muted }]}>{detail}</Text>
+        <Text style={[styles.offlineTitle, { color: colors.foreground }]}>{tx(title)}</Text>
+        <Text style={[styles.offlineDetail, { color: colors.muted }]}>{tx(detail)}</Text>
       </View>
       {onRetry ? (
         <Pressable
@@ -411,16 +425,17 @@ export function SectionHeader({
   onPress?: () => void;
   caption?: string;
 }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <View style={styles.sectionHeader}>
       <View style={{ flex: 1 }}>
         <View style={styles.sectionTitleRow}>
           <View style={[styles.sectionMark, { backgroundColor: colors.accent }]} />
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{title}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{tx(title)}</Text>
         </View>
         {caption ? (
-          <Text style={[styles.sectionCaption, { color: colors.muted }]}>{caption}</Text>
+          <Text style={[styles.sectionCaption, { color: colors.muted }]}>{tx(caption)}</Text>
         ) : null}
       </View>
       {action ? (
@@ -430,7 +445,7 @@ export function SectionHeader({
           hitSlop={10}
           style={styles.sectionActionWrap}
         >
-          <Text style={[styles.sectionAction, { color: colors.primary }]}>{action}</Text>
+          <Text style={[styles.sectionAction, { color: colors.primary }]}>{tx(action)}</Text>
           <MaterialIcons name="chevron-right" size={16} color={colors.primary} />
         </Pressable>
       ) : null}
@@ -447,11 +462,12 @@ export function StatusPill({
   tone: Tone;
   compact?: boolean;
 }) {
+  const tx = useTx();
   const color = useToneColor(tone);
   return (
     <View style={[styles.pill, compact && styles.pillCompact, { backgroundColor: `${color}16` }]}>
       <View style={[styles.pillDot, { backgroundColor: color }]} />
-      <Text style={[styles.pillText, { color }]}>{label}</Text>
+      <Text style={[styles.pillText, { color }]}>{tx(label)}</Text>
     </View>
   );
 }
@@ -526,6 +542,7 @@ export function MetricCard({
   note?: string;
   onPress?: () => void;
 }) {
+  const tx = useTx();
   const colors = useColors();
   const accent = useToneColor(tone);
   const elevation = useElevation(1);
@@ -533,7 +550,7 @@ export function MetricCard({
     <Animated.View entering={enter} style={{ flex: 1 }}>
       <Pressable
         accessibilityRole={onPress ? "button" : undefined}
-        accessibilityLabel={`${label}: ${value}`}
+        accessibilityLabel={`${tx(label)}: ${value}`}
         disabled={!onPress}
         onPress={onPress}
         style={({ pressed }) => [
@@ -548,7 +565,7 @@ export function MetricCard({
         </View>
         <Text style={[styles.metricValue, { color: colors.foreground }]}>{value}</Text>
         <Text style={[styles.metricLabel, { color: colors.muted }]} numberOfLines={2}>
-          {label}
+          {tx(label)}
         </Text>
         {note ? <Text style={[styles.metricNote, { color: accent }]}>{note}</Text> : null}
       </Pressable>
@@ -572,6 +589,7 @@ export function ModuleTile({
   tone?: Tone;
   badge?: number;
 }) {
+  const tx = useTx();
   const colors = useColors();
   const accent = useToneColor(tone);
   const elevation = useElevation(1);
@@ -579,7 +597,7 @@ export function ModuleTile({
     <Animated.View entering={enter} style={styles.tileShell}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={title}
+        accessibilityLabel={tx(title)}
         onPress={onPress}
         style={({ pressed }) => [
           styles.tile,
@@ -599,11 +617,11 @@ export function ModuleTile({
           ) : null}
         </View>
         <Text style={[styles.tileTitle, { color: colors.foreground }]} numberOfLines={1}>
-          {title}
+          {tx(title)}
         </Text>
         {detail ? (
           <Text style={[styles.tileDetail, { color: colors.muted }]} numberOfLines={2}>
-            {detail}
+            {tx(detail)}
           </Text>
         ) : null}
       </Pressable>
@@ -629,6 +647,7 @@ export function ListRow({
   /** Replaces the icon, for example with a person's photo. */
   leading?: ReactNode;
 }) {
+  const tx = useTx();
   const colors = useColors();
   const accent = useToneColor(tone);
   return (
@@ -644,8 +663,10 @@ export function ListRow({
         </View>
       )}
       <View style={{ flex: 1 }}>
-        <Text style={[styles.listTitle, { color: colors.foreground }]}>{title}</Text>
-        {detail ? <Text style={[styles.listDetail, { color: colors.muted }]}>{detail}</Text> : null}
+        <Text style={[styles.listTitle, { color: colors.foreground }]}>{tx(title)}</Text>
+        {detail ? (
+          <Text style={[styles.listDetail, { color: colors.muted }]}>{tx(detail)}</Text>
+        ) : null}
       </View>
       {trailing ??
         (onPress ? <MaterialIcons name="chevron-right" size={20} color={colors.muted} /> : null)}
@@ -673,6 +694,7 @@ export function PrimaryButton({
   loading?: boolean;
   tone?: "primary" | "danger" | "gold";
 }) {
+  const tx = useTx();
   const colors = useColors();
   const bg =
     disabled || loading
@@ -686,7 +708,7 @@ export function PrimaryButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={tx(label)}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       onPress={onPress}
@@ -702,7 +724,7 @@ export function PrimaryButton({
         <MaterialIcons name={icon} size={19} color={disabled ? colors.muted : fg} />
       ) : null}
       <Text style={[styles.primaryButtonText, { color: disabled ? colors.muted : fg }]}>
-        {label}
+        {tx(label)}
       </Text>
     </Pressable>
   );
@@ -719,11 +741,12 @@ export function SecondaryButton({
   onPress?: () => void;
   disabled?: boolean;
 }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={tx(label)}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -737,7 +760,7 @@ export function SecondaryButton({
       ]}
     >
       {icon ? <MaterialIcons name={icon} size={18} color={colors.primary} /> : null}
-      <Text style={[styles.secondaryButtonText, { color: colors.foreground }]}>{label}</Text>
+      <Text style={[styles.secondaryButtonText, { color: colors.foreground }]}>{tx(label)}</Text>
     </Pressable>
   );
 }
@@ -752,12 +775,13 @@ export function Fab({
   label: string;
   onPress: () => void;
 }) {
+  const tx = useTx();
   const colors = useColors();
   const elevation = useElevation(2);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={tx(label)}
       onPress={onPress}
       style={({ pressed }) => [
         styles.fab,
@@ -767,7 +791,7 @@ export function Fab({
       ]}
     >
       <MaterialIcons name={icon} size={22} color={colors.background} />
-      <Text style={[styles.fabText, { color: colors.background }]}>{label}</Text>
+      <Text style={[styles.fabText, { color: colors.background }]}>{tx(label)}</Text>
     </Pressable>
   );
 }
@@ -785,6 +809,7 @@ export function EmptyState({
   action?: string;
   onPress?: () => void;
 }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <View
@@ -793,8 +818,8 @@ export function EmptyState({
       <View style={[styles.emptyIcon, { backgroundColor: `${colors.accent}18` }]}>
         <MaterialIcons name={icon} size={26} color={colors.accent} />
       </View>
-      <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{title}</Text>
-      <Text style={[styles.emptyDetail, { color: colors.muted }]}>{detail}</Text>
+      <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{tx(title)}</Text>
+      <Text style={[styles.emptyDetail, { color: colors.muted }]}>{tx(detail)}</Text>
       {action ? <SecondaryButton label={action} onPress={onPress} /> : null}
     </View>
   );
@@ -804,13 +829,15 @@ export function LoadingBlock({ label }: { label?: string }) {
   const colors = useColors();
   const { t } = useT();
   return (
-    <View style={styles.loadingBlock} accessibilityLabel={label ?? t("Loading…")}>
+    <View style={styles.loadingBlock} accessibilityLabel={label ? t(label) : t("Loading…")}>
       <Shimmer width="92%" />
       <Shimmer width="70%" />
       <Shimmer width="80%" />
       <View style={styles.loadingRow}>
         <ActivityIndicator size="small" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.muted }]}>{label ?? t("Loading…")}</Text>
+        <Text style={[styles.loadingText, { color: colors.muted }]}>
+          {label ? t(label) : t("Loading…")}
+        </Text>
       </View>
     </View>
   );
@@ -895,10 +922,10 @@ export function InlineError({
       />
       <View style={{ flex: 1 }}>
         <Text style={[styles.errorTitle, { color: colors.foreground }]}>
-          {title ?? (denied ? t("No access") : t("Something went wrong"))}
+          {title ? t(title) : denied ? t("No access") : t("Something went wrong")}
         </Text>
         <Text style={[styles.errorDetail, { color: colors.muted }]}>
-          {denied ? noAccessDetail(denied, t) : friendlyError(message)}
+          {denied ? noAccessDetail(denied, t) : t(friendlyError(message))}
         </Text>
       </View>
       {onRetry && !denied ? (
@@ -916,14 +943,18 @@ export function Field({
   error,
   ...input
 }: TextInputProps & { label: string; hint?: string; error?: string | null }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <View style={styles.field}>
-      <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{label}</Text>
+      <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{tx(label)}</Text>
       <TextInput
         placeholderTextColor={colors.muted}
-        accessibilityLabel={label}
+        accessibilityLabel={tx(label)}
         {...input}
+        placeholder={
+          typeof input.placeholder === "string" ? tx(input.placeholder) : input.placeholder
+        }
         style={[
           styles.fieldInput,
           input.multiline && styles.fieldMultiline,
@@ -937,7 +968,7 @@ export function Field({
       {error ? (
         <Text style={[styles.fieldHint, { color: colors.error }]}>{error}</Text>
       ) : hint ? (
-        <Text style={[styles.fieldHint, { color: colors.muted }]}>{hint}</Text>
+        <Text style={[styles.fieldHint, { color: colors.muted }]}>{tx(hint)}</Text>
       ) : null}
     </View>
   );
@@ -956,11 +987,12 @@ export function ChipGroup<T extends string>({
   onChange: (value: T) => void;
   format?: (value: T) => string;
 }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <View style={styles.field}>
       {label ? (
-        <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{label}</Text>
+        <Text style={[styles.fieldLabel, { color: colors.foreground }]}>{tx(label)}</Text>
       ) : null}
       <View style={styles.chipWrap}>
         {options.map((option) => {
@@ -985,7 +1017,7 @@ export function ChipGroup<T extends string>({
                   { color: selected ? colors.background : colors.foreground },
                 ]}
               >
-                {format(option)}
+                {tx(format(option))}
               </Text>
             </Pressable>
           );
@@ -1014,6 +1046,7 @@ export function Sheet({
   /** Manual page for this form: shows a book icon that opens it. */
   manual?: string;
 }) {
+  const tx = useTx();
   const colors = useColors();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -1023,9 +1056,9 @@ export function Sheet({
           <View style={[styles.sheetHandle, { backgroundColor: colors.border }]} />
           <View style={styles.sheetHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{title}</Text>
+              <Text style={[styles.sheetTitle, { color: colors.foreground }]}>{tx(title)}</Text>
               {subtitle ? (
-                <Text style={[styles.sheetSubtitle, { color: colors.muted }]}>{subtitle}</Text>
+                <Text style={[styles.sheetSubtitle, { color: colors.muted }]}>{tx(subtitle)}</Text>
               ) : null}
             </View>
             {manual ? <ManualButton form={manual} /> : null}

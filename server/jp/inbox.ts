@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lt, ne, notInArray, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lt, lte, ne, notInArray, or } from "drizzle-orm";
 import {
   dailyReports,
   inventoryMovements,
@@ -20,6 +20,7 @@ import {
   supplierPayments,
   vendors,
   workTasks,
+  warranties,
 } from "../../drizzle/schema";
 import type { getDb } from "../db";
 import { formatMinorAsRupees } from "../../lib/jp/finance-domain";
@@ -182,6 +183,49 @@ export async function buildInbox(db: Db, userId: number, capabilities: Capabilit
         route: `/po?siteId=${row.siteId}&id=${row.id}`,
         severity: "normal",
       });
+  });
+  await guard("warranties", async () => {
+    const siteIds = sitesWith(capabilities, "document.upload");
+    if (!siteIds.length) return;
+    const soon = new Date(Date.parse(`${today}T00:00:00Z`) + 30 * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const rows = await db
+      .select({
+        id: warranties.id,
+        itemName: warranties.itemName,
+        endDate: warranties.endDate,
+        siteId: warranties.siteId,
+        siteName: sites.name,
+      })
+      .from(warranties)
+      .innerJoin(sites, eq(warranties.siteId, sites.id))
+      .where(
+        and(
+          inArray(warranties.siteId, siteIds),
+          eq(warranties.status, "Active"),
+          gte(warranties.endDate, today),
+          lte(warranties.endDate, soon),
+        ),
+      )
+      .orderBy(asc(warranties.endDate))
+      .limit(LIMIT);
+    for (const row of rows) {
+      const days = Math.round(
+        (Date.parse(`${row.endDate}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000,
+      );
+      items.push({
+        id: `warranty-${row.id}`,
+        kind: "warranty.expiring",
+        title: "Warranty ends soon",
+        detail: `${row.itemName} · ${row.endDate} (${days} days)`,
+        siteId: row.siteId,
+        siteName: row.siteName,
+        occurredAt: `${row.endDate}T00:00:00.000Z`,
+        route: "/warranties",
+        severity: days <= 7 ? "high" : "normal",
+      });
+    }
   });
   await guard("subcontract", async () => {
     const approveSites = sitesWith(capabilities, "subcontract.approve");
