@@ -8,7 +8,7 @@
  *    Mandap marked Completed (real).
  */
 import { randomUUID } from "node:crypto";
-import { asc, eq, inArray, like } from "drizzle-orm";
+import { and, asc, eq, inArray, like } from "drizzle-orm";
 import {
   auditEvents,
   organizationMemberships,
@@ -34,6 +34,15 @@ import {
 import { addRealPhotos, addSampleMedia, addSampleWarranties } from "./media-data";
 import { seedRolesAndRequests } from "./roles-data";
 import { newRows, registerSample, rowsCreatedSince, snapshot } from "./sample-registry";
+
+const ROLE_LOGINS = [
+  "director.sample",
+  "admin.sample",
+  "pm.sample",
+  "engineer.sample",
+  "store.sample",
+  "auditor.sample",
+];
 
 /** Tables whose every row is real (company structure, people, suppliers, settings). */
 const REAL_TABLES = new Set([
@@ -235,9 +244,42 @@ export async function runClientSeed(superAdminUsername: string) {
   const [anyLeave] = await db.select({ id: leaveRequests.id }).from(leaveRequests).limit(1);
   const sipunId = await userIdByUsername("sipun.gouda");
   const accountsId = await userIdByUsername("accounts.sample");
+  // An earlier run may have stopped after making the role logins: list its rows too.
+  const [earlier] = await db
+    .select({ createdAt: users.createdAt })
+    .from(users)
+    .innerJoin(userCredentials, eq(userCredentials.userId, users.id))
+    .where(eq(userCredentials.username, "director.sample"))
+    .limit(1);
+  const [leaveListed] = anyLeave
+    ? await db
+        .select({ id: sampleRecords.id })
+        .from(sampleRecords)
+        .where(
+          and(eq(sampleRecords.tableName, "leave_requests"), eq(sampleRecords.rowId, anyLeave.id)),
+        )
+        .limit(1)
+    : [null];
+  if (anyLeave && earlier && !leaveListed) {
+    // The work is there but was never listed (a run stopped while listing): list it now, and
+    // give the role logins fresh temporary passwords, since the old ones were never saved.
+    const rows = await rowsCreatedSince(db, new Date(earlier.createdAt));
+    notes.push(`${await registerSample(db, rows)} role, leave and return rows listed as SAMPLE.`);
+    const [company] = await boss.jp.accounts.options();
+    for (const username of ROLE_LOGINS) {
+      const userId = await userIdByUsername(username);
+      if (!userId || !company) continue;
+      const reset = await boss.jp.accounts.resetPassword({ organizationId: company.id, userId });
+      logins.push({
+        name: username,
+        role: username.split(".")[0]!,
+        username,
+        temporaryPassword: reset.temporaryPassword,
+      });
+    }
+  }
   if (kalyan && water && !anyLeave && sipunId && accountsId) {
-    // An earlier run may have stopped after making the role logins: list its rows too.
-    const [earlier] = await db
+    const [earlierRun] = await db
       .select({ createdAt: users.createdAt })
       .from(users)
       .innerJoin(userCredentials, eq(userCredentials.userId, users.id))
@@ -255,7 +297,7 @@ export async function runClientSeed(superAdminUsername: string) {
     });
     logins = [...logins, ...result.logins];
     const added = newRows(before, await snapshot(db));
-    if (earlier) added.push(...(await rowsCreatedSince(db, new Date(earlier.createdAt))));
+    if (earlierRun) added.push(...(await rowsCreatedSince(db, new Date(earlierRun.createdAt))));
     notes.push(`${await registerSample(db, added)} role, leave and return rows listed as SAMPLE.`);
   }
   return { notes, logins };

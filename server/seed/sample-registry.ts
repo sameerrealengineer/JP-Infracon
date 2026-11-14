@@ -107,7 +107,13 @@ export async function registerSample(db: Db, rows: { tableName: string; rowId: s
       (row: { tableName: string; rowId: string }) => `${row.tableName}:${row.rowId}`,
     ),
   );
-  const fresh = rows.filter((row) => !known.has(`${row.tableName}:${row.rowId}`));
+  const fresh: { tableName: string; rowId: string }[] = [];
+  for (const row of rows) {
+    const key = `${row.tableName}:${row.rowId}`;
+    if (known.has(key)) continue;
+    known.add(key);
+    fresh.push(row);
+  }
   for (let index = 0; index < fresh.length; index += 200)
     await db
       .insert(schema.sampleRecords)
@@ -255,7 +261,9 @@ export async function rowsCreatedSince(db: Db, since: Date) {
   const rows: { tableName: string; rowId: string }[] = [];
   for (const info of businessTables()) {
     const config = getTableConfig(info.table);
-    const created = config.columns.find((column) => column.name === "createdAt");
+    const created = config.columns.find(
+      (column) => column.name === "createdAt" || column.name === "occurredAt",
+    );
     if (!created) continue;
     const found: { id: unknown }[] = await db
       .select({ id: info.pk })
