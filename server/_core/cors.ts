@@ -27,8 +27,31 @@ function pairedPreviewOrigin(packagerOrigin: string): string | null {
   return url.origin;
 }
 
+/**
+ * The deployed web app's own address (`PUBLIC_BASE_URL`, served by Caddy on the same host) and
+ * any extra `WEB_ORIGINS` (comma separated). Browsers send Origin on every POST, even to their
+ * own site, so without this the web app's sign-in is refused while the APK (no Origin) works.
+ */
+export function deployedWebOrigins(): string[] {
+  const values = [process.env.PUBLIC_BASE_URL ?? "", ...(process.env.WEB_ORIGINS ?? "").split(",")];
+  const origins: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    try {
+      const url = new URL(trimmed);
+      if (url.protocol === "https:" || url.protocol === "http:") origins.push(url.origin);
+    } catch {
+      // Ignore a malformed value.
+    }
+  }
+  return origins;
+}
+
 export function trustedExpoWebOrigins(): Set<string> {
   const origins = new Set<string>();
+  for (const origin of deployedWebOrigins())
+    if (!originHasLoopbackHostname(origin)) origins.add(origin);
   const packager = configuredOrigin("EXPO_PACKAGER_PROXY_URL");
   const preview = configuredOrigin("EXPO_WEB_PREVIEW_URL");
   // Loopback origins are request-local below. Never put one in this process-wide set: the
