@@ -3,9 +3,22 @@
  * repeated wrong PINs, and the features an authorised person switches on for each worker.
  */
 
-export const WORKER_FEATURES = ["money", "attendance", "drawings", "call", "help"] as const;
+export const WORKER_FEATURES = [
+  "money",
+  "attendance",
+  "drawings",
+  "call",
+  "help",
+  "leave",
+] as const;
 export type WorkerFeature = (typeof WORKER_FEATURES)[number];
-export const DEFAULT_WORKER_FEATURES: WorkerFeature[] = ["money", "attendance", "call", "help"];
+export const DEFAULT_WORKER_FEATURES: WorkerFeature[] = [
+  "money",
+  "attendance",
+  "call",
+  "help",
+  "leave",
+];
 
 export const MAX_WRONG_PINS = 5;
 export const PIN_LOCK_MINUTES = 30;

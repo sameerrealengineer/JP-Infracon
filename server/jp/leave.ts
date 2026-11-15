@@ -8,6 +8,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites, getSiteScope } from "./access";
 import { siteCapabilities } from "./capabilities";
+import { markLeaveDays } from "./attendance";
 
 function requireDb(db: Awaited<ReturnType<typeof getDb>>) {
   if (!db)
@@ -209,6 +210,16 @@ export const leaveRouter = router({
             reviewNote: input.note ?? null,
           })
           .where(eq(leaveRequests.id, leave.id));
+        // An approved worker's leave becomes Leave in attendance for days already passed.
+        if (input.decision === "Approved" && leave.personId && leave.halfDays > 1)
+          await markLeaveDays(tx, {
+            organizationId: leave.organizationId,
+            siteId: leave.siteId,
+            personId: leave.personId,
+            fromDate: leave.fromDate,
+            toDate: leave.toDate,
+            markedBy: ctx.user.id,
+          });
         await tx.insert(auditEvents).values({
           id: randomUUID(),
           organizationId: leave.organizationId,

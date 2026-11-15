@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { suggestedMonthlyTds } from "../../lib/jp/salary-tds";
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -1067,6 +1068,8 @@ export const payrollRouter = router({
               uan: profile?.uan ?? null,
               esiNumber: profile?.esiNumber ?? null,
               warnings: line.warnings ? (JSON.parse(line.warnings) as string[]) : [],
+              // Suggested salary TDS (new regime) for accounts to check; never applied by itself.
+              tdsSuggestedMinor: suggestedMonthlyTds(BigInt(line.grossMinor)).toString(),
             };
           })
           .sort((a, b) => a.payType.localeCompare(b.payType) || a.name.localeCompare(b.name)),

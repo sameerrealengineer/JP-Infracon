@@ -35,7 +35,7 @@ import { trpc } from "@/lib/trpc";
 import type { AppRouter } from "@/server/routers";
 
 type Bundle = inferRouterOutputs<AppRouter>["jp"]["worker"]["me"];
-type Section = "money" | "attendance" | "drawings" | "call" | "help";
+type Section = "money" | "attendance" | "drawings" | "call" | "help" | "leave";
 type SpeakFn = (
   text: string,
   language: "en-IN" | "hi-IN" | "od-IN",
@@ -47,6 +47,7 @@ const TILES: { key: Section; emoji: string; label: string }[] = [
   { key: "drawings", emoji: "📐", label: "Drawings" },
   { key: "call", emoji: "📞", label: "Call supervisor" },
   { key: "help", emoji: "🆘", label: "Problem? Tell us" },
+  { key: "leave", emoji: "🛌", label: "Ask for leave" },
 ];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -76,7 +77,11 @@ export function WorkerHome({
   const colors = useColors();
   const { t, language, setLanguage } = useT();
   const tiles = TILES.filter(
-    (tile) => data.features.includes(tile.key) && (tile.key !== "help" || reportProblem),
+    (tile) =>
+      (data.features as readonly string[]).includes(tile.key) &&
+      (tile.key !== "help" || reportProblem) &&
+      // Asking for leave is only on the worker's own phone.
+      (tile.key !== "leave" || selfMode),
   );
   const [open, setOpen] = useState<Section | null>(tiles[0]?.key ?? null);
   const [error, setError] = useState<string | null>(null);
@@ -390,6 +395,7 @@ export function WorkerHome({
         </View>
       ) : null}
 
+      {open === "leave" && selfMode ? <WorkerLeave /> : null}
       {open === "help" && reportProblem ? (
         <View style={{ gap: 10 }}>
           {sent ? (
@@ -630,3 +636,109 @@ const styles = StyleSheet.create({
   signOut: { borderRadius: 20, borderWidth: 1, padding: 16, alignItems: "center" },
   error: { fontSize: 16, fontWeight: "700" },
 });
+
+const LEAVE_REASONS = [
+  { emoji: "🤒", label: "I am sick", type: "Sick" as const },
+  { emoji: "🏠", label: "Work at home", type: "Casual" as const },
+  { emoji: "🎉", label: "Function or wedding", type: "Casual" as const },
+];
+
+/** Big-button leave request for the worker's own phone: pick the day, then the reason. */
+function WorkerLeave() {
+  const colors = useColors();
+  const { t } = useT();
+  const mine = trpc.jp.worker.myLeave.useQuery();
+  const request = trpc.jp.worker.requestLeave.useMutation();
+  const [when, setWhen] = useState<"today" | "tomorrow" | "half">("today");
+  const [message, setMessage] = useState<string | null>(null);
+  const day = (offset: number) =>
+    new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+  const send = async (reason: (typeof LEAVE_REASONS)[number]) => {
+    setMessage(null);
+    const date = when === "tomorrow" ? day(1) : day(0);
+    try {
+      await request.mutateAsync({
+        leaveType: reason.type,
+        fromDate: date,
+        toDate: date,
+        halfDay: when === "half",
+        reason: reason.label,
+      });
+      setMessage(t("Sent. Your supervisor will answer."));
+      await mine.refetch();
+    } catch (cause) {
+      setMessage(cause instanceof Error ? t(cause.message) : t("Could not send."));
+    }
+  };
+  const mark = (status: string) =>
+    status === "Approved"
+      ? "✅"
+      : status === "Rejected"
+        ? "❌"
+        : status === "Cancelled"
+          ? "➖"
+          : "⏳";
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {(
+          [
+            ["today", "Today"],
+            ["tomorrow", "Tomorrow"],
+            ["half", "Half day today"],
+          ] as const
+        ).map(([key, label]) => (
+          <Pressable
+            key={key}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: when === key }}
+            onPress={() => setWhen(key)}
+            style={[
+              styles.card,
+              {
+                flex: 1,
+                alignItems: "center",
+                backgroundColor: when === key ? `${colors.primary}22` : colors.surface,
+                borderColor: when === key ? colors.primary : colors.border,
+              },
+            ]}
+          >
+            <Text style={[styles.cardTitle, { color: colors.foreground, textAlign: "center" }]}>
+              {t(label)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+      {LEAVE_REASONS.map((reason) => (
+        <Pressable
+          key={reason.label}
+          accessibilityRole="button"
+          disabled={request.isPending}
+          onPress={() => void send(reason)}
+          style={[
+            styles.card,
+            {
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          <Text style={{ fontSize: 34 }}>{reason.emoji}</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t(reason.label)}</Text>
+        </Pressable>
+      ))}
+      {message ? (
+        <Text style={[styles.cardTitle, { color: colors.primary }]}>{message}</Text>
+      ) : null}
+      {(mine.data ?? []).map((leave) => (
+        <Text key={leave.id} style={{ fontSize: 18, color: colors.foreground }}>
+          {mark(leave.status)} {leave.fromDate}
+          {leave.toDate !== leave.fromDate ? ` → ${leave.toDate}` : ""} · {t(leave.status)}
+        </Text>
+      ))}
+    </View>
+  );
+}

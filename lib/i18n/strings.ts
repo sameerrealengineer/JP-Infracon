@@ -2274,6 +2274,39 @@ export const hi: Dictionary = {
   "Another person must approve a return you made.": "आपकी बनाई वापसी कोई और मंज़ूर करेगा।",
   // Attendance leave
   "On leave": "छुट्टी पर",
+  // Tasks, worker leave, PIN code, TDS
+  "My tasks": "मेरे काम",
+  "Work given to you on every site; mark it started, done or blocked.":
+    "हर साइट पर आपको दिया काम; शुरू, पूरा या रुका हुआ बताएँ।",
+  "tasks done": "काम पूरे",
+  "Nothing open for you": "आपके लिए कोई खुला काम नहीं",
+  "Tasks your manager gives you appear here.": "आपके मैनेजर के दिए काम यहाँ दिखेंगे।",
+  "Team progress": "टीम की प्रगति",
+  "{done} of {total} done · {open} in progress · {late} overdue":
+    "{total} में से {done} पूरे · {open} चालू · {late} देर से",
+  "Work given to you; team progress": "आपको दिया काम; टीम की प्रगति",
+  "Ask for leave": "छुट्टी माँगें",
+  "I am sick": "मैं बीमार हूँ",
+  "Work at home": "घर का काम",
+  "Function or wedding": "समारोह या शादी",
+  Tomorrow: "कल",
+  "Half day today": "आज आधा दिन",
+  "Sent. Your supervisor will answer.": "भेज दिया। आपके सुपरवाइज़र जवाब देंगे।",
+  "Could not send.": "भेज नहीं सके।",
+  "Asking for leave in the app is not switched on for you. Tell your supervisor.":
+    "ऐप से छुट्टी माँगना आपके लिए चालू नहीं है। सुपरवाइज़र को बताएँ।",
+  "You are not on an active site. Tell your supervisor.":
+    "आप किसी चालू साइट पर नहीं हैं। सुपरवाइज़र को बताएँ।",
+  "Code from WhatsApp": "WhatsApp पर आया कोड",
+  "Set new PIN": "नया PIN बनाएँ",
+  "Forgot PIN? Get a code": "PIN भूल गए? कोड पाएँ",
+  "If this number has a worker login, a code was sent on WhatsApp and your supervisor was told.":
+    "अगर इस नंबर पर लॉगिन है, तो WhatsApp पर कोड भेजा गया और सुपरवाइज़र को बताया गया।",
+  "The code is wrong or has expired. Ask for a new one.":
+    "कोड गलत है या उसका समय खत्म हो गया। नया माँगें।",
+  "New PIN set. Sign in with it now.": "नया PIN बन गया। अब उससे साइन इन करें।",
+  "Suggested TDS {amount} (new regime, check with your CA) · Use":
+    "सुझाया TDS {amount} (नई व्यवस्था, CA से जाँचें) · लगाएँ",
 };
 
 export const or: Dictionary = {
@@ -4525,6 +4558,38 @@ export const or: Dictionary = {
   "Another person must approve a return you made.": "ଆପଣ କରିଥିବା ଫେରସ୍ତ ଅନ୍ୟ ଜଣେ ଅନୁମୋଦନ କରିବେ।",
   // Attendance leave
   "On leave": "ଛୁଟିରେ",
+  // Tasks, worker leave, PIN code, TDS
+  "My tasks": "ମୋ କାମ",
+  "Work given to you on every site; mark it started, done or blocked.":
+    "ପ୍ରତି ସାଇଟରେ ଆପଣଙ୍କୁ ଦିଆଯାଇଥିବା କାମ; ଆରମ୍ଭ, ସମ୍ପୂର୍ଣ୍ଣ ବା ଅଟକିଛି ଜଣାନ୍ତୁ।",
+  "tasks done": "କାମ ସମ୍ପୂର୍ଣ୍ଣ",
+  "Nothing open for you": "ଆପଣଙ୍କ ପାଇଁ କୌଣସି ଖୋଲା କାମ ନାହିଁ",
+  "Tasks your manager gives you appear here.": "ଆପଣଙ୍କ ମ୍ୟାନେଜର ଦେଇଥିବା କାମ ଏଠାରେ ଦେଖାଯିବ।",
+  "Team progress": "ଟିମ୍ ପ୍ରଗତି",
+  "{done} of {total} done · {open} in progress · {late} overdue":
+    "{total} ରୁ {done} ସମ୍ପୂର୍ଣ୍ଣ · {open} ଚାଲୁ · {late} ବିଳମ୍ବିତ",
+  "Work given to you; team progress": "ଆପଣଙ୍କୁ ଦିଆଯାଇଥିବା କାମ; ଟିମ୍ ପ୍ରଗତି",
+  "Ask for leave": "ଛୁଟି ମାଗନ୍ତୁ",
+  "I am sick": "ମୁଁ ଅସୁସ୍ଥ",
+  "Work at home": "ଘର କାମ",
+  "Function or wedding": "ଉତ୍ସବ ବା ବିବାହ",
+  Tomorrow: "କାଲି",
+  "Half day today": "ଆଜି ଅଧା ଦିନ",
+  "Sent. Your supervisor will answer.": "ପଠାଗଲା। ଆପଣଙ୍କ ସୁପରଭାଇଜର ଉତ୍ତର ଦେବେ।",
+  "Could not send.": "ପଠାଯାଇପାରିଲା ନାହିଁ।",
+  "Asking for leave in the app is not switched on for you. Tell your supervisor.":
+    "ଆପରୁ ଛୁଟି ମାଗିବା ଆପଣଙ୍କ ପାଇଁ ଚାଲୁ ନାହିଁ। ସୁପରଭାଇଜରଙ୍କୁ କୁହନ୍ତୁ।",
+  "You are not on an active site. Tell your supervisor.":
+    "ଆପଣ କୌଣସି ସକ୍ରିୟ ସାଇଟରେ ନାହାନ୍ତି। ସୁପରଭାଇଜରଙ୍କୁ କୁହନ୍ତୁ।",
+  "Code from WhatsApp": "WhatsApp ରେ ଆସିଥିବା କୋଡ୍",
+  "Set new PIN": "ନୂଆ PIN ତିଆରି କରନ୍ତୁ",
+  "Forgot PIN? Get a code": "PIN ଭୁଲିଗଲେ? କୋଡ୍ ପାଆନ୍ତୁ",
+  "If this number has a worker login, a code was sent on WhatsApp and your supervisor was told.":
+    "ଏହି ନମ୍ବରରେ ଲଗଇନ୍ ଥିଲେ, WhatsApp ରେ କୋଡ୍ ପଠାଗଲା ଓ ସୁପରଭାଇଜରଙ୍କୁ ଜଣାଗଲା।",
+  "The code is wrong or has expired. Ask for a new one.": "କୋଡ୍ ଭୁଲ୍ ବା ସମୟ ସରିଛି। ନୂଆ ମାଗନ୍ତୁ।",
+  "New PIN set. Sign in with it now.": "ନୂଆ PIN ତିଆରି ହେଲା। ଏବେ ସେଥିରେ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ।",
+  "Suggested TDS {amount} (new regime, check with your CA) · Use":
+    "ପରାମର୍ଶିତ TDS {amount} (ନୂଆ ବ୍ୟବସ୍ଥା, CA ସହ ଯାଞ୍ଚ କରନ୍ତୁ) · ଲଗାନ୍ତୁ",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

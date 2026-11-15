@@ -21,7 +21,7 @@ import {
   type ScheduleTask,
   type TaskStatus,
 } from "../../lib/jp/scheduling";
-import { getSiteScope } from "./access";
+import { getAccessibleSites, getSiteScope } from "./access";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const dateSchema = z
@@ -708,6 +708,70 @@ export const taskRouter = router({
       });
     }),
 
+  /** Tasks assigned to me on every site I can see, open ones first. */
+  mine: protectedProcedure.query(async ({ ctx }) => {
+    const db = requireDb(await (await import("../db")).getDb());
+    const accessible = await getAccessibleSites(ctx.user);
+    const ids = accessible.map((site) => site.id);
+    if (!ids.length) return [];
+    const rows = await db
+      .select()
+      .from(workTasks)
+      .where(and(eq(workTasks.assigneeUserId, ctx.user.id), inArray(workTasks.siteId, ids)))
+      .orderBy(asc(workTasks.plannedEnd))
+      .limit(300);
+    const names = new Map(accessible.map((site) => [site.id, site.name]));
+    const today = new Date().toISOString().slice(0, 10);
+    return rows
+      .map((task) => ({
+        ...task,
+        siteName: names.get(task.siteId) ?? "",
+        overdue:
+          task.status !== "Completed" && task.status !== "Cancelled" && task.plannedEnd < today,
+      }))
+      .sort((a, b) => Number(a.status === "Completed") - Number(b.status === "Completed"));
+  }),
+
+  /** Per person on a site: tasks given, done, in progress and overdue (managers). */
+  byPerson: protectedProcedure
+    .input(z.object({ siteId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const scope = await getSiteScope(ctx.user, input.siteId, "task.view");
+      const db = requireDb(await (await import("../db")).getDb());
+      const rows = await db
+        .select({
+          assigneeUserId: workTasks.assigneeUserId,
+          status: workTasks.status,
+          plannedEnd: workTasks.plannedEnd,
+          name: users.name,
+        })
+        .from(workTasks)
+        .leftJoin(users, eq(workTasks.assigneeUserId, users.id))
+        .where(eq(workTasks.siteId, scope.siteId));
+      const today = new Date().toISOString().slice(0, 10);
+      const people = new Map<
+        string,
+        { name: string; total: number; done: number; inProgress: number; overdue: number }
+      >();
+      for (const row of rows) {
+        const key = row.assigneeUserId ? String(row.assigneeUserId) : "none";
+        const entry = people.get(key) ?? {
+          name: row.name ?? "Not assigned",
+          total: 0,
+          done: 0,
+          inProgress: 0,
+          overdue: 0,
+        };
+        if (row.status === "Cancelled") continue;
+        entry.total += 1;
+        if (row.status === "Completed") entry.done += 1;
+        else if (row.status === "In Progress") entry.inProgress += 1;
+        if (row.status !== "Completed" && row.plannedEnd < today) entry.overdue += 1;
+        people.set(key, entry);
+      }
+      return [...people.values()].sort((a, b) => b.total - a.total);
+    }),
+
   updateStatus: protectedProcedure
     .input(
       z
@@ -735,7 +799,20 @@ export const taskRouter = router({
         .where(eq(workTasks.id, input.taskId))
         .limit(1);
       if (!task) throw new TRPCError({ code: "NOT_FOUND", message: "Task not found." });
-      const scope = await getSiteScope(ctx.user, task.siteId, "task.status.update");
+      // The person a task is assigned to may start, finish or block it themselves, even when
+      // their role cannot change other tasks; holding or cancelling stays with the managers.
+      const ownTask = task.assigneeUserId === ctx.user.id;
+      const scope = ownTask
+        ? await getSiteScope(ctx.user, task.siteId, "task.view")
+        : await getSiteScope(ctx.user, task.siteId, "task.status.update");
+      if (ownTask && scope.siteStatus !== "Active")
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "This site is not accepting routine changes.",
+        });
+      if (ownTask && !["In Progress", "Completed", "Blocked"].includes(input.status)) {
+        await getSiteScope(ctx.user, task.siteId, "task.status.update");
+      }
       const priorResult = await verifyTaskStatusReplay(db, input, ctx.user.id);
       if (priorResult) return priorResult;
       const now = new Date();

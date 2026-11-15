@@ -76,6 +76,69 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Approved leave of a worker becomes Leave in attendance for the days up to today that have no
+ * mark yet (0 hours, waiting for the usual approval). Later days are shown as on leave in the
+ * roster and marked on the day.
+ */
+export async function markLeaveDays(
+  // A transaction or the database; both run the same queries.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: any,
+  leave: {
+    organizationId: string;
+    siteId: string;
+    personId: string;
+    fromDate: string;
+    toDate: string;
+    markedBy: number;
+  },
+) {
+  const today = new Date().toISOString().slice(0, 10);
+  const last = leave.toDate < today ? leave.toDate : today;
+  let marked = 0;
+  for (let date = leave.fromDate; date <= last; ) {
+    const engagement = (await activeEngagements(tx as Db, leave.siteId, date)).find(
+      (row) => row.personId === leave.personId,
+    );
+    if (engagement) {
+      const [existing] = await tx
+        .select({ id: attendanceRecords.id })
+        .from(attendanceRecords)
+        .where(
+          and(
+            eq(attendanceRecords.workerEngagementId, engagement.engagementId),
+            eq(attendanceRecords.siteId, leave.siteId),
+            eq(attendanceRecords.workDate, date),
+            eq(attendanceRecords.shiftCode, "GEN"),
+          ),
+        )
+        .limit(1);
+      if (!existing) {
+        await tx.insert(attendanceRecords).values({
+          id: randomUUID(),
+          organizationId: leave.organizationId,
+          siteId: leave.siteId,
+          workDate: date,
+          shiftCode: "GEN",
+          workerEngagementId: engagement.engagementId,
+          attendanceStatus: "Leave",
+          regularHours: formatHours(0n),
+          overtimeHours: formatHours(0n),
+          overtimeApprovalStatus: "Not Applicable",
+          rateSnapshotMinor: engagement.rateMinor,
+          markedBy: leave.markedBy,
+        });
+        marked += 1;
+      }
+    }
+    const next = new Date(`${date}T12:00:00Z`);
+    next.setUTCDate(next.getUTCDate() + 1);
+    date = next.toISOString().slice(0, 10);
+  }
+  return marked;
+}
+
 export const attendanceRouter = router({
   roster: protectedProcedure
     .input(z.object({ siteId: z.string().uuid(), workDate: dateSchema, shiftCode: shiftSchema }))

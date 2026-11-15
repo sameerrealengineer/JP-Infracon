@@ -16,7 +16,9 @@ import {
   workerAccounts,
   workerEngagements,
   type User,
+  leaveRequests,
 } from "../../drizzle/schema";
+import { LEAVE_TYPES, leaveHalfDays, leaveProblem, rangesOverlap } from "../../lib/jp/leave-domain";
 import { protectedProcedure, router } from "../_core/trpc";
 import { hashPassword, hashPin } from "../_core/credential-auth";
 import { getDb } from "../db";
@@ -333,6 +335,90 @@ export const workerRouter = router({
         });
       return workerProblem(db, account, person.fullName, input);
     }),
+
+  /** The worker asks for leave for themselves (needs the leave feature); a manager decides. */
+  requestLeave: protectedProcedure
+    .input(
+      z.object({
+        leaveType: z.enum(LEAVE_TYPES),
+        fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        halfDay: z.boolean().default(false),
+        reason: z.string().trim().max(500),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { db, account, person } = await workerOf(ctx.user);
+      if (!parseFeatures(account.features).includes("leave"))
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Asking for leave in the app is not switched on for you. Tell your supervisor.",
+        });
+      const problem = leaveProblem(input);
+      if (problem) bad(problem);
+      const site = (await workerSites(db, person.id)).find((row) => row.status === "Active");
+      if (!site) bad("You are not on an active site. Tell your supervisor.");
+      const taken = await db
+        .select({ fromDate: leaveRequests.fromDate, toDate: leaveRequests.toDate })
+        .from(leaveRequests)
+        .where(
+          and(
+            eq(leaveRequests.personId, person.id),
+            inArray(leaveRequests.status, ["Pending", "Approved"]),
+          ),
+        );
+      if (taken.some((row) => rangesOverlap(row, input)))
+        bad("There is already leave on some of these days.");
+      const id = randomUUID();
+      await db.transaction(async (tx) => {
+        await tx.insert(leaveRequests).values({
+          id,
+          organizationId: account.organizationId,
+          siteId: site!.id,
+          personId: person.id,
+          leaveType: input.leaveType,
+          fromDate: input.fromDate,
+          toDate: input.toDate,
+          halfDays: leaveHalfDays(input.fromDate, input.toDate, input.halfDay),
+          reason: input.reason,
+          createdBy: ctx.user.id,
+        });
+        await tx.insert(auditEvents).values({
+          id: randomUUID(),
+          organizationId: account.organizationId,
+          siteId: site!.id,
+          actorUserId: ctx.user.id,
+          action: "leave.applied",
+          entityType: "leave_request",
+          entityId: id,
+          afterSummary: JSON.stringify({
+            byWorker: true,
+            fromDate: input.fromDate,
+            toDate: input.toDate,
+          }),
+        });
+      });
+      return { id };
+    }),
+
+  /** The worker's own leave requests and their answers. */
+  myLeave: protectedProcedure.query(async ({ ctx }) => {
+    const { db, person } = await workerOf(ctx.user);
+    return db
+      .select({
+        id: leaveRequests.id,
+        leaveType: leaveRequests.leaveType,
+        fromDate: leaveRequests.fromDate,
+        toDate: leaveRequests.toDate,
+        halfDays: leaveRequests.halfDays,
+        status: leaveRequests.status,
+        reviewNote: leaveRequests.reviewNote,
+      })
+      .from(leaveRequests)
+      .where(eq(leaveRequests.personId, person.id))
+      .orderBy(desc(leaveRequests.fromDate))
+      .limit(10);
+  }),
 
   /** Reads the worker's own screen aloud (Sarvam), for workers who read little. */
   speak: protectedProcedure

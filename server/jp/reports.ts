@@ -1,9 +1,11 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { and, desc, eq, gte, inArray, isNull, or, sql, type SQL } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   appReports,
+  auditEvents,
+  authSessions,
   organizationMemberships,
   people,
   personSiteAssignments,
@@ -15,8 +17,10 @@ import {
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites, getSiteScope } from "./access";
-import { dispatchAlert, siteLeadIds } from "./notify";
+import { dispatchAlert, sendWhatsAppText, siteLeadIds } from "./notify";
 import { normalizeIndianMobile } from "../../lib/jp/notify-policy";
+import { checkPin } from "../../lib/jp/worker-app";
+import { hashPin } from "../_core/credential-auth";
 import {
   DUPLICATE_WINDOW_MINUTES,
   PIN_RESET_REPEAT_HOURS,
@@ -97,11 +101,16 @@ async function firstSiteOf(db: Db, personId: string) {
  * A worker forgot their PIN. Always gives the same answer, so nobody can learn which numbers
  * have a login. A real request tells the site's supervisor and managers once in a few hours.
  */
+/** WhatsApp PIN codes waiting to be used, by mobile (kept in memory; a restart clears them). */
+const pinCodes = new Map<string, { hash: string; expiresAt: number; tries: number }>();
+const codeHash = (mobile: string, code: string) =>
+  createHash("sha256").update(`${mobile}:${code}`).digest("hex");
+
 export async function requestPinReset(mobileInput: string, clientKey: string) {
   const answer = {
     ok: true as const,
     message:
-      "If this number has a worker login, your supervisor has been told. They will give you a new PIN.",
+      "If this number has a worker login, a code was sent on WhatsApp and your supervisor was told.",
   };
   const mobile = normalizeIndianMobile(mobileInput);
   if (!mobile) bad("Enter a 10-digit Indian mobile number.");
@@ -118,6 +127,18 @@ export async function requestPinReset(mobileInput: string, clientKey: string) {
     .where(eq(workerAccounts.mobile, mobile))
     .limit(1);
   if (!row || row.account.status !== "Active") return answer;
+  // A code on WhatsApp lets the worker set a new PIN themselves (10 minutes, 5 tries).
+  const code = String(randomInt(100000, 1000000));
+  const sent = await sendWhatsAppText(
+    mobile!,
+    `JP Infracon: your code to set a new PIN is ${code}. It works for 10 minutes. Do not share it.`,
+  ).catch(() => false);
+  if (sent)
+    pinCodes.set(mobile!, {
+      hash: codeHash(mobile!, code),
+      expiresAt: Date.now() + 10 * 60_000,
+      tries: 0,
+    });
   const since = new Date(Date.now() - PIN_RESET_REPEAT_HOURS * 3_600_000);
   const [recent] = await db
     .select({ id: appReports.id })
@@ -482,4 +503,78 @@ export async function openWorkerRequests(db: Db, siteIds: string[], limit: numbe
     )
     .orderBy(appReports.createdAt)
     .limit(limit);
+}
+
+/**
+ * Sets a new PIN with the WhatsApp code. One plain answer for any wrong number, code or expiry,
+ * so nobody learns which numbers have a login. Old sign-ins are closed; the supervisor's
+ * forgot-PIN request is closed too.
+ */
+export async function resetPinWithCode(
+  mobileInput: string,
+  code: string,
+  newPin: string,
+  clientKey: string,
+) {
+  const mobile = normalizeIndianMobile(mobileInput);
+  if (!mobile) bad("Enter a 10-digit Indian mobile number.");
+  if (!allowHit(`pin-code-ip:${clientKey}`, 20))
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many tries. Wait a minute and try again.",
+    });
+  const pinIssue = checkPin(newPin);
+  if (pinIssue) bad(pinIssue);
+  const wrong = () => bad("The code is wrong or has expired. Ask for a new one.");
+  const entry = pinCodes.get(mobile!);
+  if (!entry || entry.expiresAt < Date.now() || entry.tries >= 5) {
+    pinCodes.delete(mobile!);
+    wrong();
+  }
+  entry!.tries += 1;
+  const expected = Buffer.from(entry!.hash, "hex");
+  const given = Buffer.from(codeHash(mobile!, code.trim()), "hex");
+  if (!timingSafeEqual(expected, given)) wrong();
+  pinCodes.delete(mobile!);
+  const db = requireDb(await getDb());
+  const [account] = await db
+    .select()
+    .from(workerAccounts)
+    .where(eq(workerAccounts.mobile, mobile!))
+    .limit(1);
+  if (!account || account.status !== "Active") wrong();
+  const pinHash = await hashPin(newPin);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(workerAccounts)
+      .set({ pinHash, failedAttempts: 0, lockedUntil: null })
+      .where(eq(workerAccounts.id, account!.id));
+    await tx
+      .update(authSessions)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(authSessions.userId, account!.userId), isNull(authSessions.revokedAt)));
+    await tx
+      .update(appReports)
+      .set({
+        status: "Resolved",
+        resolution: "New PIN set with the WhatsApp code",
+        resolvedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(appReports.source, "pin_reset"),
+          eq(appReports.personId, account!.personId),
+          eq(appReports.status, "Open"),
+        ),
+      );
+    await tx.insert(auditEvents).values({
+      id: randomUUID(),
+      organizationId: account!.organizationId,
+      actorUserId: account!.userId,
+      action: "worker.pin_reset_by_code",
+      entityType: "worker_account",
+      entityId: account!.id,
+    });
+  });
+  return { ok: true as const, message: "New PIN set. Sign in with it now." };
 }

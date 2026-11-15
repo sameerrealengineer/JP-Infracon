@@ -25,6 +25,10 @@ export function WorkerSignIn({
   const { t } = useT();
   const login = trpc.auth.workerLogin.useMutation();
   const forgot = trpc.auth.workerForgotPin.useMutation();
+  const resetPin = trpc.auth.workerResetPin.useMutation();
+  const [askedCode, setAskedCode] = useState(false);
+  const [code, setCode] = useState("");
+  const [newPin, setNewPin] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [mobile, setMobile] = useState("");
   const [pin, setPin] = useState("");
@@ -51,6 +55,7 @@ export function WorkerSignIn({
     try {
       const result = await forgot.mutateAsync({ mobile: mobile.trim() });
       setNotice(t(result.message));
+      setAskedCode(true);
     } catch (cause) {
       setError(cause instanceof Error ? t(cause.message) : t("Could not send. Try again."));
     }
@@ -146,10 +151,77 @@ export function WorkerSignIn({
           <ActivityIndicator color={colors.primary} />
         ) : (
           <Text style={[styles.forgotText, { color: colors.foreground }]}>
-            🤔 {t("Forgot PIN? Tell supervisor")}
+            🤔 {t("Forgot PIN? Get a code")}
           </Text>
         )}
       </Pressable>
+      {askedCode ? (
+        <View style={{ gap: 10 }}>
+          <Text style={[styles.label, { color: colors.muted }]}>💬 {t("Code from WhatsApp")}</Text>
+          <TextInput
+            accessibilityLabel={t("Code from WhatsApp")}
+            value={code}
+            onChangeText={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+            keyboardType="number-pad"
+            maxLength={6}
+            style={[
+              styles.forgot,
+              {
+                borderColor: colors.border,
+                color: colors.foreground,
+                fontSize: 24,
+                textAlign: "center",
+              },
+            ]}
+          />
+          <Text style={[styles.label, { color: colors.muted }]}>🔢 {t("New 6-digit PIN")}</Text>
+          <TextInput
+            accessibilityLabel={t("New 6-digit PIN")}
+            value={newPin}
+            onChangeText={(value) => setNewPin(value.replace(/\D/g, "").slice(0, 6))}
+            keyboardType="number-pad"
+            secureTextEntry
+            maxLength={6}
+            style={[
+              styles.forgot,
+              {
+                borderColor: colors.border,
+                color: colors.foreground,
+                fontSize: 24,
+                textAlign: "center",
+              },
+            ]}
+          />
+          <Pressable
+            accessibilityRole="button"
+            disabled={resetPin.isPending || code.length !== 6 || newPin.length !== 6}
+            onPress={() => {
+              setError(null);
+              resetPin
+                .mutateAsync({ mobile: mobile.trim(), code, pin: newPin })
+                .then((result) => {
+                  setNotice(t(result.message));
+                  setAskedCode(false);
+                  setCode("");
+                  setNewPin("");
+                })
+                .catch((cause: unknown) =>
+                  setError(
+                    cause instanceof Error ? t(cause.message) : t("Could not send. Try again."),
+                  ),
+                );
+            }}
+            style={[
+              styles.forgot,
+              { backgroundColor: colors.primary, borderColor: colors.primary },
+            ]}
+          >
+            <Text style={[styles.forgotText, { color: colors.background }]}>
+              ✅ {t("Set new PIN")}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
       {DEMO_MODE ? (
         <Pressable
           accessibilityRole="button"

@@ -21,6 +21,7 @@ const FEATURE_LABEL: Record<WorkerFeature, string> = {
   drawings: "📐 Site drawings",
   call: "📞 Call supervisor",
   help: "🆘 Tell a problem / ask for help",
+  leave: "🛌 Ask for leave",
 };
 
 /**

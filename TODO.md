@@ -6,6 +6,18 @@ Delivered in prior increments: app-managed sign-in/session gate (the former cust
 
 Catalogue presentation now pages server-side in batches of 100 with an exact total; users can navigate pages to locate materials for movement entry. Movement review remains limited to up to 200 oldest pending records and 100 latest posted/rejected records; full history pagination/export is not delivered.
 
+## Increment 2026-11-15 — my tasks, worker leave, leave in attendance, WhatsApp PIN code, salary TDS suggestion
+
+Delivered in source and on the server (typecheck, lint, unit and demo-backend tests for each).
+
+- My tasks: tasks assigned to a person on every site; the assignee may start, finish or block their own task even without task status rights (hold and cancel stay with managers); per-person progress for managers. Closes "tasks have no assignee yet (no per-person task completion)".
+- Mistri app: Ask for leave (big buttons: day, reason), answers shown; a new `leave` feature (on by default for new logins).
+- Approved worker leave marks Leave (0 hours) in attendance for days up to today that have no mark; later days show "On leave" in the roster.
+- Forgot PIN: a 6-digit code goes to the worker's WhatsApp (10 minutes, 5 tries); the worker sets a new PIN with it; supervisors are still told. Closes "OTP/forgot-PIN by WhatsApp".
+- Read-aloud on the worker screen was already delivered (expo-speech and Sarvam voice); closes that open item.
+- Payroll: suggested monthly salary TDS (new regime, FY 2025-26 rates: ₹75,000 standard deduction, 87A rebate to ₹12 lakh with marginal relief, 4% cess) beside each pay line, applied only when accounts taps Use. Still open: CA review; surcharge, other income and declarations are not considered.
+- Still open: native-speaker review of Hindi and Odia; testing on real phones.
+
 ## Increment 2026-11-13 — permissions up front, every screen size, fresh production database
 
 Delivered in source (typecheck, lint, 567 unit tests including the permission plan). Production database reset for the client handover on 2026-11-13 after a backup (`~/backups/jp-2026-11-13.sql.gz` plus `files-20261113-071259.tar.gz` for uploads): 93 empty tables, no users, no files; the first Super Admin comes from the bootstrap flow.

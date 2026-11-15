@@ -226,6 +226,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "task-alt",
+      title: "My tasks",
+      detail: "Work given to you; team progress",
+      tone: "success",
+      route: "/my-tasks",
+      show: true,
+    },
+    {
       icon: "event-busy",
       title: "Leave",
       detail: "Apply, approve, cancel leave",

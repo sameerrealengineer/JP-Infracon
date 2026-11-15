@@ -74,6 +74,24 @@ export const appRouter = router({
           String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
         );
       }),
+    /** A worker sets a new PIN with the code sent to their WhatsApp. */
+    workerResetPin: publicProcedure
+      .input(
+        z.object({
+          mobile: z.string().trim().max(20),
+          code: z.string().trim().max(10),
+          pin: z.string().trim().max(6),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { resetPinWithCode } = await import("./jp/reports");
+        return resetPinWithCode(
+          input.mobile,
+          input.code,
+          input.pin,
+          String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
+        );
+      }),
     registerWithInvite: publicProcedure
       .input(
         z.object({

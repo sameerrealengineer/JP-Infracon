@@ -2,7 +2,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Platform, RefreshControl, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { RUN_TONE, TotalRow, commercialStyles as styles } from "@/components/jp/commercial-ui";
 import {
@@ -504,6 +504,20 @@ export default function PayRunScreen() {
                           onChangeText={setPaidDays}
                           keyboardType="decimal-pad"
                         />
+                      ) : null}
+                      {line.tdsSuggestedMinor !== "0" ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => setTds(rupeeText(line.tdsSuggestedMinor))}
+                        >
+                          <Text
+                            style={{ color: colors.primary, fontWeight: "700", marginBottom: 6 }}
+                          >
+                            {t("Suggested TDS {amount} (new regime, check with your CA) · Use", {
+                              amount: formatMinorAsRupees(line.tdsSuggestedMinor),
+                            })}
+                          </Text>
+                        </Pressable>
                       ) : null}
                       <Field
                         label={t("TDS (₹)")}

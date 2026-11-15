@@ -117,6 +117,13 @@ async function send(request: HttpRequest): Promise<{ ok: boolean; detail: string
   }
 }
 
+/** One WhatsApp text to a number (no opt-in check; used for the person's own sign-in codes). */
+export async function sendWhatsAppText(phone: string, text: string): Promise<boolean> {
+  const config = whatsappConfig();
+  if (!config) return false;
+  return (await send(whatsappRequest(config, phone, text))).ok;
+}
+
 export type AlertEvent = {
   organizationId: string;
   siteId?: string | null;
