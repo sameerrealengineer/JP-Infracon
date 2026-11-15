@@ -3369,3 +3369,70 @@ export const purchaseReturnLines = mysqlTable("purchase_return_lines", {
   amountMinor: decimal("amountMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
   movementId: varchar("movementId", { length: 36 }),
 });
+
+/**
+ * A person on a whole project with a role: they see and work on every site of the project,
+ * including sites added later. A site assignment on the same site is more specific and wins.
+ */
+export const projectAssignments = mysqlTable(
+  "project_assignments",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    role: varchar("role", { length: 64 }).notNull(),
+    status: mysqlEnum("status", ["Active", "Revoked"]).default("Active").notNull(),
+    effectiveFrom: timestamp("effectiveFrom").defaultNow().notNull(),
+    effectiveTo: timestamp("effectiveTo"),
+    assignedBy: int("assignedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userStatusIndex: index("project_assign_user_idx").on(table.userId, table.status),
+    projectIndex: index("project_assign_project_idx").on(table.projectId, table.status),
+  }),
+);
+
+/**
+ * Delegation of authority: the largest amount a role may approve in one area. No row means no
+ * ceiling. Owner and Super Admin are never limited.
+ */
+export const approvalLimits = mysqlTable(
+  "approval_limits",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    role: varchar("role", { length: 64 }).notNull(),
+    area: mysqlEnum("area", [
+      "purchase_order",
+      "subcontract_bill",
+      "supplier_payment",
+      "petty_cash",
+      "client_bill",
+      "budget",
+    ]).notNull(),
+    limitMinor: decimal("limitMinor", { precision: 18, scale: 0, mode: "string" }).notNull(),
+    updatedBy: int("updatedBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    roleAreaUnique: uniqueIndex("approval_limit_role_area_uq").on(
+      table.organizationId,
+      table.role,
+      table.area,
+    ),
+  }),
+);

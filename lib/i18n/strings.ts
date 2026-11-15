@@ -2307,6 +2307,58 @@ export const hi: Dictionary = {
   "New PIN set. Sign in with it now.": "नया PIN बन गया। अब उससे साइन इन करें।",
   "Suggested TDS {amount} (new regime, check with your CA) · Use":
     "सुझाया TDS {amount} (नई व्यवस्था, CA से जाँचें) · लगाएँ",
+  // Access and permissions
+  "Access and permissions": "पहुँच और अनुमतियाँ",
+  "My access, roles, approval limits, project teams, access review":
+    "मेरी पहुँच, भूमिकाएँ, स्वीकृति सीमा, प्रोजेक्ट टीम, पहुँच समीक्षा",
+  "Who can do what, where, up to how much, and why.":
+    "कौन क्या, कहाँ, कितनी राशि तक और क्यों कर सकता है।",
+  "My access": "मेरी पहुँच",
+  Roles: "भूमिकाएँ",
+  "Approval limits": "स्वीकृति सीमा",
+  "Project teams": "प्रोजेक्ट टीम",
+  "Access review": "पहुँच समीक्षा",
+  "Company role": "कंपनी में भूमिका",
+  "My sites": "मेरी साइटें",
+  "{count} sites": "{count} साइटें",
+  "{count} actions allowed": "{count} काम की अनुमति",
+  "Changed just for you": "सिर्फ़ आपके लिए बदला गया",
+  "Authority given to you": "आपको दिया गया अधिकार",
+  "until {date}": "{date} तक",
+  "Sign out on every device": "हर डिवाइस से साइन आउट करें",
+  "This is the default for each role. Leaders can switch single actions on or off for one person in Team accounts → Access.":
+    "यह हर भूमिका का डिफ़ॉल्ट है। लीडर टीम खाते → पहुँच में किसी एक व्यक्ति के लिए अलग काम चालू या बंद कर सकते हैं।",
+  "The largest amount each role may approve. Empty means no limit. The Owner is never limited.":
+    "हर भूमिका जितनी सबसे बड़ी राशि स्वीकृत कर सकती है। खाली मतलब कोई सीमा नहीं। मालिक पर कोई सीमा नहीं।",
+  "No limit": "कोई सीमा नहीं",
+  "Subcontract bills": "ठेकेदार बिल",
+  "Client bills": "ग्राहक बिल",
+  Budgets: "बजट",
+  "People on a project see every site of it, also sites added later.":
+    "प्रोजेक्ट पर रखे लोग उसकी हर साइट देखते हैं, बाद में जुड़ी साइटें भी।",
+  "No one on the whole project yet": "पूरे प्रोजेक्ट पर अभी कोई नहीं",
+  "People may still be on single sites.": "लोग अभी भी अलग-अलग साइटों पर हो सकते हैं।",
+  "Remove from project": "प्रोजेक्ट से हटाएँ",
+  "Add to project": "प्रोजेक्ट में जोड़ें",
+  "Open the web app on a computer to download the file.":
+    "फ़ाइल डाउनलोड करने के लिए कंप्यूटर पर वेब ऐप खोलें।",
+  "Download access review (CSV)": "पहुँच समीक्षा डाउनलोड करें (CSV)",
+  Exceptions: "अपवाद",
+  "{count} active sign-ins": "{count} सक्रिय साइन-इन",
+  "Sign this person out everywhere": "इस व्यक्ति को हर जगह से साइन आउट करें",
+  "Sites, people and audit": "साइटें, लोग और ऑडिट",
+  org: "कंपनी",
+  site: "साइट",
+  project: "प्रोजेक्ट",
+  "Only company leaders or this project's Project Manager can change its team.":
+    "सिर्फ़ कंपनी के लीडर या इस प्रोजेक्ट का प्रोजेक्ट मैनेजर इसकी टीम बदल सकता है।",
+  "Someone else must add you to a project.": "आपको प्रोजेक्ट में कोई और जोड़े।",
+  "This person is not an active member of the company.":
+    "यह व्यक्ति कंपनी का सक्रिय सदस्य नहीं है।",
+  "Only someone above this role can set its approval limit.":
+    "सिर्फ़ इस भूमिका से ऊपर वाला इसकी स्वीकृति सीमा तय कर सकता है।",
+  "This project is outside your access.": "यह प्रोजेक्ट आपकी पहुँच से बाहर है।",
+  "Choose the company.": "कंपनी चुनें।",
 };
 
 export const or: Dictionary = {
@@ -4590,6 +4642,58 @@ export const or: Dictionary = {
   "New PIN set. Sign in with it now.": "ନୂଆ PIN ତିଆରି ହେଲା। ଏବେ ସେଥିରେ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ।",
   "Suggested TDS {amount} (new regime, check with your CA) · Use":
     "ପରାମର୍ଶିତ TDS {amount} (ନୂଆ ବ୍ୟବସ୍ଥା, CA ସହ ଯାଞ୍ଚ କରନ୍ତୁ) · ଲଗାନ୍ତୁ",
+  // Access and permissions
+  "Access and permissions": "ପ୍ରବେଶ ଓ ଅନୁମତି",
+  "My access, roles, approval limits, project teams, access review":
+    "ମୋ ପ୍ରବେଶ, ଭୂମିକା, ଅନୁମୋଦନ ସୀମା, ପ୍ରକଳ୍ପ ଦଳ, ପ୍ରବେଶ ସମୀକ୍ଷା",
+  "Who can do what, where, up to how much, and why.":
+    "କିଏ କଣ, କେଉଁଠି, କେତେ ଟଙ୍କା ପର୍ଯ୍ୟନ୍ତ ଓ କାହିଁକି କରିପାରିବେ।",
+  "My access": "ମୋ ପ୍ରବେଶ",
+  Roles: "ଭୂମିକା",
+  "Approval limits": "ଅନୁମୋଦନ ସୀମା",
+  "Project teams": "ପ୍ରକଳ୍ପ ଦଳ",
+  "Access review": "ପ୍ରବେଶ ସମୀକ୍ଷା",
+  "Company role": "କମ୍ପାନୀରେ ଭୂମିକା",
+  "My sites": "ମୋ ସାଇଟ୍",
+  "{count} sites": "{count} ସାଇଟ୍",
+  "{count} actions allowed": "{count} କାମର ଅନୁମତି",
+  "Changed just for you": "କେବଳ ଆପଣଙ୍କ ପାଇଁ ବଦଳାଯାଇଛି",
+  "Authority given to you": "ଆପଣଙ୍କୁ ଦିଆଯାଇଥିବା ଅଧିକାର",
+  "until {date}": "{date} ପର୍ଯ୍ୟନ୍ତ",
+  "Sign out on every device": "ସବୁ ଡିଭାଇସ୍‌ରୁ ସାଇନ୍ ଆଉଟ୍ କରନ୍ତୁ",
+  "This is the default for each role. Leaders can switch single actions on or off for one person in Team accounts → Access.":
+    "ଏହା ପ୍ରତି ଭୂମିକାର ଡିଫଲ୍ଟ। ନେତାମାନେ ଦଳ ଖାତା → ପ୍ରବେଶରେ ଜଣେ ବ୍ୟକ୍ତିଙ୍କ ପାଇଁ ଅଲଗା କାମ ଚାଲୁ ବା ବନ୍ଦ କରିପାରିବେ।",
+  "The largest amount each role may approve. Empty means no limit. The Owner is never limited.":
+    "ପ୍ରତି ଭୂମିକା ଅନୁମୋଦନ କରିପାରୁଥିବା ସର୍ବାଧିକ ଟଙ୍କା। ଖାଲି ମାନେ କୌଣସି ସୀମା ନାହିଁ। ମାଲିକଙ୍କ ପାଇଁ ସୀମା ନାହିଁ।",
+  "No limit": "ସୀମା ନାହିଁ",
+  "Subcontract bills": "ଠିକାଦାର ବିଲ୍",
+  "Client bills": "ଗ୍ରାହକ ବିଲ୍",
+  Budgets: "ବଜେଟ୍",
+  "People on a project see every site of it, also sites added later.":
+    "ପ୍ରକଳ୍ପରେ ଥିବା ଲୋକେ ଏହାର ସବୁ ସାଇଟ୍ ଦେଖନ୍ତି, ପରେ ଯୋଡ଼ାଯାଇଥିବା ସାଇଟ୍ ମଧ୍ୟ।",
+  "No one on the whole project yet": "ପୂରା ପ୍ରକଳ୍ପରେ ଏପର୍ଯ୍ୟନ୍ତ କେହି ନାହାନ୍ତି",
+  "People may still be on single sites.": "ଲୋକେ ଏବେ ବି ଅଲଗା ସାଇଟ୍‌ରେ ଥାଇପାରନ୍ତି।",
+  "Remove from project": "ପ୍ରକଳ୍ପରୁ ହଟାନ୍ତୁ",
+  "Add to project": "ପ୍ରକଳ୍ପରେ ଯୋଡ଼ନ୍ତୁ",
+  "Open the web app on a computer to download the file.":
+    "ଫାଇଲ୍ ଡାଉନଲୋଡ୍ ପାଇଁ କମ୍ପ୍ୟୁଟରରେ ୱେବ୍ ଆପ୍ ଖୋଲନ୍ତୁ।",
+  "Download access review (CSV)": "ପ୍ରବେଶ ସମୀକ୍ଷା ଡାଉନଲୋଡ୍ କରନ୍ତୁ (CSV)",
+  Exceptions: "ବ୍ୟତିକ୍ରମ",
+  "{count} active sign-ins": "{count} ସକ୍ରିୟ ସାଇନ୍-ଇନ୍",
+  "Sign this person out everywhere": "ଏହି ବ୍ୟକ୍ତିଙ୍କୁ ସବୁଠୁ ସାଇନ୍ ଆଉଟ୍ କରନ୍ତୁ",
+  "Sites, people and audit": "ସାଇଟ୍, ଲୋକ ଓ ଅଡିଟ୍",
+  org: "କମ୍ପାନୀ",
+  site: "ସାଇଟ୍",
+  project: "ପ୍ରକଳ୍ପ",
+  "Only company leaders or this project's Project Manager can change its team.":
+    "କେବଳ କମ୍ପାନୀ ନେତା ବା ଏହି ପ୍ରକଳ୍ପର ପ୍ରକଳ୍ପ ମ୍ୟାନେଜର ଏହାର ଦଳ ବଦଳାଇପାରିବେ।",
+  "Someone else must add you to a project.": "ଆପଣଙ୍କୁ ପ୍ରକଳ୍ପରେ ଅନ୍ୟ କେହି ଯୋଡ଼ନ୍ତୁ।",
+  "This person is not an active member of the company.":
+    "ଏହି ବ୍ୟକ୍ତି କମ୍ପାନୀର ସକ୍ରିୟ ସଦସ୍ୟ ନୁହଁନ୍ତି।",
+  "Only someone above this role can set its approval limit.":
+    "କେବଳ ଏହି ଭୂମିକା ଉପରେ ଥିବା ଜଣେ ଏହାର ଅନୁମୋଦନ ସୀମା ସ୍ଥିର କରିପାରିବେ।",
+  "This project is outside your access.": "ଏହି ପ୍ରକଳ୍ପ ଆପଣଙ୍କ ପ୍ରବେଶ ବାହାରେ।",
+  "Choose the company.": "କମ୍ପାନୀ ବାଛନ୍ତୁ।",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

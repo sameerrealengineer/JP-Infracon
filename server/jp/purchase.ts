@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { approverRole, assertWithinLimit } from "./approval-limits";
 import { and, asc, desc, eq, inArray, like } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -606,6 +607,13 @@ export const purchaseRouter = router({
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "A different person must approve or reject this order.",
+          });
+        if (input.action === "approve")
+          await assertWithinLimit(tx, {
+            organizationId: scope.organizationId,
+            role: approverRole(ctx.user, scope.businessRole),
+            area: "purchase_order",
+            amountMinor: BigInt(order.totalMinor),
           });
         await tx
           .update(purchaseOrders)

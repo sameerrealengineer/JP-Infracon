@@ -60,6 +60,9 @@ import { warrantiesRouter } from "./warranties";
 import { calendarRouter } from "./calendar";
 import { leaveRouter } from "./leave";
 import { purchaseReturnsRouter } from "./purchase-returns";
+import { approvalLimitsRouter } from "./approval-limits";
+import { projectTeamRouter } from "./project-team";
+import { accessReviewRouter } from "./access-review";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -217,6 +220,9 @@ export const jpRouter = router({
   calendar: calendarRouter,
   leave: leaveRouter,
   purchaseReturns: purchaseReturnsRouter,
+  approvalLimits: approvalLimitsRouter,
+  projectTeam: projectTeamRouter,
+  accessReview: accessReviewRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

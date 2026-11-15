@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { approverRole, assertWithinLimit } from "./approval-limits";
 import { and, asc, desc, eq, inArray, isNull, like, lte, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -587,6 +588,13 @@ export const subcontractRouter = router({
           !selfOk
         )
           forbidden("A different person must approve or reject this work order.");
+        if (input.action === "approve")
+          await assertWithinLimit(tx, {
+            organizationId: scope.organizationId,
+            role: approverRole(ctx.user, scope.businessRole),
+            area: "subcontract_bill",
+            amountMinor: BigInt(order.valueMinor),
+          });
         if (input.action === "close") {
           const open = await tx
             .select({ id: subcontractBills.id })
@@ -1037,6 +1045,13 @@ export const subcontractRouter = router({
           !selfOk
         )
           forbidden("A different person must approve or reject this bill.");
+        if (input.action === "approve")
+          await assertWithinLimit(tx, {
+            organizationId: scope.organizationId,
+            role: approverRole(ctx.user, scope.businessRole),
+            area: "subcontract_bill",
+            amountMinor: BigInt(bill.netPayableMinor),
+          });
         let invoiceId = bill.invoiceId;
         if (input.action === "approve") {
           const [order] = await tx

@@ -6,6 +6,7 @@ import type { User } from "../../drizzle/schema";
 import {
   organizationMemberships,
   permissionGrants,
+  projectAssignments,
   projects,
   siteAssignments,
   sites,
@@ -55,6 +56,32 @@ export function assertActiveAccount(user: User): void {
       code: "FORBIDDEN",
       message: "This account is not active. Contact an organisation administrator.",
     });
+  }
+}
+
+/** A person's active project assignments (optionally for some projects only). */
+export async function activeProjectRoles(
+  db: any,
+  userId: number,
+  projectIds?: string[],
+): Promise<{ projectId: string; role: string }[]> {
+  const now = new Date();
+  try {
+    return await db
+      .select({ projectId: projectAssignments.projectId, role: projectAssignments.role })
+      .from(projectAssignments)
+      .where(
+        and(
+          eq(projectAssignments.userId, userId),
+          eq(projectAssignments.status, "Active"),
+          lte(projectAssignments.effectiveFrom, now),
+          or(isNull(projectAssignments.effectiveTo), gte(projectAssignments.effectiveTo, now)),
+          ...(projectIds ? [inArray(projectAssignments.projectId, projectIds)] : []),
+        ),
+      );
+  } catch {
+    // Before migration 0036 there is no table: no project assignments.
+    return [];
   }
 }
 
@@ -128,12 +155,16 @@ export async function getSiteScope(
         ),
       )
       .limit(1);
-    if (!assignment)
+    // No site assignment: a project assignment covers every site of the project.
+    const projectRole = assignment
+      ? null
+      : (await activeProjectRoles(db, user.id, [siteRow.projectId]))[0]?.role;
+    if (!assignment && !projectRole)
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "This site is outside your active assignment.",
       });
-    businessRole = parseBusinessRole(assignment.assignmentRole);
+    businessRole = parseBusinessRole(assignment?.assignmentRole ?? projectRole!);
   }
 
   {
@@ -241,8 +272,28 @@ export async function getAccessibleSites(user: User) {
         or(isNull(siteAssignments.effectiveTo), gte(siteAssignments.effectiveTo, now)),
       ),
     );
-  const allowedSiteIds = [...new Set(assigned.map((row) => row.siteId))];
-  const assignmentRoleBySite = new Map(assigned.map((row) => [row.siteId, row.assignmentRole]));
+  // Project assignments cover every site of the project; a site assignment on the same site wins.
+  const projectRoles = await activeProjectRoles(db, user.id);
+  const projectSites = projectRoles.length
+    ? await db
+        .select({ siteId: sites.id, projectId: sites.projectId })
+        .from(sites)
+        .where(
+          and(
+            inArray(
+              sites.projectId,
+              projectRoles.map((row) => row.projectId),
+            ),
+            inArray(sites.organizationId, assignmentOrgIds),
+          ),
+        )
+    : [];
+  const projectRoleById = new Map(projectRoles.map((row) => [row.projectId, row.role]));
+  const assignmentRoleBySite = new Map<string, string>();
+  for (const row of projectSites)
+    assignmentRoleBySite.set(row.siteId, projectRoleById.get(row.projectId)!);
+  for (const row of assigned) assignmentRoleBySite.set(row.siteId, row.assignmentRole);
+  const allowedSiteIds = [...assignmentRoleBySite.keys()];
 
   const visibleByOrg =
     broadOrgIds.length === 0

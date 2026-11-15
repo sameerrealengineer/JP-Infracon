@@ -253,6 +253,13 @@
       "when": 1794666403503,
       "tag": "0035_wealthy_frog_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1794723919578,
+      "tag": "0036_damp_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

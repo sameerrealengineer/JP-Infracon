@@ -16,7 +16,7 @@ import {
   users,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
-import { assertActiveAccount } from "./access";
+import { activeProjectRoles, assertActiveAccount } from "./access";
 import {
   generateTemporaryPassword,
   hashPassword,
@@ -292,7 +292,25 @@ export async function accountManagerScope(
         or(isNull(siteAssignments.effectiveTo), gte(siteAssignments.effectiveTo, now)),
       ),
     );
-  const siteIds = [...new Set(own.map((row) => row.siteId))];
+  // Project assignments give every site of the project.
+  const projectRoles = await activeProjectRoles(db, user.id);
+  const projectSites = projectRoles.length
+    ? await db
+        .select({ siteId: sites.id })
+        .from(sites)
+        .where(
+          and(
+            eq(sites.organizationId, organizationId),
+            inArray(
+              sites.projectId,
+              projectRoles.map((row) => row.projectId),
+            ),
+          ),
+        )
+    : [];
+  const siteIds = [
+    ...new Set([...own.map((row) => row.siteId), ...projectSites.map((row) => row.siteId)]),
+  ];
   if (!siteIds.length)
     throw new TRPCError({
       code: "FORBIDDEN",

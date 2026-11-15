@@ -20,10 +20,10 @@ describe("worker app rules", () => {
     expect(locked.lockedUntil?.toISOString()).toBe("2026-11-05T10:30:00.000Z");
   });
 
-  it("reads switched-on features, defaulting to money, attendance and call", () => {
-    expect(parseFeatures(null)).toEqual(["money", "attendance", "call", "help"]);
+  it("reads switched-on features, defaulting to money, attendance, call, help and leave", () => {
+    expect(parseFeatures(null)).toEqual(["money", "attendance", "call", "help", "leave"]);
     expect(parseFeatures('["drawings","money","bogus"]')).toEqual(["money", "drawings"]);
-    expect(parseFeatures("not json")).toEqual(["money", "attendance", "call", "help"]);
+    expect(parseFeatures("not json")).toEqual(["money", "attendance", "call", "help", "leave"]);
   });
 
   it("shows attendance as a simple sign", () => {

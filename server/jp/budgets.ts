@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { approverRole, assertWithinLimit } from "./approval-limits";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -514,6 +515,13 @@ export const budgetsRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Give a reason for rejecting." });
       const status: "Approved" | "Rejected" =
         input.decision === "Approve" ? "Approved" : "Rejected";
+      if (input.decision === "Approve")
+        await assertWithinLimit(db, {
+          organizationId: scope.organizationId,
+          role: approverRole(ctx.user, scope.businessRole),
+          area: "budget",
+          amountMinor: BigInt(budget.totalMinor),
+        });
       await db.transaction(async (tx) => {
         const [locked] = await tx
           .select({ status: projectBudgets.status })

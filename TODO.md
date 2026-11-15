@@ -205,6 +205,7 @@ Delivered in source (typecheck, lint with 0 errors, 121 unit tests, API build, w
 - Exported data includes organisation/site, filter range, generated timestamp, and pagination/continuation markers where applicable; CSV escapes untrusted text fields and PDF layouts are printable.
 - Admin screens support users, roles, site assignments, permission grants/revocations, approval policies, master data, reports/export history, privacy, and operational settings.
 - Admin can set approval thresholds; do not hard-code ₹25,000 or ₹50,000 as universal limits. Approval request and review history remain visible.
+  - Done 15 Nov 2026 (evidence: `lib/demo/rbac.test.ts`): approval limits per role and area set in Access and permissions, enforced on the server inside each approval (PO, work order, subcontract bill, supplier payment, petty cash, budget, client bill); project teams give whole-project scope incl. sites added later; role matrix, My access, access review CSV (audited) and sign out everywhere. Pending: live check on production after migration 0036.
 
 ## 12. Backend, security, release, and QA foundations — IN PROGRESS
 

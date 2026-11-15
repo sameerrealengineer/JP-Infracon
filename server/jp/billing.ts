@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { approverRole, assertWithinLimit } from "./approval-limits";
 import { and, asc, desc, eq, inArray, like, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -651,6 +652,13 @@ const billsRouter = router({
         if (!bill || bill.organizationId !== access.organizationId)
           throw new TRPCError({ code: "NOT_FOUND", message: "Bill not found." });
         requireProject(access, bill.projectId);
+        if (input.action === "approve")
+          await assertWithinLimit(tx, {
+            organizationId: access.organizationId,
+            role: approverRole(ctx.user, access.role),
+            area: "client_bill",
+            amountMinor: BigInt(bill.netReceivableMinor),
+          });
         const plan: Record<string, { from: string[]; to: string; maker: boolean }> = {
           submit: { from: ["Draft"], to: "Submitted", maker: true },
           approve: { from: ["Submitted"], to: "Approved", maker: false },

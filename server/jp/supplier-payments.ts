@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { approverRole, assertWithinLimit } from "./approval-limits";
 import { and, asc, count, desc, eq, gte, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -880,6 +881,13 @@ export const supplierPaymentRouter = router({
           throw new TRPCError({
             code: "CONFLICT",
             message: "Only a Submitted payment can be reviewed.",
+          });
+        if (status === "Approved")
+          await assertWithinLimit(tx, {
+            organizationId: scope.organizationId,
+            role: approverRole(ctx.user, scope.businessRole),
+            area: "supplier_payment",
+            amountMinor: BigInt(payment.amountMinor),
           });
         await enforceConfiguredActionLimits(tx, {
           userId: ctx.user.id,

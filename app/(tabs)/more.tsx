@@ -266,6 +266,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "admin-panel-settings",
+      title: "Access and permissions",
+      detail: "My access, roles, approval limits, project teams, access review",
+      tone: "info",
+      route: "/access",
+      show: true,
+    },
+    {
       icon: "delete-sweep",
       title: "Sample data",
       detail: "Remove all example records in one tap",

@@ -185,8 +185,12 @@ export default function RootLayout() {
           // background), so approvals and new records from others appear without a refresh.
           refetchInterval: 45_000,
           refetchIntervalInBackground: false,
-          // Never retry a signed-out refusal; it will not change.
-          retry: (count, error) => !isSignedOutError(error) && count < 1,
+          // Never retry a signed-out or permission refusal; it will not change, and the screen
+          // should show "no access" at once instead of a spinner.
+          retry: (count, error) =>
+            !isSignedOutError(error) &&
+            (error as { data?: { code?: string } } | null)?.data?.code !== "FORBIDDEN" &&
+            count < 1,
         },
       },
     });

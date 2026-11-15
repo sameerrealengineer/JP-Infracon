@@ -41,7 +41,7 @@ describe("problem reports", () => {
   it("a forgotten PIN reaches the manager's inbox and closes with the new PIN", async () => {
     const guest = await callerFor(null);
     const answer = await guest.auth.workerForgotPin({ mobile: `+91 ${DEMO_WORKER.mobile}` });
-    expect(answer.message).toMatch(/supervisor has been told/);
+    expect(answer.message).toMatch(/supervisor was told/);
     // An unknown number gets the very same answer and stores nothing.
     expect((await guest.auth.workerForgotPin({ mobile: "9000000001" })).message).toBe(
       answer.message,
