@@ -100,6 +100,11 @@ describe("client seed", () => {
     const returns = await boss.jp.purchaseReturns.list({ siteId: tank.id });
     expect(returns.map((row) => row.status).sort()).toEqual(["Settled", "Submitted"]);
 
+    const around = (offset: number) =>
+      new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
+    const leaveEvents = await boss.jp.calendar.range({ from: around(-10), to: around(10) });
+    expect(leaveEvents.some((event) => event.kind === "leave")).toBe(true);
+
     // One step removes every SAMPLE record; real people, suppliers, sites and logins stay.
     const organizationId = aska.organizationId;
     const before = await boss.jp.sampleData.status({ organizationId });

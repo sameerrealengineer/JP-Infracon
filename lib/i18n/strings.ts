@@ -2272,6 +2272,8 @@ export const hi: Dictionary = {
   "Another person must decide on a leave you applied for.":
     "आपकी अपनी छुट्टी पर कोई और फ़ैसला करेगा।",
   "Another person must approve a return you made.": "आपकी बनाई वापसी कोई और मंज़ूर करेगा।",
+  // Attendance leave
+  "On leave": "छुट्टी पर",
 };
 
 export const or: Dictionary = {
@@ -4521,6 +4523,8 @@ export const or: Dictionary = {
   "Another person must decide on a leave you applied for.":
     "ଆପଣଙ୍କ ନିଜ ଛୁଟି ଉପରେ ଅନ୍ୟ ଜଣେ ନିଷ୍ପତ୍ତି ନେବେ।",
   "Another person must approve a return you made.": "ଆପଣ କରିଥିବା ଫେରସ୍ତ ଅନ୍ୟ ଜଣେ ଅନୁମୋଦନ କରିବେ।",
+  // Attendance leave
+  "On leave": "ଛୁଟିରେ",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

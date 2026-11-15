@@ -14,7 +14,7 @@ export async function callerForUserId(userId: number): Promise<SeedCaller> {
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user) throw new Error(`No account with id ${userId}.`);
   const req = {
-    headers: { "x-jp-client-platform": "seed", "x-jp-inbox": "2" },
+    headers: { "x-jp-client-platform": "seed", "x-jp-inbox": "3" },
     ip: "127.0.0.1",
     socket: { remoteAddress: "127.0.0.1" },
     protocol: "https",

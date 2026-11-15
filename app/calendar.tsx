@@ -13,7 +13,7 @@ const KIND: Record<
   {
     label: string;
     color: string;
-    icon: "event" | "flag" | "receipt-long" | "verified" | "handyman";
+    icon: "event" | "flag" | "receipt-long" | "verified" | "handyman" | "event-busy";
   }
 > = {
   task_start: { label: "Task starts", color: "#2F6FB0", icon: "event" },
@@ -21,6 +21,7 @@ const KIND: Record<
   bill_due: { label: "Bill due", color: "#B08A3E", icon: "receipt-long" },
   warranty_end: { label: "Warranty ends", color: "#7D3C98", icon: "verified" },
   work_order_end: { label: "Work order ends", color: "#1E8449", icon: "handyman" },
+  leave: { label: "Leave", color: "#5D6D7E", icon: "event-busy" },
 };
 const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -170,7 +171,7 @@ export default function CalendarScreen() {
           ) : (
             <View style={{ gap: 8 }}>
               {dayEvents.map((event, index) => {
-                const kind = KIND[event.kind]!;
+                const kind = KIND[event.kind] ?? KIND.task_start!;
                 return (
                   <Card
                     key={`${event.kind}-${index}`}

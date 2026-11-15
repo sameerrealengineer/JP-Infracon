@@ -72,8 +72,8 @@ export function createTRPCClient() {
           const token = await Auth.getSessionToken();
           return {
             "x-jp-client-platform": Platform.OS,
-            // This app shows any inbox kind safely (see server/jp/inbox.ts).
-            "x-jp-inbox": "2",
+            // Which newer record kinds this app understands (inbox: 2, calendar leave: 3).
+            "x-jp-inbox": "3",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           };
         },
@@ -106,8 +106,8 @@ export function createBackgroundClient() {
           const token = await Auth.getSessionToken();
           return {
             "x-jp-client-platform": Platform.OS,
-            // This app shows any inbox kind safely (see server/jp/inbox.ts).
-            "x-jp-inbox": "2",
+            // Which newer record kinds this app understands (inbox: 2, calendar leave: 3).
+            "x-jp-inbox": "3",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           };
         },

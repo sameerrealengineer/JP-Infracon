@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, gte, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
@@ -9,6 +9,7 @@ import {
   sites,
   users,
   workerEngagements,
+  leaveRequests,
 } from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
@@ -105,11 +106,28 @@ export const attendanceRouter = router({
             eq(attendanceRecords.shiftCode, input.shiftCode),
           ),
         );
+      // Approved leave on this day, so the marker sees who is away.
+      const personIds = engagements.map((engagement) => engagement.personId);
+      const leave = personIds.length
+        ? await db
+            .select({ personId: leaveRequests.personId, leaveType: leaveRequests.leaveType })
+            .from(leaveRequests)
+            .where(
+              and(
+                inArray(leaveRequests.personId, personIds),
+                eq(leaveRequests.status, "Approved"),
+                lte(leaveRequests.fromDate, input.workDate),
+                gte(leaveRequests.toDate, input.workDate),
+              ),
+            )
+            .catch(() => [])
+        : [];
       return {
         siteName: scope.siteName,
         rows: engagements.map((engagement) => {
           const record = marked.find((row) => row.engagementId === engagement.engagementId);
           return {
+            onLeave: leave.find((row) => row.personId === engagement.personId)?.leaveType ?? null,
             engagementId: engagement.engagementId,
             name: engagement.name,
             trade: engagement.trade,

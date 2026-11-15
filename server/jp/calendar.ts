@@ -1,7 +1,15 @@
-import { and, gte, inArray, lte, ne } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { supplierInvoices, warranties, workOrders, workTasks } from "../../drizzle/schema";
+import {
+  leaveRequests,
+  people,
+  supplierInvoices,
+  users,
+  warranties,
+  workOrders,
+  workTasks,
+} from "../../drizzle/schema";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { getAccessibleSites } from "./access";
@@ -9,7 +17,7 @@ import { siteCapabilities } from "./capabilities";
 
 export type CalendarEvent = {
   date: string;
-  kind: "task_start" | "task_due" | "bill_due" | "warranty_end" | "work_order_end";
+  kind: "task_start" | "task_due" | "bill_due" | "warranty_end" | "work_order_end" | "leave";
   title: string;
   siteId: string;
   siteName: string;
@@ -155,6 +163,44 @@ export const calendarRouter = router({
               route: `/subcontract?siteId=${wo.siteId}`,
               done: wo.status === "Closed",
             });
+      }
+      // Approved leave (staff and workers) on sites where the person sees the workforce.
+      // Apps before 1.5.17 do not know this kind and would fail on it: only newer ones get it.
+      const appVersion = Number(ctx.req.headers["x-jp-inbox"] ?? 1);
+      const leaveSites = appVersion >= 3 ? with_("workforce.view") : [];
+      if (leaveSites.length) {
+        const rows = await db
+          .select({
+            fromDate: leaveRequests.fromDate,
+            toDate: leaveRequests.toDate,
+            leaveType: leaveRequests.leaveType,
+            siteId: leaveRequests.siteId,
+            userName: users.name,
+            personName: people.fullName,
+          })
+          .from(leaveRequests)
+          .leftJoin(users, eq(leaveRequests.applicantUserId, users.id))
+          .leftJoin(people, eq(leaveRequests.personId, people.id))
+          .where(
+            and(
+              inArray(leaveRequests.siteId, leaveSites),
+              eq(leaveRequests.status, "Approved"),
+              lte(leaveRequests.fromDate, to),
+              gte(leaveRequests.toDate, from),
+            ),
+          )
+          .limit(500)
+          .catch(() => []);
+        for (const row of rows)
+          events.push({
+            date: row.fromDate < from ? from : row.fromDate,
+            kind: "leave",
+            title: `On leave: ${row.personName ?? row.userName ?? ""} (${row.leaveType}) until ${row.toDate}`,
+            siteId: row.siteId,
+            siteName: names.get(row.siteId) ?? "",
+            route: "/leave",
+            done: false,
+          });
       }
       events.sort((a, b) => a.date.localeCompare(b.date) || a.kind.localeCompare(b.kind));
       return events;

@@ -273,6 +273,13 @@ function MarkDay({
                           {[row.trade, row.engagementType].filter(Boolean).join(" · ")}
                         </Text>
                       </View>
+                      {row.onLeave ? (
+                        <StatusPill
+                          label={`${t("On leave")} · ${t(row.onLeave)}`}
+                          tone="info"
+                          compact
+                        />
+                      ) : null}
                       {row.record?.approved ? (
                         <StatusPill label="Approved" tone="success" compact />
                       ) : row.record ? (

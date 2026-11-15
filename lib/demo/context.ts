@@ -5,7 +5,7 @@ export async function buildDemoContext(token: string | null | undefined, platfor
   const req = {
     headers: {
       "x-jp-client-platform": platform,
-      "x-jp-inbox": "2",
+      "x-jp-inbox": "3",
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     ip: "127.0.0.1",
