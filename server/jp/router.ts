@@ -64,6 +64,7 @@ import { approvalLimitsRouter } from "./approval-limits";
 import { projectTeamRouter } from "./project-team";
 import { accessReviewRouter } from "./access-review";
 import { dailySummaryRouter } from "./daily-summary";
+import { analyticsRouter } from "./analytics";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -225,6 +226,7 @@ export const jpRouter = router({
   projectTeam: projectTeamRouter,
   accessReview: accessReviewRouter,
   dailySummary: dailySummaryRouter,
+  analytics: analyticsRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

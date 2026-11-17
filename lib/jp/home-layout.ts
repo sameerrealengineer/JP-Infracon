@@ -26,6 +26,41 @@ export type HomeGroup = { key: string; title: string; modules: readonly HomeModu
 
 export const HOME_GROUPS: readonly HomeGroup[] = [
   {
+    key: "insights",
+    title: "Insights & tools",
+    modules: [
+      {
+        key: "analytics",
+        title: "Analytics",
+        icon: "insights",
+        tone: "info",
+        route: "/analytics",
+      },
+      {
+        key: "gantt",
+        title: "Gantt & S-curve",
+        icon: "stacked-line-chart",
+        tone: "accent",
+        route: "/gantt",
+        anyOf: ["task.view"],
+      },
+      {
+        key: "civil-tools",
+        title: "Civil tools",
+        icon: "calculate",
+        tone: "success",
+        route: "/civil-tools",
+      },
+      {
+        key: "day-summary",
+        title: "Day summary",
+        icon: "summarize",
+        tone: "warning",
+        route: "/day-summary",
+      },
+    ],
+  },
+  {
     key: "business",
     title: "Business",
     modules: [

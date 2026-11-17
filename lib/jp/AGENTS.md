@@ -68,6 +68,11 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `ai-request-extraction.ts` | Prompt, schema and re-checking of AI material request drafts (names, quantities, units); saves nothing |
 | `daily-summary.ts` | The 11 PM day summary text: IST clock, when it is due, Indian rupees, per-site attendance/reports/measurements/money lines shown only when visible |
 | `approval-limits.ts` | Approval areas and labels, roles that can have a ceiling, `ceilingExceeded`, rupee text |
+| `civil-tools.ts` | 29 site calculators as data + pure `compute` (concrete/footing by nominal mix and dry volume 1.54, brick, plaster, paint, tiles, excavation, filling, road, steel d²/162, shuttering, anti-termite, tank capacity, OHT painting area, disinfection dose, pump power, pipe flow, rainwater, staircase, slope, Odisha area units, volume/brass, triangle plot, labour days, carriage, building cost, works bill GST/TDS in exact paise); one screen (`app/civil-tool.tsx`) renders any of them |
+| `bbs.ts` | Bar bending schedule: cutting length by shape (bend deductions, hooks, cranks, stirrups), bars, weight, totals per diameter, 12 m bars to order, CSV |
+| `rate-analysis.ts` | Rate per unit (material + labour + plant + water % + overhead & profit %) and the estimate abstract with contingency and GST, exact paise |
+| `s-curve.ts` | Planned vs actual S-curve points and Gantt rows from tasks and DPR progress history |
+| `analytics.ts` | Dashboard helpers: ranges, day/week buckets, paise sums per series, top-N, ageing buckets, short rupee labels (L / Cr) |
 | `permission-plan.ts` | Permissions asked up front after sign-in, per platform and in order (notifications first), status mapping, which to ask and which are blocked |
 
 ## Conventions

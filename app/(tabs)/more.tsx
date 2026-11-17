@@ -266,6 +266,22 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "insights",
+      title: "Analytics",
+      detail: "Money, progress, labour and materials in charts",
+      tone: "info",
+      route: "/analytics",
+      show: true,
+    },
+    {
+      icon: "calculate",
+      title: "Civil tools",
+      detail: "32 calculators: concrete, brick, BBS, estimate, tanks, Gantt and more",
+      tone: "accent",
+      route: "/civil-tools",
+      show: true,
+    },
+    {
       icon: "summarize",
       title: "Day summary",
       detail: "Today's attendance, reports, work and money out (also on WhatsApp at 11 PM)",
