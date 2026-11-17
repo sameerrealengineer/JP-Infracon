@@ -37,7 +37,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `budget-domain.ts` | Budget cost heads, supplier type to head, line validation, budget vs approved spend per head (ok / near / over), margins |
 | `progress-domain.ts` | Task and site progress (tenths of a percent), expected-by-today, health (ahead / on track / behind) |
 | `profile-policy.ts` | Profile field cleaning (mobile, PIN code), address text, completeness |
-| `modules.ts` | Company modules that can be turned off, permission → module, audit action → module |
+| `modules.ts` | Company modules that can be turned off, permission → module, audit action → module, the A-Class starting set (`A_CLASS_ON`, `defaultDisabledModules`) |
 | `assistant-catalog.ts` | Screens the assistant may open and `resolveAssistantAction` (only allowed screens, own sites, drafts where the person may create) |
 | `selection.ts` | Keeping a chosen site, section, role, or page valid as server data changes (`resolveSelectedId`, `resolveChoice`, `clampPageIndex`) |
 | `home-layout.ts` | Home screen module groups, quick actions and badge counts from capabilities and inbox kinds |
@@ -66,6 +66,8 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `help-content.ts` | In-app guide topics, first steps per role (`startPathFor`), troubleshooting |
 | `ai-expense-extraction.ts` | Prompt, schema and re-checking of AI petty cash expense drafts (amount, date, payment mode); saves nothing |
 | `ai-request-extraction.ts` | Prompt, schema and re-checking of AI material request drafts (names, quantities, units); saves nothing |
+| `daily-summary.ts` | The 11 PM day summary text: IST clock, when it is due, Indian rupees, per-site attendance/reports/measurements/money lines shown only when visible |
+| `approval-limits.ts` | Approval areas and labels, roles that can have a ceiling, `ceilingExceeded`, rupee text |
 | `permission-plan.ts` | Permissions asked up front after sign-in, per platform and in order (notifications first), status mapping, which to ask and which are blocked |
 
 ## Conventions

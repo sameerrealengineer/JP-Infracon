@@ -67,3 +67,29 @@ describe("assistant actions", () => {
     expect(resolveAssistantAction({ type: "pay_supplier" }, context)).toEqual({ type: "none" });
   });
 });
+
+describe("assistant module changes", () => {
+  const keys = ["crm", "issues", "billing"];
+  it("proposes a module change only to company leaders, as a link to review and save", () => {
+    const proposed = { type: "modules", modulesOn: ["crm", "bogus"], modulesOff: ["issues"] };
+    expect(resolveAssistantAction(proposed, { ...context, moduleKeys: keys })).toEqual({
+      type: "none",
+    });
+    const action = resolveAssistantAction(proposed, {
+      ...context,
+      canManageModules: true,
+      moduleKeys: keys,
+    });
+    expect(action).toMatchObject({ type: "modules", on: ["crm"], off: ["issues"] });
+    expect(action.type === "modules" && action.route).toBe("/modules?turnOn=crm&turnOff=issues");
+  });
+
+  it("ignores an empty or unknown change", () => {
+    expect(
+      resolveAssistantAction(
+        { type: "modules", modulesOn: ["nope"] },
+        { ...context, canManageModules: true, moduleKeys: keys },
+      ),
+    ).toEqual({ type: "none" });
+  });
+});

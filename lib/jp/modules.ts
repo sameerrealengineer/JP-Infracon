@@ -119,6 +119,31 @@ export function cleanModuleList(keys: readonly string[]): ModuleKey[] {
   return MODULE_KEYS.filter((key) => wanted.has(key));
 }
 
+/**
+ * The starting set for an A-Class works contractor (what the client asked for on 15 Nov 2026):
+ * daily reports, attendance, workforce, schedule, material requests, inventory, finance,
+ * subcontractors, payroll and advances, documents, client billing. Everything else starts off
+ * and a leader turns it on from Modules (or by asking the assistant) when needed.
+ */
+export const A_CLASS_ON: readonly ModuleKey[] = [
+  "reports",
+  "attendance",
+  "workforce",
+  "schedule",
+  "materials",
+  "inventory",
+  "finance",
+  "subcontract",
+  "payroll",
+  "documents",
+  "billing",
+];
+
+/** Modules off for a company that has never saved its own choice. */
+export function defaultDisabledModules(): ModuleKey[] {
+  return MODULE_KEYS.filter((key) => !A_CLASS_ON.includes(key));
+}
+
 export function parseDisabledModules(stored: string | null | undefined): ModuleKey[] {
   if (!stored) return [];
   try {

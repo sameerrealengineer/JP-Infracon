@@ -266,6 +266,14 @@ export default function MoreScreen() {
       show: true,
     },
     {
+      icon: "summarize",
+      title: "Day summary",
+      detail: "Today's attendance, reports, work and money out (also on WhatsApp at 11 PM)",
+      tone: "accent",
+      route: "/day-summary",
+      show: true,
+    },
+    {
       icon: "admin-panel-settings",
       title: "Access and permissions",
       detail: "My access, roles, approval limits, project teams, access review",

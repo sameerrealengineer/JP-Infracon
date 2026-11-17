@@ -33,6 +33,22 @@ const PERSON_TYPES = [
   ["technician", "Technician"],
   ["subcontractor_contact", "Subcontractor contact"],
 ] as const;
+/** One tap for the usual people on an A-Class site (still editable below). */
+const COMMON_TRADES = [
+  "Mason (Mistri)",
+  "Helper (Labour)",
+  "Painter",
+  "Carpenter",
+  "Bar bender",
+  "Electrician",
+  "Plumber",
+  "Driver",
+  "Cook",
+  "Watchman",
+  "Supervisor",
+  "Operator",
+] as const;
+
 const SKILL_CATEGORIES = ["Skilled", "Semi-skilled", "Unskilled", "Not specified"] as const;
 const RATE_TYPES = [
   ["daily", "Daily"],
@@ -499,6 +515,20 @@ export default function WorkforceScreen() {
                         selected={skillCategory === value}
                         onPress={() => {
                           setSkillCategory(value);
+                          resetCreateKey();
+                        }}
+                      />
+                    ))}
+                  </View>
+                  <Text style={[styles.label, { color: colors.muted }]}>Trade / role</Text>
+                  <View style={styles.choiceWrap}>
+                    {COMMON_TRADES.map((value) => (
+                      <Choice
+                        key={value}
+                        label={value}
+                        selected={tradeType === value}
+                        onPress={() => {
+                          setTradeType(tradeType === value ? "" : value);
                           resetCreateKey();
                         }}
                       />

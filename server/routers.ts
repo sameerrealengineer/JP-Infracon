@@ -92,6 +92,33 @@ export const appRouter = router({
           String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
         );
       }),
+    /** Staff forgot username or password: username + code on WhatsApp to the saved mobile. */
+    staffForgotLogin: publicProcedure
+      .input(z.object({ mobile: z.string().trim().max(20) }))
+      .mutation(async ({ ctx, input }) => {
+        const { requestStaffReset } = await import("./jp/staff-recovery");
+        return requestStaffReset(
+          input.mobile,
+          String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
+        );
+      }),
+    /** Staff set a new password with the WhatsApp code. */
+    staffResetPassword: publicProcedure
+      .input(
+        z.object({
+          mobile: z.string().trim().max(20),
+          code: z.string().trim().max(10),
+          username: z.string().trim().min(3).max(32),
+          password: z.string().max(128),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const { resetStaffPasswordWithCode } = await import("./jp/staff-recovery");
+        return resetStaffPasswordWithCode(
+          input,
+          String(ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown"),
+        );
+      }),
     registerWithInvite: publicProcedure
       .input(
         z.object({

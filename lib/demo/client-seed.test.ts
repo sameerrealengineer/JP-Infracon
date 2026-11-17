@@ -43,6 +43,8 @@ describe("client seed", () => {
     const first = await runClientSeed("sameer");
     // Running again adds nothing.
     expect((await runClientSeed("sameer")).notes).toEqual([]);
+    // A new company starts with the A-Class set; turn everything on to check every sample.
+    await boss.jp.modules.update({ disabled: [], reason: "Check every sample record" });
 
     const sites = await boss.jp.workspace.mySites();
     expect(sites.find((site) => site.code === SEED_SITE_CODE)?.status).toBe("Completed");

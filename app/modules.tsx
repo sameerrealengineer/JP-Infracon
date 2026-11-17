@@ -1,5 +1,6 @@
 import { useT } from "@/lib/i18n";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 
@@ -36,7 +37,18 @@ export default function ModulesScreen() {
   const settings = trpc.jp.modules.settings.useQuery();
   const update = trpc.jp.modules.update.useMutation();
   const suggest = trpc.jp.modules.suggest.useMutation();
-  const [draft, setDraft] = useState<Record<string, boolean> | null>(null);
+  // The assistant can propose a change (?turnOn=crm&turnOff=issues); it shows as unsaved
+  // switches here and the leader saves it themselves.
+  const params = useLocalSearchParams<{ turnOn?: string; turnOff?: string }>();
+  const [draft, setDraft] = useState<Record<string, boolean> | null>(() => {
+    const on = typeof params.turnOn === "string" ? params.turnOn.split(",").filter(Boolean) : [];
+    const off = typeof params.turnOff === "string" ? params.turnOff.split(",").filter(Boolean) : [];
+    if (!on.length && !off.length) return null;
+    return Object.fromEntries([
+      ...off.map((key) => [key, false] as const),
+      ...on.map((key) => [key, true] as const),
+    ]);
+  });
   const [about, setAbout] = useState("");
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [message, setMessage] = useState<string | null>(null);

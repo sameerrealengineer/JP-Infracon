@@ -287,6 +287,16 @@ export default function WorkOrderScreen() {
                   value={formatMinorAsRupees(data.position.measuredValueMinor)}
                 />
                 <TotalRow
+                  label={t("Work left (not yet measured)")}
+                  value={formatMinorAsRupees(
+                    (() => {
+                      const left =
+                        BigInt(data.position.valueMinor) - BigInt(data.position.measuredValueMinor);
+                      return (left > 0n ? left : 0n).toString();
+                    })(),
+                  )}
+                />
+                <TotalRow
                   label={t("Billed (approved)")}
                   value={formatMinorAsRupees(data.position.billedValueMinor)}
                 />

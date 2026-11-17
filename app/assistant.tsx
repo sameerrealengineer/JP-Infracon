@@ -414,14 +414,27 @@ export default function AssistantScreen() {
                     ]}
                   >
                     <MaterialIcons
-                      name={message.action.type === "open" ? "open-in-new" : "edit-note"}
+                      name={
+                        message.action.type === "open"
+                          ? "open-in-new"
+                          : message.action.type === "modules"
+                            ? "tune"
+                            : "edit-note"
+                      }
                       size={18}
                       color="#0E1A26"
                     />
                     <Text style={styles.actionText}>
-                      {"label" in message.action ? message.action.label : "Open"}
+                      {"label" in message.action ? t(message.action.label) : t("Open")}
                     </Text>
                   </Pressable>
+                ) : null}
+                {message.action?.type === "modules" ? (
+                  <Text style={[styles.hint, { color: colors.muted }]}>
+                    {t(
+                      "Nothing is changed yet. Modules opens with the change marked; check it and save.",
+                    )}
+                  </Text>
                 ) : null}
                 {message.action?.type === "draft_report" ||
                 message.action?.type === "draft_issue" ? (

@@ -202,11 +202,18 @@ export const ASSISTANT_SCREENS: readonly AssistantScreen[] = [
   },
 ] as const;
 
-export const ASSISTANT_ACTIONS = ["none", "open", "draft_report", "draft_issue"] as const;
+export const ASSISTANT_ACTIONS = [
+  "none",
+  "open",
+  "draft_report",
+  "draft_issue",
+  "modules",
+] as const;
 export type AssistantActionType = (typeof ASSISTANT_ACTIONS)[number];
 
 export type AssistantAction =
   | { type: "none" }
+  | { type: "modules"; route: string; on: string[]; off: string[]; label: string }
   | { type: "open"; screen: string; route: string; siteId: string | null; label: string }
   | {
       type: "draft_report" | "draft_issue";
@@ -243,14 +250,42 @@ export function resolveAssistantAction(
     siteId?: unknown;
     text?: unknown;
     reportKind?: unknown;
+    modulesOn?: unknown;
+    modulesOff?: unknown;
   } | null,
   context: {
     held: ReadonlySet<string>;
     sitePermissions: ReadonlyMap<string, ReadonlySet<string>>;
     defaultSiteId: string | null;
+    /** Owner, director or admin: may change company modules (still only after their own tap). */
+    canManageModules?: boolean;
+    /** Known module keys. */
+    moduleKeys?: readonly string[];
   },
 ): AssistantAction {
   if (!proposed || typeof proposed.type !== "string") return { type: "none" };
+  if (proposed.type === "modules") {
+    if (!context.canManageModules) return { type: "none" };
+    const known = new Set(context.moduleKeys ?? []);
+    const list = (value: unknown) =>
+      Array.isArray(value)
+        ? [
+            ...new Set(
+              value.filter((key): key is string => typeof key === "string" && known.has(key)),
+            ),
+          ]
+        : [];
+    const on = list(proposed.modulesOn);
+    const off = list(proposed.modulesOff).filter((key) => !on.includes(key));
+    if (!on.length && !off.length) return { type: "none" };
+    return {
+      type: "modules",
+      on,
+      off,
+      route: withQuery("/modules", { turnOn: on.join(","), turnOff: off.join(",") }),
+      label: "Review and save the module change",
+    };
+  }
   const siteId =
     typeof proposed.siteId === "string" && context.sitePermissions.has(proposed.siteId)
       ? proposed.siteId

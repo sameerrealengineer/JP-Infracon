@@ -2359,6 +2359,50 @@ export const hi: Dictionary = {
     "सिर्फ़ इस भूमिका से ऊपर वाला इसकी स्वीकृति सीमा तय कर सकता है।",
   "This project is outside your access.": "यह प्रोजेक्ट आपकी पहुँच से बाहर है।",
   "Choose the company.": "कंपनी चुनें।",
+  // Forgot login, day summary, A-Class modules
+  "Forgot username or password?": "यूज़रनेम या पासवर्ड भूल गए?",
+  "Forgot username or password": "यूज़रनेम या पासवर्ड भूल गए",
+  "Enter the mobile number saved in your profile. Your username and a code come on WhatsApp.":
+    "अपनी प्रोफ़ाइल में सहेजा मोबाइल नंबर डालें। यूज़रनेम और कोड WhatsApp पर आएगा।",
+  "Send code on WhatsApp": "WhatsApp पर कोड भेजें",
+  "The two passwords are not the same.": "दोनों पासवर्ड एक जैसे नहीं हैं।",
+  "Could not save. Try again.": "सहेजा नहीं जा सका। फिर कोशिश करें।",
+  "Username (from WhatsApp)": "यूज़रनेम (WhatsApp से)",
+  "Set new password": "नया पासवर्ड सेट करें",
+  "Send the code again": "कोड फिर भेजें",
+  "No mobile saved, or no WhatsApp? Ask your administrator to reset your password.":
+    "मोबाइल सहेजा नहीं या WhatsApp नहीं है? अपने एडमिन से पासवर्ड रीसेट करवाएँ।",
+  "Back to sign in": "साइन इन पर वापस",
+  "New password set. Sign in with it now.": "नया पासवर्ड सेट हो गया। अब उससे साइन इन करें।",
+  "If this number is saved on an account, your username and a code were sent on WhatsApp.":
+    "अगर यह नंबर किसी खाते में सहेजा है, तो यूज़रनेम और कोड WhatsApp पर भेजा गया।",
+  "This username is not saved with this mobile number.":
+    "यह यूज़रनेम इस मोबाइल नंबर के साथ सहेजा नहीं है।",
+  "Day summary": "दिन का सारांश",
+  "Today's attendance, reports, work and money out (also on WhatsApp at 11 PM)":
+    "आज की हाज़िरी, रिपोर्ट, काम और गया पैसा (रात 11 बजे WhatsApp पर भी)",
+  "Attendance, reports, work measured and money out today. Sent on WhatsApp at 11 PM to leaders and site managers who switched WhatsApp on in their profile.":
+    "आज की हाज़िरी, रिपोर्ट, नापा गया काम और गया पैसा। रात 11 बजे उन लीडर और साइट मैनेजर को WhatsApp पर जाता है जिन्होंने प्रोफ़ाइल में WhatsApp चालू किया है।",
+  "No sites to summarise": "सारांश के लिए कोई साइट नहीं",
+  "The summary is for leaders and site managers of a site.":
+    "सारांश लीडर और साइट मैनेजर के लिए है।",
+  "Review and save the module change": "मॉड्यूल बदलाव देखें और सहेजें",
+  "Nothing is changed yet. Modules opens with the change marked; check it and save.":
+    "अभी कुछ नहीं बदला। मॉड्यूल स्क्रीन बदलाव के साथ खुलेगी; देखकर सहेजें।",
+  "Work left (not yet measured)": "बचा काम (अभी नापा नहीं)",
+  "Trade / role": "काम / भूमिका",
+  "Mason (Mistri)": "राजमिस्त्री",
+  "Helper (Labour)": "हेल्पर (मज़दूर)",
+  Painter: "पेंटर",
+  Carpenter: "बढ़ई",
+  "Bar bender": "सरिया बेंडर",
+  Electrician: "इलेक्ट्रीशियन",
+  Plumber: "प्लंबर",
+  Driver: "ड्राइवर",
+  Cook: "रसोइया",
+  Watchman: "चौकीदार",
+  Supervisor: "सुपरवाइज़र",
+  Operator: "ऑपरेटर",
 };
 
 export const or: Dictionary = {
@@ -4694,6 +4738,50 @@ export const or: Dictionary = {
     "କେବଳ ଏହି ଭୂମିକା ଉପରେ ଥିବା ଜଣେ ଏହାର ଅନୁମୋଦନ ସୀମା ସ୍ଥିର କରିପାରିବେ।",
   "This project is outside your access.": "ଏହି ପ୍ରକଳ୍ପ ଆପଣଙ୍କ ପ୍ରବେଶ ବାହାରେ।",
   "Choose the company.": "କମ୍ପାନୀ ବାଛନ୍ତୁ।",
+  // Forgot login, day summary, A-Class modules
+  "Forgot username or password?": "ୟୁଜରନେମ୍ ବା ପାସୱାର୍ଡ ଭୁଲିଗଲେ?",
+  "Forgot username or password": "ୟୁଜରନେମ୍ ବା ପାସୱାର୍ଡ ଭୁଲିଗଲେ",
+  "Enter the mobile number saved in your profile. Your username and a code come on WhatsApp.":
+    "ଆପଣଙ୍କ ପ୍ରୋଫାଇଲରେ ସେଭ୍ ଥିବା ମୋବାଇଲ୍ ନମ୍ବର ଦିଅନ୍ତୁ। ୟୁଜରନେମ୍ ଓ କୋଡ୍ WhatsApp ରେ ଆସିବ।",
+  "Send code on WhatsApp": "WhatsApp ରେ କୋଡ୍ ପଠାନ୍ତୁ",
+  "The two passwords are not the same.": "ଦୁଇଟି ପାସୱାର୍ଡ ସମାନ ନୁହେଁ।",
+  "Could not save. Try again.": "ସେଭ୍ ହେଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।",
+  "Username (from WhatsApp)": "ୟୁଜରନେମ୍ (WhatsApp ରୁ)",
+  "Set new password": "ନୂଆ ପାସୱାର୍ଡ ସେଟ୍ କରନ୍ତୁ",
+  "Send the code again": "କୋଡ୍ ପୁଣି ପଠାନ୍ତୁ",
+  "No mobile saved, or no WhatsApp? Ask your administrator to reset your password.":
+    "ମୋବାଇଲ୍ ସେଭ୍ ନାହିଁ ବା WhatsApp ନାହିଁ? ଆପଣଙ୍କ ଆଡମିନଙ୍କୁ ପାସୱାର୍ଡ ରିସେଟ୍ କରିବାକୁ କୁହନ୍ତୁ।",
+  "Back to sign in": "ସାଇନ୍ ଇନ୍‌କୁ ଫେରନ୍ତୁ",
+  "New password set. Sign in with it now.": "ନୂଆ ପାସୱାର୍ଡ ସେଟ୍ ହେଲା। ଏବେ ସେଥିରେ ସାଇନ୍ ଇନ୍ କରନ୍ତୁ।",
+  "If this number is saved on an account, your username and a code were sent on WhatsApp.":
+    "ଯଦି ଏହି ନମ୍ବର କୌଣସି ଖାତାରେ ସେଭ୍ ଅଛି, ୟୁଜରନେମ୍ ଓ କୋଡ୍ WhatsApp ରେ ପଠାଗଲା।",
+  "This username is not saved with this mobile number.":
+    "ଏହି ୟୁଜରନେମ୍ ଏହି ମୋବାଇଲ୍ ନମ୍ବର ସହ ସେଭ୍ ନାହିଁ।",
+  "Day summary": "ଦିନର ସାରାଂଶ",
+  "Today's attendance, reports, work and money out (also on WhatsApp at 11 PM)":
+    "ଆଜିର ହାଜିରା, ରିପୋର୍ଟ, କାମ ଓ ଖର୍ଚ୍ଚ ଟଙ୍କା (ରାତି 11ଟାରେ WhatsApp ରେ ମଧ୍ୟ)",
+  "Attendance, reports, work measured and money out today. Sent on WhatsApp at 11 PM to leaders and site managers who switched WhatsApp on in their profile.":
+    "ଆଜିର ହାଜିରା, ରିପୋର୍ଟ, ମାପ ହୋଇଥିବା କାମ ଓ ଖର୍ଚ୍ଚ ଟଙ୍କା। ପ୍ରୋଫାଇଲରେ WhatsApp ଚାଲୁ କରିଥିବା ନେତା ଓ ସାଇଟ୍ ମ୍ୟାନେଜରଙ୍କୁ ରାତି 11ଟାରେ WhatsApp ରେ ଯାଏ।",
+  "No sites to summarise": "ସାରାଂଶ ପାଇଁ କୌଣସି ସାଇଟ୍ ନାହିଁ",
+  "The summary is for leaders and site managers of a site.":
+    "ସାରାଂଶ ନେତା ଓ ସାଇଟ୍ ମ୍ୟାନେଜରଙ୍କ ପାଇଁ।",
+  "Review and save the module change": "ମଡ୍ୟୁଲ୍ ପରିବର୍ତ୍ତନ ଦେଖି ସେଭ୍ କରନ୍ତୁ",
+  "Nothing is changed yet. Modules opens with the change marked; check it and save.":
+    "ଏପର୍ଯ୍ୟନ୍ତ କିଛି ବଦଳିନାହିଁ। ମଡ୍ୟୁଲ୍ ସ୍କ୍ରିନ୍ ପରିବର୍ତ୍ତନ ସହ ଖୋଲିବ; ଦେଖି ସେଭ୍ କରନ୍ତୁ।",
+  "Work left (not yet measured)": "ବାକି କାମ (ଏପର୍ଯ୍ୟନ୍ତ ମାପ ହୋଇନାହିଁ)",
+  "Trade / role": "କାମ / ଭୂମିକା",
+  "Mason (Mistri)": "ରାଜମିସ୍ତ୍ରୀ",
+  "Helper (Labour)": "ହେଲ୍ପର (ମଜୁରିଆ)",
+  Painter: "ପେଣ୍ଟର",
+  Carpenter: "ବଢ଼େଇ",
+  "Bar bender": "ରଡ୍ ବେଣ୍ଡର",
+  Electrician: "ଇଲେକ୍ଟ୍ରିସିଆନ୍",
+  Plumber: "ପ୍ଲମ୍ବର",
+  Driver: "ଡ୍ରାଇଭର",
+  Cook: "ରୋଷେଇଆ",
+  Watchman: "ଚୌକିଦାର",
+  Supervisor: "ସୁପରଭାଇଜର",
+  Operator: "ଅପରେଟର",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

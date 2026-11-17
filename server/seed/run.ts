@@ -7,6 +7,7 @@
  *    10 tank sites (real), the example records (listed as SAMPLE as they are made), then Kalyan
  *    Mandap marked Completed (real).
  */
+import { withAllModulesOn } from "../jp/module-settings";
 import { randomUUID } from "node:crypto";
 import { and, asc, eq, inArray, like } from "drizzle-orm";
 import {
@@ -63,6 +64,11 @@ const REAL_TABLES = new Set([
 ]);
 
 export async function runClientSeed(superAdminUsername: string) {
+  // Sample data covers every module, also those the company keeps off (A-Class default).
+  return withAllModulesOn(() => runClientSeedInner(superAdminUsername));
+}
+
+async function runClientSeedInner(superAdminUsername: string) {
   const db = await getDb();
   if (!db) throw new Error("The database is not available.");
   const adminId = await userIdByUsername(superAdminUsername);

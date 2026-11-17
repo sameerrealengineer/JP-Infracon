@@ -4,7 +4,12 @@
  */
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { systemBootstrap, userCredentials, users } from "../../drizzle/schema";
+import {
+  organizationSettings,
+  systemBootstrap,
+  userCredentials,
+  users,
+} from "../../drizzle/schema";
 import { hashPassword } from "../../server/_core/credential-auth";
 import { appRouter } from "../../server/routers";
 import { DEMO_ACCOUNTS, DEMO_PASSWORD } from "./config";
@@ -89,6 +94,10 @@ export async function seedDemoData(db: DemoDb): Promise<void> {
     state: "Odisha",
     clientMutationId: mutationId(),
   });
+  // The demo shows every module (a real company starts with the A-Class set).
+  await db
+    .insert(organizationSettings)
+    .values({ organizationId: first.organizationId, disabledModules: "[]" });
   const workspace: DemoWorkspace = {
     organizationId: first.organizationId,
     projectId: first.projectId,

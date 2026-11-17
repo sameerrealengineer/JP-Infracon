@@ -22,6 +22,7 @@ import * as Auth from "@/lib/_core/auth";
 import { DEMO_ACCOUNTS, DEMO_MODE, DEMO_PASSWORD } from "@/lib/demo/config";
 import { PermissionsGate } from "@/components/jp/permissions-gate";
 import { WorkerSelf } from "@/components/jp/worker-home";
+import { StaffRecovery } from "@/components/jp/staff-recovery";
 import { WorkerSignIn } from "@/components/jp/worker-sign-in";
 
 const companyLogo = require("../../assets/images/icon.png");
@@ -49,6 +50,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [registering, setRegistering] = useState(false);
   const [workerMode, setWorkerMode] = useState(false);
+  const [recovering, setRecovering] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [inviteCode, setInviteCode] = useState("");
   const registerMutation = trpc.auth.registerWithInvite.useMutation();
   const [submitting, setSubmitting] = useState(false);
@@ -261,6 +264,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
           {workerMode && !firstRun && !mustChangePassword ? (
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <WorkerSignIn onSignedIn={completeSignIn} onBack={() => setWorkerMode(false)} />
+            </View>
+          ) : recovering && !firstRun && !mustChangePassword ? (
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <StaffRecovery
+                onBack={() => setRecovering(false)}
+                onDone={(name) => {
+                  setRecovering(false);
+                  setUsername(name);
+                  setPassword("");
+                  setFormError(null);
+                  setNotice(t("New password set. Sign in with it now."));
+                }}
+              />
             </View>
           ) : (
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -574,6 +590,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
                   {formError}
                 </Text>
               ) : null}
+              {notice && !formError ? (
+                <Text style={[styles.error, { color: colors.success }]}>{notice}</Text>
+              ) : null}
               <Pressable
                 accessibilityRole="button"
                 disabled={disabled}
@@ -602,6 +621,20 @@ export function AuthGate({ children }: { children: ReactNode }) {
                   </Text>
                 )}
               </Pressable>
+              {!mustChangePassword && !firstRun && !registering ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    setRecovering(true);
+                    setFormError(null);
+                  }}
+                  hitSlop={8}
+                >
+                  <Text style={[styles.switchLink, { color: colors.primary }]}>
+                    {t("Forgot username or password?")}
+                  </Text>
+                </Pressable>
+              ) : null}
               {!mustChangePassword && !firstRun ? (
                 <Pressable
                   accessibilityRole="button"

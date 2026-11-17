@@ -57,6 +57,16 @@ async function membershipOf(db: Db, userId: number) {
   return leader ?? rows[0] ?? null;
 }
 
+/** The company this person leads (owner, director or admin), or null. Super Admin counts. */
+export async function companyLeaderOrg(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const membership = await membershipOf(db, userId).catch(() => null);
+  return membership && LEADER_ROLES.includes(membership.businessRole)
+    ? membership.organizationId
+    : null;
+}
+
 async function requireLeader(db: Db, userId: number) {
   const membership = await membershipOf(db, userId);
   if (!membership)

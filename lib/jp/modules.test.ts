@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  A_CLASS_ON,
+  MODULE_KEYS,
   cleanModuleList,
+  defaultDisabledModules,
   isPermissionDisabled,
   moduleForAuditAction,
   moduleForPermission,
@@ -43,5 +46,23 @@ describe("modules", () => {
     expect(moduleForAuditAction("petty_cash.posted")).toBe("finance");
     expect(moduleForAuditAction("report.submitted")).toBe("reports");
     expect(moduleForAuditAction("account.created")).toBeNull();
+  });
+
+  it("starts an A-Class contractor with the essentials on and the rest off", () => {
+    const off = defaultDisabledModules();
+    for (const key of [
+      "reports",
+      "attendance",
+      "workforce",
+      "finance",
+      "subcontract",
+      "payroll",
+      "billing",
+    ])
+      expect(off).not.toContain(key);
+    expect(off).toEqual(
+      expect.arrayContaining(["issues", "budget", "purchase", "accounts", "crm"]),
+    );
+    expect(off.length + A_CLASS_ON.length).toBe(MODULE_KEYS.length);
   });
 });

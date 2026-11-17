@@ -73,6 +73,9 @@ async function startServer() {
   server.listen(port, () => {
     console.log("[api] server listening");
   });
+  // The 11 PM (India time) day summary on WhatsApp for leaders and site managers.
+  const { startDailySummaryScheduler } = await import("../jp/daily-summary");
+  startDailySummaryScheduler();
 }
 
 startServer().catch((error) => {

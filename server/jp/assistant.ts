@@ -19,6 +19,9 @@ import {
 import { siteCapabilities } from "./capabilities";
 import { buildInbox } from "./inbox";
 import { placeCards } from "./places";
+import { disabledModulesFor } from "./module-settings";
+import { companyLeaderOrg } from "./modules-router";
+import { MODULES, MODULE_KEYS } from "../../lib/jp/modules";
 import {
   MAX_ASSISTANT_FILES,
   checkAssistantFileSizes,
@@ -52,6 +55,8 @@ const answerSchema = {
         siteId: { type: "string" },
         text: { type: "string" },
         reportKind: { type: "string", enum: ["DPR", "DLR"] },
+        modulesOn: { type: "array", items: { type: "string" } },
+        modulesOff: { type: "array", items: { type: "string" } },
       },
       required: ["type"],
     },
@@ -172,6 +177,12 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
     .map((turn) => `${turn.role === "user" ? "Person" : "Assistant"}: ${turn.text}`)
     .join("\n");
   const expert = expertFor(input.expert);
+  const moduleLeader = await companyLeaderOrg(user.id);
+  const disabledNow = moduleLeader ? await disabledModulesFor(moduleLeader) : [];
+  const moduleLines = MODULES.map(
+    (module) =>
+      `- ${module.key}: ${module.title} (${module.detail}): ${disabledNow.includes(module.key) ? "OFF" : "ON"}`,
+  ).join("\n");
   const sentences =
     input.channel === "voice"
       ? "two"
@@ -202,7 +213,14 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
     "Actions: 'open' a screen by its key (with siteId when it is about one site); " +
     "'draft_report' when they describe today's work or labour (put their words in text, " +
     "reportKind DPR for work done, DLR for labour); 'draft_issue' when they report a hazard, " +
-    "defect or problem (their words in text); otherwise 'none'.\n\n" +
+    "defect or problem (their words in text); otherwise 'none'.\n" +
+    (moduleLeader
+      ? "They lead the company: when they ask to turn modules (features) on or off, use " +
+        "'modules' with modulesOn / modulesOff as module keys from the list below; they review " +
+        "and save it themselves, so say it is ready to save, not done.\n" +
+        `Company modules now:\n${moduleLines}\n`
+      : "") +
+    "\n" +
     `Today: ${cards?.today ?? new Date().toISOString().slice(0, 10)}\n` +
     `Person: ${user.name ?? "user"}\n` +
     `Their sites:\n${sitesText || "- none"}\n` +
@@ -235,7 +253,7 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
       ],
       answerSchema,
       {
-        system: `${prompt}\n\nReply as JSON: {"reply": "...", "action": {"type": "none|open|draft_report|draft_issue", "screen": "...", "siteId": "...", "text": "...", "reportKind": "DPR|DLR"}}`,
+        system: `${prompt}\n\nReply as JSON: {"reply": "...", "action": {"type": "none|open|draft_report|draft_issue|modules", "screen": "...", "siteId": "...", "text": "...", "reportKind": "DPR|DLR", "modulesOn": [], "modulesOff": []}}`,
         text: input.text,
       },
     );
@@ -253,6 +271,8 @@ export async function answerQuestion(user: User, input: AssistantQuestion) {
     held,
     sitePermissions,
     defaultSiteId,
+    canManageModules: moduleLeader !== null && input.channel !== "whatsapp",
+    moduleKeys: MODULE_KEYS,
   });
   const site = accessible.find((row) => row.id === defaultSiteId);
   if (site)
