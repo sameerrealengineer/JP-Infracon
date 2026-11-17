@@ -1,4 +1,5 @@
 import { ExpenseAssist } from "@/components/jp/voice-assist";
+import { useT } from "@/lib/i18n";
 import { centeredColumn } from "@/constants/layout";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
@@ -81,6 +82,7 @@ function shortId(value: string | null | undefined) {
 }
 
 export function PettyCashLedger(props: Props) {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const [message, setMessage] = useState<string | null>(null);
@@ -463,9 +465,9 @@ export function PettyCashLedger(props: Props) {
       >
         <MaterialIcons name="account-balance-wallet" size={17} color={colors.warning} />
         <Text style={[styles.noticeText, { color: colors.muted }]}>
-          The balance counts Posted funding, expenses and cash returns only — drafts and pending
-          entries never change cash. Enter site petty-cash spending only, not personal out-of-pocket
-          costs. No money is sent from this app.
+          {t(
+            "The balance counts Posted funding, expenses and cash returns only — drafts and pending entries never change cash. Enter site petty-cash spending only, not personal out-of-pocket costs. No money is sent from this app.",
+          )}
         </Text>
       </View>
 
@@ -479,7 +481,7 @@ export function PettyCashLedger(props: Props) {
       ) : fundsQuery.isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={[styles.meta, { color: colors.muted }]}>Loading site funds…</Text>
+          <Text style={[styles.meta, { color: colors.muted }]}>{t("Loading site funds…")}</Text>
         </View>
       ) : funds.length === 0 ? (
         <EmptyState
@@ -541,7 +543,7 @@ export function PettyCashLedger(props: Props) {
                 <View style={styles.balanceRow}>
                   <View>
                     <Text style={[styles.balanceLabel, { color: colors.muted }]}>
-                      Posted ledger balance
+                      {t("Posted ledger balance")}
                     </Text>
                     <Text style={[styles.balanceAmount, { color: colors.foreground }]}>
                       {formatMinorAsRupees(fund.balanceMinor)}
@@ -549,7 +551,7 @@ export function PettyCashLedger(props: Props) {
                   </View>
                   <View>
                     <Text style={[styles.balanceLabel, { color: colors.muted }]}>
-                      Authorised balance ceiling
+                      {t("Authorised balance ceiling")}
                     </Text>
                     <Text style={[styles.limitAmount, { color: colors.muted }]}>
                       {formatMinorAsRupees(fund.authorizedLimitMinor)}
@@ -609,7 +611,9 @@ export function PettyCashLedger(props: Props) {
           ) : movementsQuery.isLoading ? (
             <View style={styles.loading}>
               <ActivityIndicator color={colors.primary} />
-              <Text style={[styles.meta, { color: colors.muted }]}>Loading movement ledger…</Text>
+              <Text style={[styles.meta, { color: colors.muted }]}>
+                {t("Loading movement ledger…")}
+              </Text>
             </View>
           ) : rows.length === 0 ? (
             <EmptyState
@@ -812,8 +816,9 @@ export function PettyCashLedger(props: Props) {
                 onClose={() => setFundModalVisible(false)}
               />
               <Text style={[styles.noticeText, { color: colors.warning }]}>
-                This creates a real site finance record with a derived zero balance. The selected
-                custodian must acknowledge; no starting cash is seeded.
+                {t(
+                  "This creates a real site finance record with a derived zero balance. The selected custodian must acknowledge; no starting cash is seeded.",
+                )}
               </Text>
               <Field
                 label="Fund name *"
@@ -828,7 +833,9 @@ export function PettyCashLedger(props: Props) {
                 placeholder="0.00"
                 keyboardType="decimal-pad"
               />
-              <Text style={[styles.label, { color: colors.muted }]}>Named site custodian *</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>
+                {t("Named site custodian *")}
+              </Text>
               {custodiansQuery.isError ? (
                 <InlineError
                   message={custodiansQuery.error.message}
@@ -840,13 +847,14 @@ export function PettyCashLedger(props: Props) {
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.meta, { color: colors.muted }]}>
-                    Loading eligible assigned accounts…
+                    {t("Loading eligible assigned accounts…")}
                   </Text>
                 </View>
               ) : (custodiansQuery.data ?? []).length === 0 ? (
                 <Text style={[styles.meta, { color: colors.warning }]}>
-                  No active eligible site assignee is available. Add/activate an authorised site
-                  account first; a free-text custodian is not accepted.
+                  {t(
+                    "No active eligible site assignee is available. Add/activate an authorised site account first; a free-text custodian is not accepted.",
+                  )}
                 </Text>
               ) : (
                 <View style={styles.choiceStack}>
@@ -863,7 +871,9 @@ export function PettyCashLedger(props: Props) {
                   ))}
                 </View>
               )}
-              <Text style={[styles.label, { color: colors.muted }]}>Reconciliation period *</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>
+                {t("Reconciliation period *")}
+              </Text>
               <View style={styles.choiceStack}>
                 {RECONCILIATION_PERIODS.map((period) => (
                   <Choice
@@ -884,7 +894,9 @@ export function PettyCashLedger(props: Props) {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  The reconciliation period is saved with the fund for the custodian and reviewers.
+                  {t(
+                    "The reconciliation period is saved with the fund for the custodian and reviewers.",
+                  )}
                 </Text>
               </View>
               <PrimaryButton
@@ -925,10 +937,11 @@ export function PettyCashLedger(props: Props) {
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <ModalHeader title="Record petty-cash movement" onClose={closeMovementForm} />
               <Text style={[styles.noticeText, { color: colors.warning }]}>
-                Records a movement from this site petty-cash fund only (not personal spending). It
-                saves as a Draft; a different authorised person posts it. No money is sent.
+                {t(
+                  "Records a movement from this site petty-cash fund only (not personal spending). It saves as a Draft; a different authorised person posts it. No money is sent.",
+                )}
               </Text>
-              <Text style={[styles.label, { color: colors.muted }]}>Movement type *</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>{t("Movement type *")}</Text>
               <View style={styles.choiceStack}>
                 {MOVEMENT_TYPES.map((type) => (
                   <Choice
@@ -973,7 +986,7 @@ export function PettyCashLedger(props: Props) {
               {movementType === "Funding" ? (
                 <>
                   <Text style={[styles.label, { color: colors.muted }]}>
-                    Funding source label *
+                    {t("Funding source label *")}
                   </Text>
                   <View style={styles.choiceStack}>
                     {FUNDING_SOURCES.map((source) => (
@@ -1029,7 +1042,7 @@ export function PettyCashLedger(props: Props) {
               />
               {movementType !== "Cash Return" ? (
                 <>
-                  <Text style={[styles.label, { color: colors.muted }]}>Payment mode *</Text>
+                  <Text style={[styles.label, { color: colors.muted }]}>{t("Payment mode *")}</Text>
                   <View style={styles.choiceStack}>
                     {PAYMENT_MODES.map((mode) => (
                       <Choice
@@ -1046,7 +1059,7 @@ export function PettyCashLedger(props: Props) {
                 </>
               ) : (
                 <Text style={[styles.meta, { color: colors.muted }]}>
-                  Payment mode · Cash (fixed for return to fund)
+                  {t("Payment mode · Cash (fixed for return to fund)")}
                 </Text>
               )}
               <Field
@@ -1058,7 +1071,7 @@ export function PettyCashLedger(props: Props) {
               {movementType === "Expense" ? (
                 <>
                   <Text style={[styles.label, { color: colors.muted }]}>
-                    Optional site work task
+                    {t("Optional site work task")}
                   </Text>
                   {tasksQuery.isError ? (
                     <InlineError
@@ -1095,7 +1108,7 @@ export function PettyCashLedger(props: Props) {
               {movementType === "Cash Return" ? (
                 <>
                   <Text style={[styles.label, { color: colors.muted }]}>
-                    Original Posted expense *
+                    {t("Original Posted expense *")}
                   </Text>
                   {returnCandidatesQuery.isError ? (
                     <InlineError
@@ -1108,12 +1121,14 @@ export function PettyCashLedger(props: Props) {
                     <View style={styles.loading}>
                       <ActivityIndicator color={colors.primary} />
                       <Text style={[styles.meta, { color: colors.muted }]}>
-                        Loading Posted expense balances…
+                        {t("Loading Posted expense balances…")}
                       </Text>
                     </View>
                   ) : (returnCandidatesQuery.data?.items ?? []).length === 0 ? (
                     <Text style={[styles.meta, { color: colors.warning }]}>
-                      No Posted expense with a remaining returnable amount exists in this fund.
+                      {t(
+                        "No Posted expense with a remaining returnable amount exists in this fund.",
+                      )}
                     </Text>
                   ) : (
                     <View style={styles.choiceStack}>
@@ -1159,9 +1174,9 @@ export function PettyCashLedger(props: Props) {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Never enter card, bank-account or login details. Write the bill or receipt number,
-                  or why there is none. Posted entries change the balance and cannot be edited or
-                  deleted.
+                  {t(
+                    "Never enter card, bank-account or login details. Write the bill or receipt number, or why there is none. Posted entries change the balance and cannot be edited or deleted.",
+                  )}
                 </Text>
               </View>
               <PrimaryButton

@@ -240,7 +240,7 @@ export default function ModulesScreen() {
               ) : (
                 <Card>
                   <Text style={[styles.body, { color: colors.muted }]}>
-                    Only the owner, a director or an admin can change modules.
+                    {t("Only the owner, a director or an admin can change modules.")}
                   </Text>
                 </Card>
               )}

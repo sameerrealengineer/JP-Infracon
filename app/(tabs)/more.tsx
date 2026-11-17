@@ -569,10 +569,10 @@ export default function MoreScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.companyName, { color: colors.foreground }]}>JP Infracon</Text>
                 <Text style={[styles.companyDetail, { color: colors.muted }]}>
-                  Jeetendra Kumar Panda · Managing Partner
+                  {t("Jeetendra Kumar Panda · Managing Partner")}
                 </Text>
                 <Text style={[styles.companyDetail, { color: colors.muted }]}>
-                  Rambabu Kumar Singh · Partner
+                  {t("Rambabu Kumar Singh · Partner")}
                 </Text>
                 <Pressable
                   accessibilityRole="link"
@@ -588,8 +588,9 @@ export default function MoreScreen() {
             <View style={styles.security}>
               <MaterialIcons name="verified-user" size={20} color={colors.success} />
               <Text style={[styles.securityText, { color: colors.muted }]}>
-                Your role and site assignments are checked by the server on every request. Payments
-                recorded here are internal ledger entries, not bank transfers.
+                {t(
+                  "Your role and site assignments are checked by the server on every request. Payments recorded here are internal ledger entries, not bank transfers.",
+                )}
               </Text>
             </View>
           </Card>

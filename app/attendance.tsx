@@ -114,8 +114,9 @@ export default function AttendanceScreen() {
             </>
           ) : null}
           <Text style={[styles.note, { color: colors.muted }]}>
-            Attendance needs a connection to save. Estimates are not payables: wages are paid only
-            through approved records.
+            {t(
+              "Attendance needs a connection to save. Estimates are not payables: wages are paid only through approved records.",
+            )}
           </Text>
         </ScrollView>
       </Screen>
@@ -333,7 +334,7 @@ function MarkDay({
                         </View>
                         {value.status !== "Absent" && value.status !== "Leave" ? (
                           <View style={styles.hoursRow}>
-                            <Text style={[styles.meta, { color: colors.muted }]}>Hours</Text>
+                            <Text style={[styles.meta, { color: colors.muted }]}>{t("Hours")}</Text>
                             <TextInput
                               value={value.regularHours}
                               onChangeText={(text) =>
@@ -346,7 +347,9 @@ function MarkDay({
                                 { color: colors.foreground, borderColor: colors.border },
                               ]}
                             />
-                            <Text style={[styles.meta, { color: colors.muted }]}>Overtime</Text>
+                            <Text style={[styles.meta, { color: colors.muted }]}>
+                              {t("Overtime")}
+                            </Text>
                             <TextInput
                               value={value.overtimeHours}
                               onChangeText={(text) =>
@@ -489,7 +492,7 @@ function LabourCost({ siteId }: { siteId: string }) {
                   ) : null}
                   {worker.notAttendanceBased ? (
                     <Text style={[styles.meta, { color: colors.muted }]}>
-                      Paid by piece/measurement/contract — not priced from attendance
+                      {t("Paid by piece/measurement/contract — not priced from attendance")}
                     </Text>
                   ) : null}
                 </View>
@@ -499,8 +502,9 @@ function LabourCost({ siteId }: { siteId: string }) {
         </Card>
       ) : null}
       <Text style={[styles.note, { color: colors.muted }]}>
-        Overtime is priced at the base hourly rate (daily rate ÷ 8 h) and only once approved. Check
-        local labour rules before paying.
+        {t(
+          "Overtime is priced at the base hourly rate (daily rate ÷ 8 h) and only once approved. Check local labour rules before paying.",
+        )}
       </Text>
     </ScrollView>
   );

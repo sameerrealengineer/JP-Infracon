@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { HelpButton } from "@/components/jp/help";
 import { useMemo, useState } from "react";
 import {
@@ -85,6 +86,7 @@ function rateBasis(value: string) {
 }
 
 export default function WorkforceScreen() {
+  const { t } = useT();
   const colors = useColors();
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
   const capabilitiesQuery = trpc.jp.workspace.myCapabilities.useQuery();
@@ -458,7 +460,7 @@ export default function WorkforceScreen() {
                   ]}
                 >
                   <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-                    Capture a workforce profile
+                    {t("Capture a workforce profile")}
                   </Text>
                   <AiFormFill
                     formId="worker"
@@ -482,7 +484,7 @@ export default function WorkforceScreen() {
                     }}
                     placeholder="Worker or contact name"
                   />
-                  <Text style={[styles.label, { color: colors.muted }]}>Record type</Text>
+                  <Text style={[styles.label, { color: colors.muted }]}>{t("Record type")}</Text>
                   <View style={styles.choiceWrap}>
                     {PERSON_TYPES.map(([value, label]) => (
                       <Choice
@@ -506,7 +508,7 @@ export default function WorkforceScreen() {
                     placeholder="Only if operationally needed"
                     keyboardType="phone-pad"
                   />
-                  <Text style={[styles.label, { color: colors.muted }]}>Skill category</Text>
+                  <Text style={[styles.label, { color: colors.muted }]}>{t("Skill category")}</Text>
                   <View style={styles.choiceWrap}>
                     {SKILL_CATEGORIES.map((value) => (
                       <Choice
@@ -520,7 +522,7 @@ export default function WorkforceScreen() {
                       />
                     ))}
                   </View>
-                  <Text style={[styles.label, { color: colors.muted }]}>Trade / role</Text>
+                  <Text style={[styles.label, { color: colors.muted }]}>{t("Trade / role")}</Text>
                   <View style={styles.choiceWrap}>
                     {COMMON_TRADES.map((value) => (
                       <Choice
@@ -546,7 +548,7 @@ export default function WorkforceScreen() {
                   {canReviewKyc ? (
                     <>
                       <Text style={[styles.label, { color: colors.muted }]}>
-                        Initial KYC state · authorised review
+                        {t("Initial KYC state · authorised review")}
                       </Text>
                       <View style={styles.choiceWrap}>
                         <Choice
@@ -572,8 +574,9 @@ export default function WorkforceScreen() {
                     </>
                   ) : (
                     <Text style={[styles.finePrint, { color: colors.muted }]}>
-                      New profiles default to Pending. Only an authorised KYC reviewer may choose or
-                      change a different initial status.
+                      {t(
+                        "New profiles default to Pending. Only an authorised KYC reviewer may choose or change a different initial status.",
+                      )}
                     </Text>
                   )}
                   <PrimaryButton
@@ -585,9 +588,9 @@ export default function WorkforceScreen() {
                     }}
                   />
                   <Text style={[styles.finePrint, { color: colors.muted }]}>
-                    New profiles are inactive Drafts. A reviewer must explicitly activate them.
-                    Profile capture is online-only; failed server confirmation retains the same
-                    mutation key for a safe retry.
+                    {t(
+                      "New profiles are inactive Drafts. A reviewer must explicitly activate them. Profile capture is online-only; failed server confirmation retains the same mutation key for a safe retry.",
+                    )}
                   </Text>
                 </View>
               ) : null}
@@ -669,7 +672,7 @@ export default function WorkforceScreen() {
                             onPress={() => openRateProposal(person.id)}
                           >
                             <Text style={[styles.actionText, { color: colors.primary }]}>
-                              Propose rate
+                              {t("Propose rate")}
                             </Text>
                           </Pressable>
                         ) : null}
@@ -677,7 +680,7 @@ export default function WorkforceScreen() {
                       {reviewPersonId === person.id ? (
                         <View style={[styles.inlinePanel, { borderTopColor: colors.border }]}>
                           <Text style={[styles.label, { color: colors.muted }]}>
-                            Profile status
+                            {t("Profile status")}
                           </Text>
                           <View style={styles.choiceWrap}>
                             {(["Active", "Inactive"] as const).map((value) => (
@@ -695,7 +698,7 @@ export default function WorkforceScreen() {
                           {canReviewKyc ? (
                             <>
                               <Text style={[styles.label, { color: colors.muted }]}>
-                                Manual KYC decision
+                                {t("Manual KYC decision")}
                               </Text>
                               <View style={styles.choiceWrap}>
                                 <Choice
@@ -723,8 +726,9 @@ export default function WorkforceScreen() {
                                 ))}
                               </View>
                               <Text style={[styles.finePrint, { color: colors.muted }]}>
-                                This records a human reviewer’s status only. The app does not
-                                authenticate identity documents or perform automated KYC.
+                                {t(
+                                  "This records a human reviewer’s status only. The app does not authenticate identity documents or perform automated KYC.",
+                                )}
                               </Text>
                             </>
                           ) : canViewKyc ? (
@@ -758,7 +762,7 @@ export default function WorkforceScreen() {
                       {ratePersonId === person.id ? (
                         <View style={[styles.inlinePanel, { borderTopColor: colors.border }]}>
                           <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-                            Propose an effective-dated rate
+                            {t("Propose an effective-dated rate")}
                           </Text>
                           <Field
                             label="Engagement / work type"
@@ -769,7 +773,9 @@ export default function WorkforceScreen() {
                             }}
                             placeholder="e.g. Masonry, electrical work"
                           />
-                          <Text style={[styles.label, { color: colors.muted }]}>Rate basis</Text>
+                          <Text style={[styles.label, { color: colors.muted }]}>
+                            {t("Rate basis")}
+                          </Text>
                           <View style={styles.choiceWrap}>
                             {RATE_TYPES.map(([value, label]) => (
                               <Choice
@@ -822,9 +828,9 @@ export default function WorkforceScreen() {
                           >
                             <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                             <Text style={[styles.noticeText, { color: colors.foreground }]}>
-                              This saves a Draft proposal, not a payable. On approval, an
-                              overlapping earlier active rate is closed the day before this start;
-                              conflicting future rates are rejected rather than overwritten.
+                              {t(
+                                "This saves a Draft proposal, not a payable. On approval, an overlapping earlier active rate is closed the day before this start; conflicting future rates are rejected rather than overwritten.",
+                              )}
                             </Text>
                           </View>
                           <PrimaryButton
@@ -949,7 +955,7 @@ export default function WorkforceScreen() {
                                 style={styles.cancelAction}
                               >
                                 <Text style={[styles.actionText, { color: colors.muted }]}>
-                                  Cancel
+                                  {t("Cancel")}
                                 </Text>
                               </Pressable>
                             </View>
@@ -968,8 +974,9 @@ export default function WorkforceScreen() {
               >
                 <MaterialIcons name="info-outline" size={17} color={colors.primary} />
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Rates take effect only after a different authorised person approves them. A rate
-                  on its own is not a payment due.
+                  {t(
+                    "Rates take effect only after a different authorised person approves them. A rate on its own is not a payment due.",
+                  )}
                 </Text>
               </View>
             </>

@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { centeredColumn } from "@/constants/layout";
 import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
@@ -83,6 +84,7 @@ function invoiceStatusDescription(status: string) {
 }
 
 export default function FinanceScreen() {
+  const { t } = useT();
   const colors = useColors();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
@@ -463,8 +465,9 @@ export default function FinanceScreen() {
           >
             <MaterialIcons name="lock-outline" size={17} color={colors.primary} />
             <Text style={[styles.noticeText, { color: colors.muted }]}>
-              Approvals need a connection. Payments and petty cash are recorded in the JP Infracon
-              ledger — no money is sent from this app. Balances count Posted entries only.
+              {t(
+                "Approvals need a connection. Payments and petty cash are recorded in the JP Infracon ledger — no money is sent from this app. Balances count Posted entries only.",
+              )}
             </Text>
           </View>
           <SectionHeader title="Assigned site" />
@@ -510,7 +513,7 @@ export default function FinanceScreen() {
             <View style={styles.loading}>
               <ActivityIndicator color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.muted }]}>
-                Loading authorised sites…
+                {t("Loading authorised sites…")}
               </Text>
             </View>
           ) : (
@@ -611,7 +614,7 @@ export default function FinanceScreen() {
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.loadingText, { color: colors.muted }]}>
-                    Loading site invoices…
+                    {t("Loading site invoices…")}
                   </Text>
                 </View>
               ) : invoices.length === 0 ? (
@@ -674,7 +677,7 @@ export default function FinanceScreen() {
                           </Text>
                         </View>
                         <Text style={[styles.grossLabel, { color: colors.muted }]}>
-                          Supplier-stated gross amount
+                          {t("Supplier-stated gross amount")}
                         </Text>
                         <Text style={[styles.gross, { color: colors.foreground }]}>
                           {formatMinorAsRupees(invoice.totalMinor)}
@@ -736,7 +739,7 @@ export default function FinanceScreen() {
                                 style={[styles.textAction, { borderColor: colors.success }]}
                               >
                                 <Text style={[styles.actionText, { color: colors.success }]}>
-                                  Review
+                                  {t("Review")}
                                 </Text>
                               </Pressable>
                             </>
@@ -745,7 +748,7 @@ export default function FinanceScreen() {
                         {expanded ? (
                           detailQuery.isLoading ? (
                             <Text style={[styles.statusDetail, { color: colors.muted }]}>
-                              Loading invoice items…
+                              {t("Loading invoice items…")}
                             </Text>
                           ) : detailQuery.isError ? (
                             <InlineError
@@ -830,7 +833,7 @@ export default function FinanceScreen() {
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.loadingText, { color: colors.muted }]}>
-                    Loading supplier directory…
+                    {t("Loading supplier directory…")}
                   </Text>
                 </View>
               ) : vendors.length === 0 ? (
@@ -894,7 +897,7 @@ export default function FinanceScreen() {
                         </Text>
                       ) : null}
                       <Text style={[styles.cardMeta, { color: colors.muted }]}>
-                        No bank credentials are collected in this register.
+                        {t("No bank credentials are collected in this register.")}
                       </Text>
                     </View>
                   ))}
@@ -941,11 +944,9 @@ export default function FinanceScreen() {
             >
               <MaterialIcons name="info-outline" size={16} color={colors.warning} />
               <Text style={[styles.noticeText, { color: colors.muted }]}>
-                Invoice approval is review only. Only Posted internal supplier allocations reduce
-                invoice availability. Petty-cash balances are calculated from Posted fund movements,
-                not physical cash counts. The app does not execute or verify bank/card/UPI transfers
-                and does not claim overall supplier dues, worker payables, or reimbursement
-                liabilities.
+                {t(
+                  "Invoice approval is review only. Only Posted internal supplier allocations reduce invoice availability. Petty-cash balances are calculated from Posted fund movements, not physical cash counts. The app does not execute or verify bank/card/UPI transfers and does not claim overall supplier dues, worker payables, or reimbursement liabilities.",
+                )}
               </Text>
             </View>
           ) : null}
@@ -967,7 +968,9 @@ export default function FinanceScreen() {
           >
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: colors.foreground }]}>Add supplier</Text>
+                <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                  {t("Add supplier")}
+                </Text>
                 <Pressable accessibilityRole="button" onPress={() => setVendorModalVisible(false)}>
                   <MaterialIcons name="close" size={22} color={colors.muted} />
                 </Pressable>
@@ -987,7 +990,7 @@ export default function FinanceScreen() {
                   setVendorMutationId(createClientMutationId());
                 }}
               />
-              <Text style={[styles.fieldLabel, { color: colors.muted }]}>Supplier type</Text>
+              <Text style={[styles.fieldLabel, { color: colors.muted }]}>{t("Supplier type")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -1056,8 +1059,9 @@ export default function FinanceScreen() {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Organisation-level supplier records are shared across sites. Payment account/bank
-                  details are intentionally not collected.
+                  {t(
+                    "Organisation-level supplier records are shared across sites. Payment account/bank details are intentionally not collected.",
+                  )}
                 </Text>
               </View>
               <PrimaryButton
@@ -1089,13 +1093,15 @@ export default function FinanceScreen() {
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  New supplier invoice
+                  {t("New supplier invoice")}
                 </Text>
                 <Pressable accessibilityRole="button" onPress={() => setInvoiceModalVisible(false)}>
                   <MaterialIcons name="close" size={22} color={colors.muted} />
                 </Pressable>
               </View>
-              <Text style={[styles.fieldLabel, { color: colors.muted }]}>Active supplier *</Text>
+              <Text style={[styles.fieldLabel, { color: colors.muted }]}>
+                {t("Active supplier *")}
+              </Text>
               {vendors.length ? (
                 <ScrollView
                   horizontal
@@ -1113,8 +1119,9 @@ export default function FinanceScreen() {
                 </ScrollView>
               ) : (
                 <Text style={[styles.cardMeta, { color: colors.warning }]}>
-                  No active supplier is loaded on this page. Add/locate a supplier before creating
-                  an invoice.
+                  {t(
+                    "No active supplier is loaded on this page. Add/locate a supplier before creating an invoice.",
+                  )}
                 </Text>
               )}
               <Field
@@ -1205,7 +1212,9 @@ export default function FinanceScreen() {
                 style={[styles.secondaryButton, { borderColor: colors.primary }]}
               >
                 <MaterialIcons name="add" size={18} color={colors.primary} />
-                <Text style={[styles.actionText, { color: colors.primary }]}>Add line item</Text>
+                <Text style={[styles.actionText, { color: colors.primary }]}>
+                  {t("Add line item")}
+                </Text>
               </Pressable>
               <View style={styles.twoColumns}>
                 <View style={{ flex: 1 }}>
@@ -1247,7 +1256,7 @@ export default function FinanceScreen() {
                   ]}
                 >
                   <Text style={[styles.cardMeta, { color: colors.muted }]}>
-                    Server-calculated from line amounts + entered tax/charges
+                    {t("Server-calculated from line amounts + entered tax/charges")}
                   </Text>
                   <Text style={[styles.totalText, { color: colors.foreground }]}>
                     {computedTotal}
@@ -1255,7 +1264,7 @@ export default function FinanceScreen() {
                 </View>
               ) : (
                 <Text style={[styles.cardMeta, { color: colors.warning }]}>
-                  Add a complete line item to calculate the gross total.
+                  {t("Add a complete line item to calculate the gross total.")}
                 </Text>
               )}
               <View
@@ -1265,8 +1274,9 @@ export default function FinanceScreen() {
                 ]}
               >
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Saving records the invoice for review. It does not pay the supplier or decide tax
-                  treatment — enter tax and charges exactly as printed on the bill.
+                  {t(
+                    "Saving records the invoice for review. It does not pay the supplier or decide tax treatment — enter tax and charges exactly as printed on the bill.",
+                  )}
                 </Text>
               </View>
               <View style={styles.buttonStack}>
@@ -1308,13 +1318,15 @@ export default function FinanceScreen() {
             ]}
           >
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.foreground }]}>Review invoice</Text>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>
+                {t("Review invoice")}
+              </Text>
               <Pressable accessibilityRole="button" onPress={() => setReviewInvoiceId(null)}>
                 <MaterialIcons name="close" size={22} color={colors.muted} />
               </Pressable>
             </View>
             <Text style={[styles.cardMeta, { color: colors.muted }]}>
-              Only a different authorised user can review this submitted invoice.
+              {t("Only a different authorised user can review this submitted invoice.")}
             </Text>
             <View style={styles.choiceStack}>
               {(["Approved", "Rejected", "Disputed"] as const).map((decision) => (
@@ -1352,7 +1364,7 @@ export default function FinanceScreen() {
               }}
             />
             <Text style={[styles.cardMeta, { color: colors.warning, marginTop: 12 }]}>
-              Approval is invoice review only. It does not post or settle a payment.
+              {t("Approval is invoice review only. It does not post or settle a payment.")}
             </Text>
           </View>
         </View>
@@ -1430,6 +1442,7 @@ function DateField({
   minDate?: string;
   allowClear?: boolean;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const [open, setOpen] = useState(false);
   const [monthCursor, setMonthCursor] = useState(() => {
@@ -1485,7 +1498,7 @@ function DateField({
             onPress={() => onChange("")}
             style={[styles.clearDate, { borderColor: colors.border }]}
           >
-            <Text style={[styles.clearDateText, { color: colors.muted }]}>Clear</Text>
+            <Text style={[styles.clearDateText, { color: colors.muted }]}>{t("Clear")}</Text>
           </Pressable>
         ) : null}
       </View>

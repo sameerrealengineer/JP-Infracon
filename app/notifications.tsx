@@ -118,7 +118,7 @@ export default function NotificationsScreen() {
             </Card>
           )}
           <Text style={[styles.note, { color: colors.muted }]}>
-            Opening an item takes you to its register, where your access is checked again.
+            {t("Opening an item takes you to its register, where your access is checked again.")}
           </Text>
           <Text
             accessibilityRole="link"

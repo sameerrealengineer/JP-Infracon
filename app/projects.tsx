@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { HelpButton } from "@/components/jp/help";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -35,6 +36,7 @@ import { resolveSelectedId } from "@/lib/jp/selection";
 import { trpc } from "@/lib/trpc";
 
 export default function ProjectsScreen() {
+  const { t } = useT();
   const colors = useColors();
   const router = useRouter();
   const overview = trpc.jp.sitesAdmin.overview.useQuery();
@@ -175,7 +177,7 @@ export default function ProjectsScreen() {
                     <View style={[styles.siteList, { borderTopColor: colors.border }]}>
                       {project.sites.length === 0 ? (
                         <Text style={[styles.meta, { color: colors.muted }]}>
-                          No sites in this project yet.
+                          {t("No sites in this project yet.")}
                         </Text>
                       ) : (
                         project.sites.map((site) => (

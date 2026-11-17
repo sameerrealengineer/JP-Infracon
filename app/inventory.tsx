@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { centeredColumn } from "@/constants/layout";
 import { AiFormFill } from "@/components/jp/voice-assist";
 import { HelpButton } from "@/components/jp/help";
@@ -94,6 +95,7 @@ function statusText(status: string) {
 }
 
 export default function InventoryScreen() {
+  const { t } = useT();
   const colors = useColors();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const sitesQuery = trpc.jp.workspace.mySites.useQuery();
@@ -376,7 +378,7 @@ export default function InventoryScreen() {
             <View style={styles.loading}>
               <ActivityIndicator color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.muted }]}>
-                Resolving inventory access…
+                {t("Resolving inventory access…")}
               </Text>
             </View>
           ) : siteOptions.length === 0 ? (
@@ -438,11 +440,12 @@ export default function InventoryScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.policyTitle, { color: colors.foreground }]}>
-                    Posted entries only
+                    {t("Posted entries only")}
                   </Text>
                   <Text style={[styles.policyDetail, { color: colors.muted }]}>
-                    There is no editable stock total. Submitted or rejected movements do not change
-                    the balance. Quantities use the catalogue base unit; no conversions are assumed.
+                    {t(
+                      "There is no editable stock total. Submitted or rejected movements do not change the balance. Quantities use the catalogue base unit; no conversions are assumed.",
+                    )}
                   </Text>
                 </View>
               </View>
@@ -469,8 +472,9 @@ export default function InventoryScreen() {
               </View>
               {canTransact && activeItems.length === 0 && !inventoryQuery.isLoading ? (
                 <Text style={[styles.hint, { color: colors.muted }]}>
-                  An authorised catalogue manager must add an active material before site movements
-                  can be recorded.
+                  {t(
+                    "An authorised catalogue manager must add an active material before site movements can be recorded.",
+                  )}
                 </Text>
               ) : null}
 
@@ -486,7 +490,7 @@ export default function InventoryScreen() {
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.loadingText, { color: colors.muted }]}>
-                    Loading site stock and ledger…
+                    {t("Loading site stock and ledger…")}
                   </Text>
                 </View>
               ) : inventoryQuery.isError ? null : (
@@ -518,7 +522,7 @@ export default function InventoryScreen() {
                         ]}
                       >
                         <Text style={[styles.reviewButtonText, { color: colors.foreground }]}>
-                          Previous
+                          {t("Previous")}
                         </Text>
                       </Pressable>
                       <Text style={[styles.movementDate, { color: colors.muted }]}>
@@ -540,15 +544,16 @@ export default function InventoryScreen() {
                         ]}
                       >
                         <Text style={[styles.reviewButtonText, { color: colors.foreground }]}>
-                          Next
+                          {t("Next")}
                         </Text>
                       </Pressable>
                     </View>
                   ) : null}
                   {catalogueTotal > CATALOGUE_PAGE_SIZE ? (
                     <Text style={[styles.hint, { color: colors.muted }]}>
-                      The movement form uses active materials on this catalogue page. Page to an
-                      item&apos;s entry before recording its movement.
+                      {t(
+                        "The movement form uses active materials on this catalogue page. Page to an item's entry before recording its movement.",
+                      )}
                     </Text>
                   ) : null}
                   {catalogue.length === 0 ? (
@@ -632,7 +637,7 @@ export default function InventoryScreen() {
                                   color={colors.warning}
                                 />
                                 <Text style={[styles.lowText, { color: colors.warning }]}>
-                                  At/below threshold
+                                  {t("At/below threshold")}
                                 </Text>
                               </View>
                             ) : null}
@@ -667,9 +672,9 @@ export default function InventoryScreen() {
                   >
                     <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                     <Text style={[styles.ledgerNoticeText, { color: colors.foreground }]}>
-                      Stock changes only when a different authorised person posts an entry. The
-                      oldest pending entries are listed first, followed by the latest posted and
-                      rejected entries.
+                      {t(
+                        "Stock changes only when a different authorised person posts an entry. The oldest pending entries are listed first, followed by the latest posted and rejected entries.",
+                      )}
                     </Text>
                   </View>
                   {movements.length === 0 ? (
@@ -772,7 +777,7 @@ export default function InventoryScreen() {
                                 style={[styles.reviewButton, { borderColor: colors.warning }]}
                               >
                                 <Text style={[styles.reviewButtonText, { color: colors.warning }]}>
-                                  Reject
+                                  {t("Reject")}
                                 </Text>
                               </Pressable>
                               <Pressable
@@ -786,7 +791,7 @@ export default function InventoryScreen() {
                                 <Text
                                   style={[styles.reviewButtonText, { color: colors.background }]}
                                 >
-                                  Review & post
+                                  {t("Review & post")}
                                 </Text>
                               </Pressable>
                             </View>
@@ -833,7 +838,7 @@ export default function InventoryScreen() {
                     setItemMutationId(createClientMutationId());
                   }}
                 />
-                <Text style={[styles.inputLabel, { color: colors.muted }]}>Item code</Text>
+                <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Item code")}</Text>
                 <TextInput
                   value={itemCode}
                   onChangeText={setItemCode}
@@ -849,7 +854,9 @@ export default function InventoryScreen() {
                     },
                   ]}
                 />
-                <Text style={[styles.inputLabel, { color: colors.muted }]}>Material name</Text>
+                <Text style={[styles.inputLabel, { color: colors.muted }]}>
+                  {t("Material name")}
+                </Text>
                 <TextInput
                   value={itemName}
                   onChangeText={setItemName}
@@ -864,7 +871,7 @@ export default function InventoryScreen() {
                     },
                   ]}
                 />
-                <Text style={[styles.inputLabel, { color: colors.muted }]}>Base unit</Text>
+                <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Base unit")}</Text>
                 <TextInput
                   value={baseUnitCode}
                   onChangeText={setBaseUnitCode}
@@ -881,11 +888,12 @@ export default function InventoryScreen() {
                   ]}
                 />
                 <Text style={[styles.helper, { color: colors.muted }]}>
-                  Choose the organisation&apos;s explicit stock unit. This slice does not convert
-                  bags, truckloads, tonnes, or other units.
+                  {t(
+                    "Choose the organisation's explicit stock unit. This slice does not convert bags, truckloads, tonnes, or other units.",
+                  )}
                 </Text>
                 <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                  Category (optional)
+                  {t("Category (optional)")}
                 </Text>
                 <TextInput
                   value={category}
@@ -902,7 +910,7 @@ export default function InventoryScreen() {
                   ]}
                 />
                 <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                  Specification / grade (optional)
+                  {t("Specification / grade (optional)")}
                 </Text>
                 <TextInput
                   value={specification}
@@ -919,7 +927,7 @@ export default function InventoryScreen() {
                   ]}
                 />
                 <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                  Reorder threshold (optional, base unit)
+                  {t("Reorder threshold (optional, base unit)")}
                 </Text>
                 <TextInput
                   value={reorderThreshold}
@@ -944,8 +952,9 @@ export default function InventoryScreen() {
                 >
                   <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                   <Text style={[styles.formCalloutText, { color: colors.foreground }]}>
-                    Saving a catalogue item creates no opening balance and does not change available
-                    stock.
+                    {t(
+                      "Saving a catalogue item creates no opening balance and does not change available stock.",
+                    )}
                   </Text>
                 </View>
                 <PrimaryButton
@@ -980,7 +989,9 @@ export default function InventoryScreen() {
                   title="Submit for review"
                   onClose={() => setMovementModalVisible(false)}
                 />
-                <Text style={[styles.inputLabel, { color: colors.muted }]}>Movement type</Text>
+                <Text style={[styles.inputLabel, { color: colors.muted }]}>
+                  {t("Movement type")}
+                </Text>
                 <View style={styles.typeStack}>
                   {MOVEMENT_TYPES.map((type) => (
                     <Pressable
@@ -1007,7 +1018,7 @@ export default function InventoryScreen() {
                   {MOVEMENT_TYPES.find((type) => type.value === movementType)?.description}
                 </Text>
                 <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                  Material / base unit
+                  {t("Material / base unit")}
                 </Text>
                 <View style={styles.typeStack}>
                   {activeItems.map((item) => (
@@ -1055,7 +1066,7 @@ export default function InventoryScreen() {
                 {movementType === "Receipt/Inward" ? (
                   <>
                     <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                      Delivery note / challan reference (optional)
+                      {t("Delivery note / challan reference (optional)")}
                     </Text>
                     <TextInput
                       value={sourceReference}
@@ -1072,12 +1083,15 @@ export default function InventoryScreen() {
                       ]}
                     />
                     <Text style={[styles.helper, { color: colors.muted }]}>
-                      Only the accepted quantity is recorded here. Supplier, rejected quantity,
-                      purchase order, and delivery evidence are not captured in this slice.
+                      {t(
+                        "Only the accepted quantity is recorded here. Supplier, rejected quantity, purchase order, and delivery evidence are not captured in this slice.",
+                      )}
                     </Text>
                   </>
                 ) : null}
-                <Text style={[styles.inputLabel, { color: colors.muted }]}>Reason (required)</Text>
+                <Text style={[styles.inputLabel, { color: colors.muted }]}>
+                  {t("Reason (required)")}
+                </Text>
                 <TextInput
                   value={reason}
                   onChangeText={setReason}
@@ -1102,8 +1116,9 @@ export default function InventoryScreen() {
                 >
                   <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                   <Text style={[styles.formCalloutText, { color: colors.foreground }]}>
-                    Online submission only. No stock changes until another authorised user posts
-                    this movement; the server rechecks available stock for outbound movements.
+                    {t(
+                      "Online submission only. No stock changes until another authorised user posts this movement; the server rechecks available stock for outbound movements.",
+                    )}
                   </Text>
                 </View>
                 <PrimaryButton
@@ -1201,7 +1216,9 @@ export default function InventoryScreen() {
                 onPress={() => setReviewTarget(null)}
                 style={styles.cancelReview}
               >
-                <Text style={[styles.cancelReviewText, { color: colors.muted }]}>Cancel</Text>
+                <Text style={[styles.cancelReviewText, { color: colors.muted }]}>
+                  {t("Cancel")}
+                </Text>
               </Pressable>
             </View>
           </View>

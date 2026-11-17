@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { HelpButton } from "@/components/jp/help";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useCallback, useMemo, useState } from "react";
@@ -65,6 +66,7 @@ export default function ReportsScreenTab() {
 }
 
 export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
+  const { t } = useT();
   const colors = useColors();
   const router = useRouter();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
@@ -243,7 +245,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
           <View>
             <Text style={[styles.kicker, { color: colors.muted }]}>REPORT REGISTER</Text>
             <Text style={[styles.subheading, { color: colors.foreground }]}>
-              Records in your site scope
+              {t("Records in your site scope")}
             </Text>
           </View>
           <Pressable
@@ -263,7 +265,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
             ]}
           >
             <MaterialIcons name="add" size={18} color={colors.background} />
-            <Text style={[styles.addText, { color: colors.background }]}>New report</Text>
+            <Text style={[styles.addText, { color: colors.background }]}>{t("New report")}</Text>
           </Pressable>
         </View>
 
@@ -297,7 +299,7 @@ export function ReportsScreen({ inTabs = false }: { inTabs?: boolean }) {
           <View style={styles.loading}>
             <ActivityIndicator color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.muted }]}>
-              Loading authorised reports…
+              {t("Loading authorised reports…")}
             </Text>
           </View>
         ) : reportsQuery.isError ? null : visibleReports.length === 0 ? (

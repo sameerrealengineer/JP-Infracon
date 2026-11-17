@@ -1,4 +1,5 @@
 import * as DocumentPicker from "expo-document-picker";
+import { useT } from "@/lib/i18n";
 import { useLocalSearchParams } from "expo-router";
 import * as Sharing from "expo-sharing";
 import * as WebBrowser from "expo-web-browser";
@@ -41,6 +42,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export default function DocumentDetailScreen() {
+  const { t } = useT();
   const params = useLocalSearchParams<{ documentId?: string }>();
   const documentId = typeof params.documentId === "string" ? params.documentId : "";
   const colors = useColors();
@@ -115,7 +117,7 @@ export default function DocumentDetailScreen() {
               <Card>
                 {detail.data.document.indexStatus === "Pending" ? (
                   <Text style={[styles.body, { color: colors.muted }]}>
-                    The file is being read for search. Pull to refresh in a moment.
+                    {t("The file is being read for search. Pull to refresh in a moment.")}
                   </Text>
                 ) : null}
                 {detail.data.document.aiDocumentType ? (

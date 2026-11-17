@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -35,6 +36,7 @@ function similar(a: string, b: string) {
 }
 
 export default function ScanBillScreen() {
+  const { t } = useT();
   const colors = useColors();
   const router = useRouter();
   const { sitesWith } = useWorkspace();
@@ -191,7 +193,7 @@ export default function ScanBillScreen() {
             <HeroCard>
               <Text style={styles.heroKicker}>STEP 1 · CAPTURE</Text>
               <Text style={styles.heroTitle}>
-                Lay the bill flat, in good light, whole page in frame.
+                {t("Lay the bill flat, in good light, whole page in frame.")}
               </Text>
               <View style={styles.heroButtons}>
                 <View style={{ flex: 1 }}>
@@ -255,7 +257,7 @@ export default function ScanBillScreen() {
               />
               {!vendorRows.length && vendors.isSuccess ? (
                 <Text style={[styles.meta, { color: colors.warning, marginBottom: 10 }]}>
-                  Add this supplier in Finance first to save an invoice draft.
+                  {t("Add this supplier in Finance first to save an invoice draft.")}
                 </Text>
               ) : null}
               <View style={styles.row}>
@@ -359,10 +361,10 @@ export default function ScanBillScreen() {
                 <Card accent="success" style={{ marginBottom: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.lineTitle, { color: colors.foreground }]}>
-                      Invoice draft saved
+                      {t("Invoice draft saved")}
                     </Text>
                     <Text style={[styles.meta, { color: colors.muted }]}>
-                      Open Finance to attach the bill photo and submit it for review.
+                      {t("Open Finance to attach the bill photo and submit it for review.")}
                     </Text>
                   </View>
                 </Card>
@@ -393,8 +395,9 @@ export default function ScanBillScreen() {
           <View style={styles.noteRow}>
             <MaterialIcons name="auto-awesome" size={14} color={colors.accent} />
             <Text style={[styles.note, { color: colors.muted }]}>
-              Powered by Google Gemini on the server. AI can misread — always compare with the paper
-              bill. Nothing is saved until you press Save.
+              {t(
+                "Powered by Google Gemini on the server. AI can misread — always compare with the paper bill. Nothing is saved until you press Save.",
+              )}
             </Text>
           </View>
         </ScrollView>

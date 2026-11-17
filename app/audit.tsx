@@ -1,4 +1,5 @@
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useT } from "@/lib/i18n";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { AppHeader, EmptyState, InlineError, Screen } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
@@ -37,6 +38,7 @@ function tone(action: string): "success" | "warning" | "error" | "info" {
 }
 
 export default function AuditScreen() {
+  const { t } = useT();
   const colors = useColors();
   const events = trpc.jp.workspace.auditEvents.useQuery();
   return (
@@ -60,7 +62,7 @@ export default function AuditScreen() {
             <View style={styles.loading}>
               <ActivityIndicator color={colors.primary} />
               <Text style={[styles.loadingText, { color: colors.muted }]}>
-                Loading permitted audit events…
+                {t("Loading permitted audit events…")}
               </Text>
             </View>
           ) : events.data?.length ? (

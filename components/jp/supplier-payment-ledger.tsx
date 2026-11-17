@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { centeredColumn } from "@/constants/layout";
 import { AttachmentStrip } from "@/components/jp/attachment-strip";
 import { useMemo, useRef, useState } from "react";
@@ -74,6 +75,7 @@ function formatTime(value: string | Date | null | undefined) {
 }
 
 export function SupplierPaymentLedger(props: Props) {
+  const { t } = useT();
   const colors = useColors();
   const [statusFilter, setStatusFilter] = useState<(typeof PAYMENT_STATUSES)[number]>("All");
   const [page, setPage] = useState(0);
@@ -418,10 +420,9 @@ export function SupplierPaymentLedger(props: Props) {
       >
         <MaterialIcons name="account-balance-wallet" size={17} color={colors.warning} />
         <Text style={[styles.noticeText, { color: colors.muted }]}>
-          Internal supplier-invoice ledger only. “Posted” is not a bank/UPI transfer or independent
-          confirmation. Only Posted allocations reduce the approved invoice amount shown as
-          available; advances, credit/debit notes, retention, evidence and actual payment execution
-          are not included.
+          {t(
+            "Internal supplier-invoice ledger only. “Posted” is not a bank/UPI transfer or independent confirmation. Only Posted allocations reduce the approved invoice amount shown as available; advances, credit/debit notes, retention, evidence and actual payment execution are not included.",
+          )}
         </Text>
       </View>
       <ScrollView
@@ -452,7 +453,9 @@ export function SupplierPaymentLedger(props: Props) {
       ) : paymentsQuery.isLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={[styles.meta, { color: colors.muted }]}>Loading site payment ledger…</Text>
+          <Text style={[styles.meta, { color: colors.muted }]}>
+            {t("Loading site payment ledger…")}
+          </Text>
         </View>
       ) : rows.length === 0 ? (
         <EmptyState
@@ -529,7 +532,7 @@ export function SupplierPaymentLedger(props: Props) {
                 ) : null}
                 {payment.status === "Posted" ? (
                   <Text style={[styles.postedNote, { color: colors.success }]}>
-                    Internal ledger entry only · not bank-verified
+                    {t("Internal ledger entry only · not bank-verified")}
                   </Text>
                 ) : null}
                 {payment.reviewReason ? (
@@ -582,7 +585,9 @@ export function SupplierPaymentLedger(props: Props) {
                       onPress={() => openAction(payment.id, "review")}
                       style={[styles.actionButton, { borderColor: colors.success }]}
                     >
-                      <Text style={[styles.actionText, { color: colors.success }]}>Review</Text>
+                      <Text style={[styles.actionText, { color: colors.success }]}>
+                        {t("Review")}
+                      </Text>
                     </Pressable>
                   ) : null}
                   {mayPost ? (
@@ -592,7 +597,7 @@ export function SupplierPaymentLedger(props: Props) {
                       style={[styles.actionButton, { borderColor: colors.primary }]}
                     >
                       <Text style={[styles.actionText, { color: colors.primary }]}>
-                        Post to ledger
+                        {t("Post to ledger")}
                       </Text>
                     </Pressable>
                   ) : null}
@@ -602,14 +607,16 @@ export function SupplierPaymentLedger(props: Props) {
                       onPress={() => openAction(payment.id, "cancel")}
                       style={[styles.actionButton, { borderColor: colors.warning }]}
                     >
-                      <Text style={[styles.actionText, { color: colors.warning }]}>Cancel</Text>
+                      <Text style={[styles.actionText, { color: colors.warning }]}>
+                        {t("Cancel")}
+                      </Text>
                     </Pressable>
                   ) : null}
                 </View>
                 {expanded ? (
                   detailQuery.isLoading ? (
                     <Text style={[styles.meta, { color: colors.muted }]}>
-                      Loading invoice allocations…
+                      {t("Loading invoice allocations…")}
                     </Text>
                   ) : detailQuery.isError ? (
                     <InlineError
@@ -638,7 +645,7 @@ export function SupplierPaymentLedger(props: Props) {
                       ))}
                       {detailQuery.data.allocations.length === 0 ? (
                         <Text style={[styles.meta, { color: colors.warning }]}>
-                          No invoice allocations are recorded.
+                          {t("No invoice allocations are recorded.")}
                         </Text>
                       ) : null}
                       {detailQuery.data.payment.reviewReason ? (
@@ -675,20 +682,24 @@ export function SupplierPaymentLedger(props: Props) {
             <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  Record supplier payment
+                  {t("Record supplier payment")}
                 </Text>
                 <Pressable accessibilityRole="button" onPress={closeForm}>
                   <MaterialIcons name="close" size={22} color={colors.muted} />
                 </Pressable>
               </View>
               <Text style={[styles.noticeText, { color: colors.warning }]}>
-                This saves a Draft ledger record only. It does not send money or prove payment.
+                {t(
+                  "This saves a Draft ledger record only. It does not send money or prove payment.",
+                )}
               </Text>
-              <Text style={[styles.label, { color: colors.muted }]}>Active supplier *</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>{t("Active supplier *")}</Text>
               {vendorsQuery.isLoading ? (
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
-                  <Text style={[styles.meta, { color: colors.muted }]}>Loading suppliers…</Text>
+                  <Text style={[styles.meta, { color: colors.muted }]}>
+                    {t("Loading suppliers…")}
+                  </Text>
                 </View>
               ) : vendorsQuery.isError ? (
                 <InlineError
@@ -710,8 +721,9 @@ export function SupplierPaymentLedger(props: Props) {
                 </View>
               ) : (
                 <Text style={[styles.meta, { color: colors.warning }]}>
-                  No supplier is available on this page. Add or locate an active organisation
-                  supplier in the Suppliers section.
+                  {t(
+                    "No supplier is available on this page. Add or locate an active organisation supplier in the Suppliers section.",
+                  )}
                 </Text>
               )}
               {vendorTotal > VENDOR_PAGE_SIZE ? (
@@ -730,7 +742,7 @@ export function SupplierPaymentLedger(props: Props) {
                 placeholder="0.00"
                 keyboardType="decimal-pad"
               />
-              <Text style={[styles.label, { color: colors.muted }]}>Payment mode *</Text>
+              <Text style={[styles.label, { color: colors.muted }]}>{t("Payment mode *")}</Text>
               <View style={styles.choiceStack}>
                 {PAYMENT_MODES.map((mode) => (
                   <Choice
@@ -783,12 +795,13 @@ export function SupplierPaymentLedger(props: Props) {
               />
               <SectionHeader title="Allocate to approved invoices" />
               <Text style={[styles.meta, { color: colors.muted }]}>
-                Select invoice allocations that sum exactly to the payment. Balances are derived
-                from approved invoices minus Posted internal-ledger allocations only.
+                {t(
+                  "Select invoice allocations that sum exactly to the payment. Balances are derived from approved invoices minus Posted internal-ledger allocations only.",
+                )}
               </Text>
               {!vendorId ? (
                 <Text style={[styles.meta, { color: colors.warning, marginTop: 10 }]}>
-                  Choose a supplier to load its approved invoices for this site.
+                  {t("Choose a supplier to load its approved invoices for this site.")}
                 </Text>
               ) : candidatesQuery.isError ? (
                 <InlineError
@@ -801,7 +814,7 @@ export function SupplierPaymentLedger(props: Props) {
                 <View style={styles.loading}>
                   <ActivityIndicator color={colors.primary} />
                   <Text style={[styles.meta, { color: colors.muted }]}>
-                    Loading approved invoice balances…
+                    {t("Loading approved invoice balances…")}
                   </Text>
                 </View>
               ) : candidates.length === 0 ? (
@@ -868,7 +881,7 @@ export function SupplierPaymentLedger(props: Props) {
                 ]}
               >
                 <Text style={[styles.meta, { color: colors.muted }]}>
-                  Allocation check · exact integer paise
+                  {t("Allocation check · exact integer paise")}
                 </Text>
                 <Text
                   style={[
@@ -903,9 +916,9 @@ export function SupplierPaymentLedger(props: Props) {
                 />
               </View>
               <Text style={[styles.meta, { color: colors.muted, marginTop: 10 }]}>
-                No raw bank credentials are collected. Uploading evidence, supplier advances,
-                reversals, retention, notes, petty cash and reimbursements are not part of this
-                slice.
+                {t(
+                  "No raw bank credentials are collected. Uploading evidence, supplier advances, reversals, retention, notes, petty cash and reimbursements are not part of this slice.",
+                )}
               </Text>
             </ScrollView>
           </View>

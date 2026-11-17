@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { RefreshControl, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -27,6 +28,7 @@ import { trpc } from "@/lib/trpc";
 const validity = ["1", "3", "7", "30"] as const;
 
 export default function InvitesScreen() {
+  const { t } = useT();
   const colors = useColors();
   const options = trpc.jp.accounts.options.useQuery();
   const orgs = options.data ?? [];
@@ -167,8 +169,9 @@ export default function InvitesScreen() {
           <View style={styles.noteRow}>
             <MaterialIcons name="shield" size={14} color={colors.accent} />
             <Text style={[styles.note, { color: colors.muted }]}>
-              Codes are stored only as a fingerprint, work once, expire, and repeated wrong codes
-              are blocked.
+              {t(
+                "Codes are stored only as a fingerprint, work once, expire, and repeated wrong codes are blocked.",
+              )}
             </Text>
           </View>
         </ScrollView>

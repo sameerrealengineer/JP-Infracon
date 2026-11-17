@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { AiFormFill } from "@/components/jp/voice-assist";
 import { AssignTaskSheet } from "@/components/jp/assign-task-sheet";
 import { HelpButton } from "@/components/jp/help";
@@ -67,6 +68,7 @@ function errorMessage(error: unknown) {
 }
 
 export default function ScheduleScreen() {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const [filesTaskId, setFilesTaskId] = useState<string | null>(null);
@@ -387,7 +389,7 @@ export default function ScheduleScreen() {
                   ]}
                 >
                   <Text style={[styles.formTitle, { color: colors.foreground }]}>
-                    Create planned task
+                    {t("Create planned task")}
                   </Text>
                   <AiFormFill
                     formId="task"
@@ -452,7 +454,7 @@ export default function ScheduleScreen() {
                         placeholder="2026-10-26"
                       />
                       <Text style={[styles.fieldHint, { color: colors.muted }]}>
-                        Initial planned end
+                        {t("Initial planned end")}
                       </Text>
                       <Field
                         label="Planned end · YYYY-MM-DD"
@@ -465,7 +467,7 @@ export default function ScheduleScreen() {
                       />
                     </View>
                   </View>
-                  <Text style={[styles.inputLabel, { color: colors.muted }]}>Priority</Text>
+                  <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Priority")}</Text>
                   <View style={styles.choiceRow}>
                     {(["Low", "Normal", "High", "Critical"] as const).map((item) => (
                       <Choice
@@ -482,7 +484,7 @@ export default function ScheduleScreen() {
                   {activeTasks.length > 0 ? (
                     <>
                       <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                        Depends on (optional)
+                        {t("Depends on (optional)")}
                       </Text>
                       <View style={styles.choiceStack}>
                         <Choice
@@ -520,8 +522,9 @@ export default function ScheduleScreen() {
                   >
                     <MaterialIcons name="info-outline" size={17} color={colors.warning} />
                     <Text style={[styles.noticeText, { color: colors.muted }]}>
-                      Task creation is online-only. A Finish-to-Start predecessor must finish before
-                      this task starts. No worker/team is assigned and no stock or cost is posted.
+                      {t(
+                        "Task creation is online-only. A Finish-to-Start predecessor must finish before this task starts. No worker/team is assigned and no stock or cost is posted.",
+                      )}
                     </Text>
                   </View>
                   <PrimaryButton
@@ -703,7 +706,7 @@ export default function ScheduleScreen() {
                             ]}
                           >
                             <Text style={[styles.panelTitle, { color: colors.foreground }]}>
-                              Propose a new start date
+                              {t("Propose a new start date")}
                             </Text>
                             <Field
                               label="New start · YYYY-MM-DD"
@@ -716,7 +719,7 @@ export default function ScheduleScreen() {
                               placeholder="2026-10-27"
                             />
                             <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                              Impact strategy
+                              {t("Impact strategy")}
                             </Text>
                             <View style={styles.choiceStack}>
                               <Choice
@@ -738,7 +741,9 @@ export default function ScheduleScreen() {
                                 }}
                               />
                             </View>
-                            <Text style={[styles.inputLabel, { color: colors.muted }]}>Reason</Text>
+                            <Text style={[styles.inputLabel, { color: colors.muted }]}>
+                              {t("Reason")}
+                            </Text>
                             <View style={styles.choiceStack}>
                               {REASONS.map(([code, label]) => (
                                 <Choice
@@ -832,8 +837,9 @@ export default function ScheduleScreen() {
                                   </Text>
                                 ))}
                                 <Text style={[styles.auditHint, { color: colors.muted }]}>
-                                  Review the affected dates. Applying this change requires a second
-                                  tap and records a reason and each old/new date.
+                                  {t(
+                                    "Review the affected dates. Applying this change requires a second tap and records a reason and each old/new date.",
+                                  )}
                                 </Text>
                                 <PrimaryButton
                                   icon="check"
@@ -862,7 +868,7 @@ export default function ScheduleScreen() {
                             ]}
                           >
                             <Text style={[styles.panelTitle, { color: colors.foreground }]}>
-                              Task status
+                              {t("Task status")}
                             </Text>
                             <View style={styles.choiceStack}>
                               {(
@@ -923,7 +929,7 @@ export default function ScheduleScreen() {
                             ]}
                           >
                             <Text style={[styles.panelTitle, { color: colors.foreground }]}>
-                              Schedule history
+                              {t("Schedule history")}
                             </Text>
                             {historyQuery.isLoading ? (
                               <LoadingLine label="Loading immutable revisions…" />
@@ -974,9 +980,9 @@ export default function ScheduleScreen() {
               >
                 <MaterialIcons name="history" size={16} color={colors.primary} />
                 <Text style={[styles.noticeText, { color: colors.muted }]}>
-                  Reschedule previews are re-computed on the server under a site schedule lock.
-                  Conflicts block applying. Workday calendars, resource assignment conflicts,
-                  calendar views, and approval routing remain future work.
+                  {t(
+                    "Reschedule previews are re-computed on the server under a site schedule lock. Conflicts block applying. Workday calendars, resource assignment conflicts, calendar views, and approval routing remain future work.",
+                  )}
                 </Text>
               </View>
             </>

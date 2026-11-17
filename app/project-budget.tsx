@@ -1,4 +1,5 @@
 import type { inferRouterOutputs } from "@trpc/server";
+import { useT } from "@/lib/i18n";
 import { HelpButton } from "@/components/jp/help";
 import { useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -313,6 +314,7 @@ function ProposedCard({
   canApprove: boolean;
   onChanged: () => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const review = trpc.jp.budgets.review.useMutation();
   const [reason, setReason] = useState("");
@@ -349,7 +351,7 @@ function ProposedCard({
         <Text style={[styles.body, { color: colors.foreground }]}>Reason: {proposed.reason}</Text>
       ) : null}
       <View style={styles.rowBetween}>
-        <Text style={[styles.body, { color: colors.muted }]}>Contract value</Text>
+        <Text style={[styles.body, { color: colors.muted }]}>{t("Contract value")}</Text>
         <Text style={[styles.bodyStrong, { color: colors.foreground }]}>
           {rupees(proposed.contractValueMinor)}
         </Text>
@@ -367,7 +369,7 @@ function ProposedCard({
         );
       })}
       <View style={styles.rowBetween}>
-        <Text style={[styles.bodyStrong, { color: colors.foreground }]}>Total</Text>
+        <Text style={[styles.bodyStrong, { color: colors.foreground }]}>{t("Total")}</Text>
         <Text style={[styles.bodyStrong, { color: colors.foreground }]}>
           {rupees(proposed.totalMinor)}
         </Text>
@@ -399,7 +401,7 @@ function ProposedCard({
       ) : proposed.mine ? (
         <>
           <Text style={[styles.note, { color: colors.muted }]}>
-            Another person with budget approval must approve it.
+            {t("Another person with budget approval must approve it.")}
           </Text>
           <SecondaryButton
             icon="undo"
@@ -424,6 +426,7 @@ function BudgetSheet({
   onClose: () => void;
   onDone: () => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const propose = trpc.jp.budgets.propose.useMutation();
   const [contract, setContract] = useState(
@@ -510,7 +513,7 @@ function BudgetSheet({
         />
       ))}
       <View style={styles.rowBetween}>
-        <Text style={[styles.bodyStrong, { color: colors.foreground }]}>Total budget</Text>
+        <Text style={[styles.bodyStrong, { color: colors.foreground }]}>{t("Total budget")}</Text>
         <Text style={[styles.bodyStrong, { color: colors.foreground }]}>
           {formatMinorAsRupees(total)}
         </Text>
@@ -523,7 +526,7 @@ function BudgetSheet({
         maxLength={1000}
       />
       <Text style={[styles.note, { color: colors.muted }]}>
-        The budget counts only after another person with approval rights approves it.
+        {t("The budget counts only after another person with approval rights approves it.")}
       </Text>
       {error ? <InlineError message={error} /> : null}
       <PrimaryButton

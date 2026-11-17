@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
@@ -42,6 +43,7 @@ function rangeDates(range: Range, today = new Date()): { from: string; to: strin
 }
 
 export default function ExportsScreen() {
+  const { t } = useT();
   const colors = useColors();
   const { online } = useConnectivity();
   const options = trpc.jp.exports.options.useQuery();
@@ -222,8 +224,9 @@ export default function ExportsScreen() {
                 </Card>
               ) : null}
               <Text style={[styles.note, { color: colors.muted }]}>
-                Each file lists the organisation, sites, period, time generated and row count. Every
-                export is recorded in the audit trail.
+                {t(
+                  "Each file lists the organisation, sites, period, time generated and row count. Every export is recorded in the audit trail.",
+                )}
               </Text>
             </>
           )}

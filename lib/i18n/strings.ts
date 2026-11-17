@@ -2752,6 +2752,339 @@ export const hi: Dictionary = {
   "Tiling m² (8/mason/day)": "टाइलिंग m² (8/मिस्त्री/दिन)",
   "PCC m³ (3/gang/day)": "PCC m³ (3/गैंग/दिन)",
   "Painting m² (25/painter/day)": "पेंटिंग m² (25/पेंटर/दिन)",
+  // Screen sweep 1
+  "+ GST": "+ GST",
+  "− TDS": "− TDS",
+  "12 m bars": "12 m सरिये",
+  "Active supplier *": "सक्रिय सप्लायर *",
+  "Actual %": "असल %",
+  "Add a complete line item to calculate the gross total.": "कुल राशि के लिए एक पूरी लाइन जोड़ें।",
+  "Add line item": "लाइन जोड़ें",
+  "Add supplier": "सप्लायर जोड़ें",
+  "Add tasks in Schedule to see the Gantt and S-curve.":
+    "गैंट और S-कर्व देखने के लिए शेड्यूल में टास्क जोड़ें।",
+  "Add this supplier in Finance first to save an invoice draft.":
+    "बिल ड्राफ्ट के लिए पहले फाइनेंस में यह सप्लायर जोड़ें।",
+  "After upload, the file is read so it can be found by what is inside it. AI suggestions are shown for checking; they never change amounts or approvals.":
+    "अपलोड के बाद फ़ाइल पढ़ी जाती है ताकि अंदर की बात से खोजी जा सके। AI सुझाव जाँच के लिए हैं; वे राशि या मंज़ूरी नहीं बदलते।",
+  Age: "उम्र (दिन)",
+  "Alerts never include money amounts or ID numbers. Unofficial WhatsApp gateways (WAHA, Evolution API) can get a number blocked by WhatsApp; use a separate business number.":
+    "अलर्ट में कभी पैसे या ID नंबर नहीं होते। अनौपचारिक WhatsApp गेटवे से नंबर ब्लॉक हो सकता है; अलग बिज़नेस नंबर रखें।",
+  "All approved supplier bills are paid.": "सभी मंज़ूर सप्लायर बिल चुकाए गए।",
+  "Allocation check · exact integer paise": "आवंटन जाँच · सटीक पैसे",
+  Amount: "राशि",
+  "An authorised catalogue manager must add an active material before site movements can be recorded.":
+    "साइट मूवमेंट दर्ज करने से पहले अधिकृत व्यक्ति सक्रिय सामान जोड़े।",
+  "Another person with budget approval must approve it.":
+    "बजट मंज़ूरी वाला कोई दूसरा व्यक्ति इसे मंज़ूर करे।",
+  "App notifications (Expo push)": "ऐप सूचनाएँ (Expo push)",
+  "Approval is invoice review only. It does not post or settle a payment.":
+    "मंज़ूरी सिर्फ़ बिल जाँच है। इससे भुगतान नहीं होता।",
+  "Approvals need a connection. Payments and petty cash are recorded in the JP Infracon ledger — no money is sent from this app. Balances count Posted entries only.":
+    "मंज़ूरी के लिए इंटरनेट चाहिए। भुगतान और छोटी नकदी JP Infracon खाते में दर्ज होते हैं — ऐप से पैसा नहीं जाता। बैलेंस में सिर्फ़ पोस्ट हुई एंट्री गिनी जाती हैं।",
+  "Approval, supplier evidence, receipt, and stock posting are separate controlled steps. This build does not place orders.":
+    "मंज़ूरी, सप्लायर सबूत, रसीद और स्टॉक पोस्टिंग अलग-अलग नियंत्रित चरण हैं। यहाँ से ऑर्डर नहीं जाता।",
+  "Approved bills less payments, by days past due":
+    "मंज़ूर बिल घटा भुगतान, देय तिथि से कितने दिन ऊपर",
+  "Approved or posted supplier payments, petty cash spent and worker advances":
+    "मंज़ूर या पोस्ट सप्लायर भुगतान, खर्च हुई छोटी नकदी और मज़दूर एडवांस",
+  "Assign this person to a site first (Projects & sites → site → Assign).":
+    "पहले इस व्यक्ति को साइट पर रखें (प्रोजेक्ट और साइट → साइट → असाइन)।",
+  "A submitted report is not approved. Review and correction decisions are recorded separately.":
+    "जमा रिपोर्ट मंज़ूर नहीं मानी जाती। जाँच और सुधार अलग दर्ज होते हैं।",
+  "At/below threshold": "सीमा पर या नीचे",
+  "Attendance needs a connection to save. Estimates are not payables: wages are paid only through approved records.":
+    "हाज़िरी सहेजने के लिए इंटरनेट चाहिए। अनुमान देनदारी नहीं: मज़दूरी सिर्फ़ मंज़ूर रिकॉर्ड से दी जाती है।",
+  "Authorised balance ceiling": "अधिकृत बैलेंस सीमा",
+  "bag, kg, hr": "बोरी, kg, घंटा",
+  "bag, kg, m3, metre": "बोरी, kg, m3, मीटर",
+  "Bar mark": "बार मार्क",
+  bars: "सरिये",
+  Bars: "सरिये",
+  "Bars per member": "प्रति भाग सरिये",
+  "Base unit": "मूल इकाई",
+  "Beam B1, Column C2…": "बीम B1, कॉलम C2…",
+  "Bends: 45° = 1d, 90° = 2d, 135° = 3d; stirrup hooks 10d; weight d²/162 kg/m.":
+    "मोड़: 45° = 1d, 90° = 2d, 135° = 3d; रिंग हुक 10d; वज़न d²/162 kg/m।",
+  "Capture a workforce profile": "मज़दूर प्रोफ़ाइल बनाएँ",
+  "Cash given minus cash repaid; pay-run recoveries show in Khaata":
+    "दिया नकद घटा लौटाया नकद; वेतन से वसूली खाते में दिखती है",
+  "Category (optional)": "श्रेणी (वैकल्पिक)",
+  "Choose a supplier to load its approved invoices for this site.":
+    "इस साइट के मंज़ूर बिल देखने के लिए सप्लायर चुनें।",
+  "Choose the organisation's explicit stock unit. This slice does not convert bags, truckloads, tonnes, or other units.":
+    "कंपनी की तय स्टॉक इकाई चुनें। यहाँ बोरी, ट्रक, टन आदि बदले नहीं जाते।",
+  Clear: "साफ़ करें",
+  "Codes are stored only as a fingerprint, work once, expire, and repeated wrong codes are blocked.":
+    "कोड सिर्फ़ फ़िंगरप्रिंट के रूप में रखे जाते हैं, एक बार चलते हैं, समय पर खत्म होते हैं, बार-बार गलत कोड रोके जाते हैं।",
+  "Contingency (%)": "आकस्मिक खर्च (%)",
+  Contingency: "आकस्मिक खर्च",
+  "Control note": "नियंत्रण नोट",
+  Cost: "खर्च",
+  "Cost for one unit (₹)": "एक इकाई का खर्च (₹)",
+  "{count} bar marks": "{count} बार मार्क",
+  "{count} calculators for site work: quantities, steel, estimates, water and more.":
+    "साइट काम के {count} कैलकुलेटर: मात्रा, सरिया, एस्टिमेट, पानी और भी।",
+  "{count} items": "{count} आइटम",
+  "{count} items in stock": "स्टॉक में {count} आइटम",
+  "{count} tasks from {date}; the line is today": "{date} से {count} काम; रेखा आज है",
+  "Create planned task": "योजना वाला काम बनाएँ",
+  "Create the workspace": "वर्कस्पेस बनाएँ",
+  "Cumulative % of work, weighted by task duration": "काम का कुल %, काम की अवधि के भार से",
+  "Cut (mm)": "कटिंग (mm)",
+  "Cutting length": "कटिंग लंबाई",
+  Day: "दिन",
+  "Days with a DPR in this period": "इस अवधि में DPR वाले दिन",
+  "Delivery note / challan reference (optional)": "डिलीवरी नोट / चालान नंबर (वैकल्पिक)",
+  "Depends on (optional)": "किस पर निर्भर (वैकल्पिक)",
+  Dia: "व्यास",
+  "Diameter (mm)": "व्यास (mm)",
+  "due {date}": "{date} तक देय",
+  "Each file lists the organisation, sites, period, time generated and row count. Every export is recorded in the audit trail.":
+    "हर फ़ाइल में कंपनी, साइट, अवधि, बनने का समय और पंक्तियाँ होती हैं। हर एक्सपोर्ट ऑडिट में दर्ज होता है।",
+  "e.g. 12.500": "जैसे 12.500",
+  "e.g. 50000000": "जैसे 50000000",
+  "e.g. 850.00": "जैसे 850.00",
+  "e.g. bag, m³, kg": "जैसे बोरी, m³, kg",
+  "e.g. Balugaon Pump House": "जैसे बालूगाँव पंप हाउस",
+  "e.g. Chainage 2+350, near valve chamber": "जैसे चेनेज 2+350, वाल्व चैंबर के पास",
+  "e.g. Civil, Accounts": "जैसे सिविल, अकाउंट्स",
+  "e.g. Government building works, 2 sites, 40 labourers, we buy cement and steel ourselves, accounts done by CA":
+    "जैसे सरकारी भवन काम, 2 साइट, 40 मज़दूर, सीमेंट-सरिया हम खुद खरीदते हैं, हिसाब CA करते हैं",
+  "e.g. Install delivery main, chainage 0–250 m": "जैसे डिलीवरी मेन बिछाना, चेनेज 0–250 m",
+  "e.g. Khurda Rural Water Supply": "जैसे खुर्दा ग्रामीण जल आपूर्ति",
+  "e.g. Sipun Behera": "जैसे सिपुन बेहेरा",
+  "Estimate abstract — JP Infracon": "एस्टिमेट सार — JP Infracon",
+  "Estimated from attendance and rates": "हाज़िरी और दर से अनुमान",
+  "Estimated from attendance and rates; {count} marks have no rate":
+    "हाज़िरी और दर से अनुमान; {count} हाज़िरी में दर नहीं",
+  "Estimated from task status and the latest DPR quantities. Not a basis for payment.":
+    "काम की स्थिति और आख़िरी DPR मात्रा से अनुमान। भुगतान का आधार नहीं।",
+  "Every delegation and revocation is recorded in the audit trail. Delegated people still work only on the chosen site or project.":
+    "हर अधिकार देना और वापस लेना ऑडिट में दर्ज होता है। अधिकार पाने वाले सिर्फ़ चुनी साइट या प्रोजेक्ट पर काम करते हैं।",
+  "Everyone eligible is already on this site. Create a new login from Team accounts first.":
+    "सभी योग्य लोग पहले से इस साइट पर हैं। पहले टीम खाते से नया लॉगिन बनाएँ।",
+  "Flags the issue as STOP WORK for every site lead until it is resolved.":
+    "समाधान तक हर साइट लीडर के लिए 'काम रोकें' चिह्नित करता है।",
+  "G+3 residential building, Patia": "G+3 आवासीय भवन, पाटिया",
+  "Go back and choose a tool.": "वापस जाकर टूल चुनें।",
+  "GST (%)": "GST (%)",
+  "Impact strategy": "असर का तरीका",
+  "Initial KYC state · authorised review": "शुरुआती KYC स्थिति · अधिकृत जाँच",
+  "Initial planned end": "शुरुआती योजना अंत",
+  "Internal ledger entry only · not bank-verified":
+    "सिर्फ़ आंतरिक खाता एंट्री · बैंक से जाँची नहीं",
+  "Internal supplier-invoice ledger only. “Posted” is not a bank/UPI transfer or independent confirmation. Only Posted allocations reduce the approved invoice amount shown as available; advances, credit/debit notes, retention, evidence and actual payment execution are not included.":
+    "सिर्फ़ आंतरिक सप्लायर-बिल खाता। “पोस्ट” का मतलब बैंक/UPI भुगतान नहीं। सिर्फ़ पोस्ट आवंटन मंज़ूर बिल की बाकी राशि घटाते हैं; एडवांस, क्रेडिट/डेबिट नोट, रिटेंशन और असल भुगतान शामिल नहीं।",
+  "Invoice approval is review only. Only Posted internal supplier allocations reduce invoice availability. Petty-cash balances are calculated from Posted fund movements, not physical cash counts. The app does not execute or verify bank/card/UPI transfers and does not claim overall supplier dues, worker payables, or reimbursement liabilities.":
+    "बिल मंज़ूरी सिर्फ़ जाँच है। सिर्फ़ पोस्ट आवंटन बिल की बाकी राशि घटाते हैं। छोटी नकदी बैलेंस पोस्ट एंट्री से बनता है, गिनी हुई नकदी से नहीं। ऐप बैंक/कार्ड/UPI भुगतान नहीं करता।",
+  "Invoice draft saved": "बिल ड्राफ्ट सहेजा गया",
+  "Item description": "आइटम विवरण",
+  "KYC status is read-only for this account; a separate authorised reviewer is required.":
+    "इस खाते के लिए KYC स्थिति सिर्फ़ देखने के लिए है; अलग अधिकृत जाँचकर्ता चाहिए।",
+  "Lay the bill flat, in good light, whole page in frame.":
+    "बिल सीधा रखें, अच्छी रोशनी में, पूरा पन्ना फ्रेम में।",
+  "Loading approved invoice balances…": "मंज़ूर बिल बैलेंस लोड हो रहे हैं…",
+  "Loading authorised reports…": "रिपोर्ट लोड हो रही हैं…",
+  "Loading authorised requests…": "माँगें लोड हो रही हैं…",
+  "Loading eligible assigned accounts…": "योग्य खाते लोड हो रहे हैं…",
+  "Loading invoice allocations…": "बिल आवंटन लोड हो रहे हैं…",
+  "Loading invoice items…": "बिल आइटम लोड हो रहे हैं…",
+  "Loading members…": "सदस्य लोड हो रहे हैं…",
+  "Loading movement ledger…": "मूवमेंट खाता लोड हो रहा है…",
+  "Loading permitted audit events…": "ऑडिट घटनाएँ लोड हो रही हैं…",
+  "Loading Posted expense balances…": "पोस्ट खर्च बैलेंस लोड हो रहे हैं…",
+  "Loading site funds…": "साइट फंड लोड हो रहे हैं…",
+  "Loading site invoices…": "साइट बिल लोड हो रहे हैं…",
+  "Loading site payment ledger…": "साइट भुगतान खाता लोड हो रहा है…",
+  "Loading site stock and ledger…": "साइट स्टॉक और खाता लोड हो रहा है…",
+  "Loading supplier directory…": "सप्लायर सूची लोड हो रही है…",
+  "Loading suppliers…": "सप्लायर लोड हो रहे हैं…",
+  "Make the area safe first. This app records the issue; it does not certify that a hazard is safe.":
+    "पहले जगह सुरक्षित करें। ऐप समस्या दर्ज करता है; यह खतरे को सुरक्षित प्रमाणित नहीं करता।",
+  "Manual KYC decision": "हाथ से KYC निर्णय",
+  Mark: "मार्क",
+  "Mark attendance for this day first. The labour report cannot be submitted without it.":
+    "पहले इस दिन की हाज़िरी लगाएँ। इसके बिना मज़दूर रिपोर्ट जमा नहीं होगी।",
+  "Material + labour + plant": "सामान + मज़दूरी + मशीन",
+  "Material / base unit": "सामान / मूल इकाई",
+  "Material name": "सामान का नाम",
+  "Material workflow": "सामान प्रक्रिया",
+  "Measured value against the work order value": "वर्क ऑर्डर मूल्य के सामने नापा गया मूल्य",
+  "Most owed": "सबसे ज़्यादा बकाया",
+  "Movement type *": "मूवमेंट प्रकार *",
+  "Movement type": "मूवमेंट प्रकार",
+  "Named site custodian *": "नामित साइट संरक्षक *",
+  "Never enter card, bank-account or login details. Write the bill or receipt number, or why there is none. Posted entries change the balance and cannot be edited or deleted.":
+    "कभी कार्ड, बैंक खाता या लॉगिन विवरण न डालें। बिल/रसीद नंबर लिखें, या क्यों नहीं है। पोस्ट एंट्री बैलेंस बदलती हैं और बदली या मिटाई नहीं जा सकतीं।",
+  "New profiles are inactive Drafts. A reviewer must explicitly activate them. Profile capture is online-only; failed server confirmation retains the same mutation key for a safe retry.":
+    "नई प्रोफ़ाइल निष्क्रिय ड्राफ्ट होती हैं। जाँचकर्ता उन्हें चालू करे। प्रोफ़ाइल बनाने के लिए इंटरनेट चाहिए; विफल होने पर सुरक्षित दोबारा कोशिश होती है।",
+  "New profiles default to Pending. Only an authorised KYC reviewer may choose or change a different initial status.":
+    "नई प्रोफ़ाइल 'बाकी' स्थिति में होती हैं। सिर्फ़ अधिकृत KYC जाँचकर्ता दूसरी स्थिति चुन सकता है।",
+  "New supplier invoice": "नया सप्लायर बिल",
+  "No active eligible site assignee is available. Add/activate an authorised site account first; a free-text custodian is not accepted.":
+    "कोई योग्य साइट व्यक्ति नहीं। पहले अधिकृत साइट खाता जोड़ें/चालू करें; हाथ से लिखा नाम नहीं चलेगा।",
+  "No active supplier is loaded on this page. Add/locate a supplier before creating an invoice.":
+    "इस पेज पर कोई सक्रिय सप्लायर नहीं। बिल से पहले सप्लायर जोड़ें/खोजें।",
+  "No attendance marked yet": "अभी कोई हाज़िरी नहीं",
+  "No bank credentials are collected in this register.":
+    "इस रजिस्टर में कोई बैंक विवरण नहीं लिया जाता।",
+  "No invoice allocations are recorded.": "कोई बिल आवंटन दर्ज नहीं।",
+  "No issues from the store in this period.": "इस अवधि में स्टोर से कुछ नहीं निकला।",
+  "No money went out in this period.": "इस अवधि में कोई पैसा नहीं गया।",
+  "No Posted expense with a remaining returnable amount exists in this fund.":
+    "इस फंड में लौटाने लायक बाकी वाला कोई पोस्ट खर्च नहीं।",
+  "No raw bank credentials are collected. Uploading evidence, supplier advances, reversals, retention, notes, petty cash and reimbursements are not part of this slice.":
+    "कोई बैंक विवरण नहीं लिया जाता। सबूत, सप्लायर एडवांस, वापसी, रिटेंशन, नोट, छोटी नकदी और भरपाई यहाँ शामिल नहीं।",
+  "No receipts in this period.": "इस अवधि में कोई प्राप्ति नहीं।",
+  // Screen sweep 2
+  "No sites in this project yet.": "इस प्रोजेक्ट में अभी कोई साइट नहीं।",
+  "No supplier is available on this page. Add or locate an active organisation supplier in the Suppliers section.":
+    "इस पेज पर कोई सप्लायर नहीं। सप्लायर भाग में सक्रिय सप्लायर जोड़ें या खोजें।",
+  "Nothing is at or below its reorder level.": "कुछ भी दोबारा मँगाने के स्तर पर या नीचे नहीं।",
+  "Nothing yet.": "अभी कुछ नहीं।",
+  "No tool matches your search.": "कोई टूल नहीं मिला।",
+  "No work lines were recorded.": "कोई काम लाइन दर्ज नहीं।",
+  "Number of members": "भागों की संख्या",
+  "On — alerts come to this device.": "चालू — अलर्ट इस डिवाइस पर आएँगे।",
+  "Online submission only. No stock changes until another authorised user posts this movement; the server rechecks available stock for outbound movements.":
+    "सिर्फ़ ऑनलाइन जमा। दूसरा अधिकृत व्यक्ति पोस्ट करे तब तक स्टॉक नहीं बदलता; बाहर जाने पर सर्वर स्टॉक दोबारा जाँचता है।",
+  "Online, the request is submitted for review. Offline, it stays on this device. Neither state is an approval or an order.":
+    "ऑनलाइन होने पर माँग जाँच के लिए जाती है। ऑफ़लाइन होने पर इस डिवाइस पर रहती है। दोनों में से कोई मंज़ूरी या ऑर्डर नहीं।",
+  "Only a different authorised user can review this submitted invoice.":
+    "इस बिल की जाँच सिर्फ़ दूसरा अधिकृत व्यक्ति कर सकता है।",
+  "Only an authorised reviewer may approve, return, or reject a submitted request.":
+    "सिर्फ़ अधिकृत जाँचकर्ता माँग मंज़ूर, वापस या नामंज़ूर कर सकता है।",
+  "Only the accepted quantity is recorded here. Supplier, rejected quantity, purchase order, and delivery evidence are not captured in this slice.":
+    "यहाँ सिर्फ़ स्वीकार मात्रा दर्ज होती है। सप्लायर, नामंज़ूर मात्रा, खरीद आदेश और डिलीवरी सबूत यहाँ नहीं।",
+  "Only the owner, a director or an admin can change modules.":
+    "सिर्फ़ मालिक, डायरेक्टर या एडमिन मॉड्यूल बदल सकते हैं।",
+  "On — your phone watches your site boundaries.": "चालू — आपका फ़ोन साइट सीमा पर नज़र रखता है।",
+  "OPC 53 grade": "OPC 53 ग्रेड",
+  "OPC 53 grade cement": "OPC 53 ग्रेड सीमेंट",
+  "Open Finance to attach the bill photo and submit it for review.":
+    "बिल फ़ोटो लगाने और जाँच के लिए भेजने के लिए फाइनेंस खोलें।",
+  "Opening an item takes you to its register, where your access is checked again.":
+    "आइटम खोलने पर उसका रजिस्टर खुलता है, जहाँ आपकी पहुँच दोबारा जाँची जाती है।",
+  "Optional site work task": "वैकल्पिक साइट काम",
+  "Organisation-level supplier records are shared across sites. Payment account/bank details are intentionally not collected.":
+    "कंपनी स्तर के सप्लायर रिकॉर्ड सभी साइटों में साझा हैं। बैंक विवरण जानबूझकर नहीं लिया जाता।",
+  "Original Posted expense *": "मूल पोस्ट खर्च *",
+  "{overdue} overdue · {blocked} blocked": "{overdue} देर से · {blocked} रुके",
+  "Overhead & profit (%)": "ओवरहेड और मुनाफ़ा (%)",
+  "Overhead & profit": "ओवरहेड और मुनाफ़ा",
+  "Overtime is priced at the base hourly rate (daily rate ÷ 8 h) and only once approved. Check local labour rules before paying.":
+    "ओवरटाइम मूल घंटा दर (दिन की दर ÷ 8) पर और मंज़ूरी के बाद ही। भुगतान से पहले स्थानीय श्रम नियम देखें।",
+  "Paid by piece/measurement/contract — not priced from attendance":
+    "नग/नाप/ठेके से भुगतान — हाज़िरी से नहीं",
+  "Past their planned end and not completed": "योजना अंत के बाद भी पूरे नहीं",
+  "Payment mode *": "भुगतान तरीका *",
+  "Payment mode · Cash (fixed for return to fund)": "भुगतान तरीका · नकद (फंड में वापसी के लिए तय)",
+  "People who worked in this period": "इस अवधि में काम करने वाले लोग",
+  "Planned %": "योजना %",
+  "Planned dates from tasks; actual from the progress in daily reports.":
+    "योजना तारीख़ें टास्क से; असल दैनिक रिपोर्ट की प्रगति से।",
+  "Posted balance per fund": "हर फंड का पोस्ट बैलेंस",
+  "Posted entries only": "सिर्फ़ पोस्ट एंट्री",
+  "Posted ledger balance": "पोस्ट खाता बैलेंस",
+  "Powered by Google Gemini on the server. AI can misread — always compare with the paper bill. Nothing is saved until you press Save.":
+    "सर्वर पर Google Gemini से। AI गलत पढ़ सकता है — कागज़ी बिल से हमेशा मिलाएँ। 'सहेजें' दबाने तक कुछ नहीं सहेजा जाता।",
+  "Present (half day counts ½)": "हाज़िर (आधा दिन ½ गिना)",
+  Priority: "प्राथमिकता",
+  "Private to people with access to this record. Files cannot be replaced once added.":
+    "सिर्फ़ इस रिकॉर्ड की पहुँच वालों के लिए। जोड़ी फ़ाइल बदली नहीं जा सकती।",
+  "Profile status": "प्रोफ़ाइल स्थिति",
+  "Propose an effective-dated rate": "तारीख़ से लागू दर का प्रस्ताव",
+  "Propose a new start date": "नई शुरुआत तारीख़ का प्रस्ताव",
+  "Propose rate": "दर प्रस्ताव",
+  "Purpose / note (optional)": "उद्देश्य / नोट (वैकल्पिक)",
+  Rate: "दर",
+  "Rate = material + labour + tools & plant, + water charges, + overhead & profit. Use your SOR / DSR figures.":
+    "दर = सामान + मज़दूरी + औज़ार व मशीन, + पानी शुल्क, + ओवरहेड व मुनाफ़ा। अपने SOR / DSR आँकड़े डालें।",
+  "Rate basis": "दर का आधार",
+  "Rate build-up": "दर का हिसाब",
+  "Rate per": "दर प्रति",
+  "Rates take effect only after a different authorised person approves them. A rate on its own is not a payment due.":
+    "दर तभी लागू होती है जब दूसरा अधिकृत व्यक्ति मंज़ूर करे। सिर्फ़ दर देय राशि नहीं है।",
+  "Reconciliation period *": "मिलान अवधि *",
+  "Records a movement from this site petty-cash fund only (not personal spending). It saves as a Draft; a different authorised person posts it. No money is sent.":
+    "सिर्फ़ इस साइट की छोटी नकदी से मूवमेंट दर्ज करता है (निजी खर्च नहीं)। ड्राफ्ट में सहेजता है; दूसरा अधिकृत व्यक्ति पोस्ट करता है। पैसा नहीं भेजा जाता।",
+  "Records in your site scope": "आपकी साइट के दायरे के रिकॉर्ड",
+  "Record supplier payment": "सप्लायर भुगतान दर्ज करें",
+  "Record type": "रिकॉर्ड प्रकार",
+  "reorder at {qty}": "{qty} पर दोबारा मँगाएँ",
+  "Reorder threshold (optional, base unit)": "दोबारा मँगाने की सीमा (वैकल्पिक, मूल इकाई)",
+  "Request ≠ purchase": "माँग ≠ खरीद",
+  "Requested quantity": "माँगी मात्रा",
+  "Request for review": "जाँच के लिए भेजें",
+  "Reschedule previews are re-computed on the server under a site schedule lock. Conflicts block applying. Workday calendars, resource assignment conflicts, calendar views, and approval routing remain future work.":
+    "तारीख़ बदलने का पूर्वावलोकन सर्वर पर दोबारा गिना जाता है। टकराव होने पर लागू नहीं होता।",
+  "Resolving inventory access…": "स्टोर पहुँच जाँच रहे हैं…",
+  "Review invoice": "बिल जाँचें",
+  "Review & post": "जाँचें और पोस्ट करें",
+  "Review the affected dates. Applying this change requires a second tap and records a reason and each old/new date.":
+    "असर वाली तारीख़ें देखें। लागू करने के लिए दूसरी बार दबाएँ; कारण और हर पुरानी/नई तारीख़ दर्ज होती है।",
+  "Saving a catalogue item creates no opening balance and does not change available stock.":
+    "आइटम सहेजने से शुरुआती बैलेंस नहीं बनता और स्टॉक नहीं बदलता।",
+  "Saving records the invoice for review. It does not pay the supplier or decide tax treatment — enter tax and charges exactly as printed on the bill.":
+    "सहेजने से बिल जाँच के लिए दर्ज होता है। इससे सप्लायर को भुगतान नहीं होता — टैक्स और शुल्क बिल पर जैसे छपे हैं वैसे डालें।",
+  "Schedule history": "शेड्यूल इतिहास",
+  "Search tools": "टूल खोजें",
+  "Select invoice allocations that sum exactly to the payment. Balances are derived from approved invoices minus Posted internal-ledger allocations only.":
+    "ऐसे बिल चुनें जिनका जोड़ भुगतान के बराबर हो। बैलेंस मंज़ूर बिल घटा पोस्ट आवंटन से बनता है।",
+  "Server-calculated from line amounts + entered tax/charges":
+    "लाइन राशि + टैक्स/शुल्क से सर्वर पर गणना",
+  "Sites that are not Active stay readable, but new reports, requests and entries are blocked until they are reactivated.":
+    "असक्रिय साइटें पढ़ी जा सकती हैं, पर दोबारा चालू होने तक नई रिपोर्ट, माँग और एंट्री रुकी रहती हैं।",
+  "Skill category": "कौशल श्रेणी",
+  "Specification / grade (optional)": "विवरण / ग्रेड (वैकल्पिक)",
+  "Stock changes only when a different authorised person posts an entry. The oldest pending entries are listed first, followed by the latest posted and rejected entries.":
+    "स्टॉक तभी बदलता है जब दूसरा अधिकृत व्यक्ति एंट्री पोस्ट करे। सबसे पुरानी बाकी एंट्री पहले, फिर नई पोस्ट और नामंज़ूर।",
+  "Sub-total": "उप-योग",
+  "Supplier-stated gross amount": "सप्लायर द्वारा बताई कुल राशि",
+  "Supplier type": "सप्लायर प्रकार",
+  "Task creation is online-only. A Finish-to-Start predecessor must finish before this task starts. No worker/team is assigned and no stock or cost is posted.":
+    "काम बनाने के लिए इंटरनेट चाहिए। पहले वाला काम पूरा होने पर ही यह शुरू होगा। कोई मज़दूर/टीम, स्टॉक या खर्च नहीं जुड़ता।",
+  "Task status": "काम की स्थिति",
+  "TDS %": "TDS %",
+  "The balance counts Posted funding, expenses and cash returns only — drafts and pending entries never change cash. Enter site petty-cash spending only, not personal out-of-pocket costs. No money is sent from this app.":
+    "बैलेंस में सिर्फ़ पोस्ट फंडिंग, खर्च और नकद वापसी गिनी जाती है — ड्राफ्ट से नकद नहीं बदलता। सिर्फ़ साइट की छोटी नकदी का खर्च डालें, निजी नहीं। ऐप से पैसा नहीं जाता।",
+  "The budget counts only after another person with approval rights approves it.":
+    "बजट तभी गिना जाता है जब मंज़ूरी वाला दूसरा व्यक्ति मंज़ूर करे।",
+  "The file is being read for search. Pull to refresh in a moment.":
+    "खोज के लिए फ़ाइल पढ़ी जा रही है। थोड़ी देर में खींचकर ताज़ा करें।",
+  "The line marks where the plan says each site should be today":
+    "रेखा बताती है कि योजना अनुसार हर साइट आज कहाँ होनी चाहिए",
+  "The movement form uses active materials on this catalogue page. Page to an item's entry before recording its movement.":
+    "मूवमेंट फ़ॉर्म इस पेज के सक्रिय सामान लेता है। मूवमेंट से पहले उस आइटम के पेज पर जाएँ।",
+  "The reconciliation period is saved with the fund for the custodian and reviewers.":
+    "मिलान अवधि फंड के साथ संरक्षक और जाँचकर्ताओं के लिए सहेजी जाती है।",
+  "There is no editable stock total. Submitted or rejected movements do not change the balance. Quantities use the catalogue base unit; no conversions are assumed.":
+    "स्टॉक कुल हाथ से नहीं बदला जा सकता। जमा या नामंज़ूर मूवमेंट से बैलेंस नहीं बदलता। मात्रा मूल इकाई में है।",
+  "This creates a real site finance record with a derived zero balance. The selected custodian must acknowledge; no starting cash is seeded.":
+    "इससे शून्य बैलेंस वाला असली साइट फंड बनता है। चुने संरक्षक को स्वीकार करना होगा; शुरुआती नकद नहीं डाला जाता।",
+  "This creates organisation, project, and site records and gives the authenticated owner an organisation role. Enter the real operational details for the client workspace.":
+    "इससे कंपनी, प्रोजेक्ट और साइट बनते हैं और मालिक को कंपनी भूमिका मिलती है। असली विवरण डालें।",
+  "This records a human reviewer’s status only. The app does not authenticate identity documents or perform automated KYC.":
+    "यह सिर्फ़ जाँचकर्ता की स्थिति दर्ज करता है। ऐप पहचान दस्तावेज़ों की जाँच या स्वचालित KYC नहीं करता।",
+  "This saves a Draft ledger record only. It does not send money or prove payment.":
+    "यह सिर्फ़ ड्राफ्ट खाता रिकॉर्ड सहेजता है। पैसा नहीं भेजता, न भुगतान साबित करता।",
+  "This saves a Draft proposal, not a payable. On approval, an overlapping earlier active rate is closed the day before this start; conflicting future rates are rejected rather than overwritten.":
+    "यह ड्राफ्ट प्रस्ताव है, देय नहीं। मंज़ूरी पर पुरानी दर इस शुरुआत से एक दिन पहले बंद होती है; टकराती आगे की दरें नामंज़ूर होती हैं।",
+  "Tool not found": "टूल नहीं मिला",
+  "Tools & plant": "औज़ार व मशीन",
+  "Total budget": "कुल बजट",
+  "Wastage (%)": "बर्बादी (%)",
+  "Water charges (%)": "पानी शुल्क (%)",
+  "Water charges": "पानी शुल्क",
+  "What they can do": "वे क्या कर सकते हैं",
+  "with wastage": "बर्बादी सहित",
+  "Workers, hours and overtime are recorded in Attendance for this site and day. Use this report for the day's labour summary and notes.":
+    "मज़दूर, घंटे और ओवरटाइम इस साइट व दिन की हाज़िरी में दर्ज होते हैं। यह रिपोर्ट दिन के मज़दूर सारांश व नोट के लिए है।",
+  "Your role and site assignments are checked by the server on every request. Payments recorded here are internal ledger entries, not bank transfers.":
+    "आपकी भूमिका और साइट हर बार सर्वर जाँचता है। यहाँ दर्ज भुगतान आंतरिक खाता एंट्री हैं, बैंक ट्रांसफर नहीं।",
+  "SMS is only used for urgent alerts. “Details” off sends just the title on WhatsApp and SMS, with no photo or document.":
+    "SMS सिर्फ़ ज़रूरी अलर्ट के लिए। “विवरण” बंद होने पर WhatsApp और SMS पर सिर्फ़ शीर्षक जाता है, फ़ोटो या दस्तावेज़ नहीं।",
 };
 
 export const or: Dictionary = {
@@ -5478,6 +5811,340 @@ export const or: Dictionary = {
   "Tiling m² (8/mason/day)": "ଟାଇଲିଂ m² (8/ମିସ୍ତ୍ରୀ/ଦିନ)",
   "PCC m³ (3/gang/day)": "PCC m³ (3/ଗ୍ୟାଙ୍ଗ/ଦିନ)",
   "Painting m² (25/painter/day)": "ପେଣ୍ଟିଂ m² (25/ପେଣ୍ଟର/ଦିନ)",
+  // Screen sweep 1
+  "+ GST": "+ GST",
+  "− TDS": "− TDS",
+  "12 m bars": "12 m ରଡ୍",
+  "Active supplier *": "ସକ୍ରିୟ ଯୋଗାଣକାରୀ *",
+  "Actual %": "ପ୍ରକୃତ %",
+  "Add a complete line item to calculate the gross total.":
+    "ମୋଟ ହିସାବ ପାଇଁ ଗୋଟିଏ ପୂରା ଲାଇନ୍ ଯୋଡ଼ନ୍ତୁ।",
+  "Add line item": "ଲାଇନ୍ ଯୋଡ଼ନ୍ତୁ",
+  "Add supplier": "ଯୋଗାଣକାରୀ ଯୋଡ଼ନ୍ତୁ",
+  "Add tasks in Schedule to see the Gantt and S-curve.":
+    "ଗାଣ୍ଟ ଓ S-କର୍ଭ ଦେଖିବାକୁ ସିଡ୍ୟୁଲରେ ଟାସ୍କ ଯୋଡ଼ନ୍ତୁ।",
+  "Add this supplier in Finance first to save an invoice draft.":
+    "ବିଲ୍ ଡ୍ରାଫ୍ଟ ପାଇଁ ପ୍ରଥମେ ଫାଇନାନ୍ସରେ ଏହି ଯୋଗାଣକାରୀ ଯୋଡ଼ନ୍ତୁ।",
+  "After upload, the file is read so it can be found by what is inside it. AI suggestions are shown for checking; they never change amounts or approvals.":
+    "ଅପଲୋଡ୍ ପରେ ଫାଇଲ୍ ପଢ଼ାଯାଏ ଯାହାଦ୍ୱାରା ଭିତର କଥାରେ ଖୋଜିହେବ। AI ପରାମର୍ଶ ଯାଞ୍ଚ ପାଇଁ; ସେଗୁଡ଼ିକ ଟଙ୍କା ବା ଅନୁମୋଦନ ବଦଳାଏ ନାହିଁ।",
+  Age: "ବୟସ (ଦିନ)",
+  "Alerts never include money amounts or ID numbers. Unofficial WhatsApp gateways (WAHA, Evolution API) can get a number blocked by WhatsApp; use a separate business number.":
+    "ଆଲର୍ଟରେ କେବେ ଟଙ୍କା ବା ID ନମ୍ବର ନଥାଏ। ଅନୌପଚାରିକ WhatsApp ଗେଟୱେ ନମ୍ବର ବ୍ଲକ୍ କରାଇପାରେ; ଅଲଗା ବ୍ୟବସାୟ ନମ୍ବର ରଖନ୍ତୁ।",
+  "All approved supplier bills are paid.": "ସବୁ ଅନୁମୋଦିତ ଯୋଗାଣକାରୀ ବିଲ୍ ପରିଶୋଧ ହୋଇଛି।",
+  "Allocation check · exact integer paise": "ବଣ୍ଟନ ଯାଞ୍ଚ · ସଠିକ୍ ପଇସା",
+  Amount: "ପରିମାଣ",
+  "An authorised catalogue manager must add an active material before site movements can be recorded.":
+    "ସାଇଟ୍ ଗତିବିଧି ଲେଖିବା ପୂର୍ବରୁ ଅଧିକୃତ ବ୍ୟକ୍ତି ସକ୍ରିୟ ସାମଗ୍ରୀ ଯୋଡ଼ନ୍ତୁ।",
+  "Another person with budget approval must approve it.":
+    "ବଜେଟ୍ ଅନୁମୋଦନ ଥିବା ଅନ୍ୟ ଜଣେ ଏହାକୁ ଅନୁମୋଦନ କରନ୍ତୁ।",
+  "App notifications (Expo push)": "ଆପ୍ ସୂଚନା (Expo push)",
+  "Approval is invoice review only. It does not post or settle a payment.":
+    "ଅନୁମୋଦନ କେବଳ ବିଲ୍ ଯାଞ୍ଚ। ଏଥିରେ ଦେୟ ହୁଏ ନାହିଁ।",
+  "Approvals need a connection. Payments and petty cash are recorded in the JP Infracon ledger — no money is sent from this app. Balances count Posted entries only.":
+    "ଅନୁମୋଦନ ପାଇଁ ଇଣ୍ଟରନେଟ୍ ଦରକାର। ଦେୟ ଓ ଛୋଟ ନଗଦ JP Infracon ଖାତାରେ ଲେଖାଯାଏ — ଆପରୁ ଟଙ୍କା ଯାଏ ନାହିଁ। ବାଲାନ୍ସରେ କେବଳ ପୋଷ୍ଟ ଏଣ୍ଟ୍ରି ଗଣାଯାଏ।",
+  "Approval, supplier evidence, receipt, and stock posting are separate controlled steps. This build does not place orders.":
+    "ଅନୁମୋଦନ, ଯୋଗାଣକାରୀ ପ୍ରମାଣ, ରସିଦ ଓ ଷ୍ଟକ୍ ପୋଷ୍ଟିଂ ଅଲଗା ନିୟନ୍ତ୍ରିତ ପାହାଚ। ଏଠାରୁ ଅର୍ଡର ଯାଏ ନାହିଁ।",
+  "Approved bills less payments, by days past due":
+    "ଅନୁମୋଦିତ ବିଲ୍ ମାଇନସ୍ ଦେୟ, ଧାର୍ଯ୍ୟ ତାରିଖରୁ କେତେ ଦିନ ଅଧିକ",
+  "Approved or posted supplier payments, petty cash spent and worker advances":
+    "ଅନୁମୋଦିତ ବା ପୋଷ୍ଟ ଯୋଗାଣକାରୀ ଦେୟ, ଖର୍ଚ୍ଚ ଛୋଟ ନଗଦ ଓ ଶ୍ରମିକ ଆଗୁଆ",
+  "Assign this person to a site first (Projects & sites → site → Assign).":
+    "ପ୍ରଥମେ ଏହି ବ୍ୟକ୍ତିଙ୍କୁ ସାଇଟରେ ରଖନ୍ତୁ (ପ୍ରକଳ୍ପ ଓ ସାଇଟ୍ → ସାଇଟ୍ → ଆସାଇନ୍)।",
+  "A submitted report is not approved. Review and correction decisions are recorded separately.":
+    "ଦାଖଲ ରିପୋର୍ଟ ଅନୁମୋଦିତ ନୁହେଁ। ଯାଞ୍ଚ ଓ ସଂଶୋଧନ ଅଲଗା ଲେଖାଯାଏ।",
+  "At/below threshold": "ସୀମାରେ ବା ତଳେ",
+  "Attendance needs a connection to save. Estimates are not payables: wages are paid only through approved records.":
+    "ହାଜିରା ସେଭ୍ ପାଇଁ ଇଣ୍ଟରନେଟ୍ ଦରକାର। ଆକଳନ ଦେୟ ନୁହେଁ: ମଜୁରି କେବଳ ଅନୁମୋଦିତ ରେକର୍ଡରୁ ଦିଆଯାଏ।",
+  "Authorised balance ceiling": "ଅଧିକୃତ ବାଲାନ୍ସ ସୀମା",
+  "bag, kg, hr": "ବସ୍ତା, kg, ଘଣ୍ଟା",
+  "bag, kg, m3, metre": "ବସ୍ତା, kg, m3, ମିଟର",
+  "Bar mark": "ବାର୍ ମାର୍କ",
+  bars: "ରଡ୍",
+  Bars: "ରଡ୍",
+  "Bars per member": "ପ୍ରତି ଅଂଶ ରଡ୍",
+  "Base unit": "ମୂଳ ଏକକ",
+  "Beam B1, Column C2…": "ବିମ୍ B1, ସ୍ତମ୍ଭ C2…",
+  "Bends: 45° = 1d, 90° = 2d, 135° = 3d; stirrup hooks 10d; weight d²/162 kg/m.":
+    "ମୋଡ଼: 45° = 1d, 90° = 2d, 135° = 3d; ରିଙ୍ଗ ହୁକ୍ 10d; ଓଜନ d²/162 kg/m।",
+  "Capture a workforce profile": "ଶ୍ରମିକ ପ୍ରୋଫାଇଲ୍ ତିଆରି କରନ୍ତୁ",
+  "Cash given minus cash repaid; pay-run recoveries show in Khaata":
+    "ଦିଆଯାଇଥିବା ନଗଦ ମାଇନସ୍ ଫେରସ୍ତ; ବେତନରୁ ଅସୁଲି ଖାତାରେ ଦେଖାଯାଏ",
+  "Category (optional)": "ଶ୍ରେଣୀ (ଇଚ୍ଛାଧୀନ)",
+  "Choose a supplier to load its approved invoices for this site.":
+    "ଏହି ସାଇଟର ଅନୁମୋଦିତ ବିଲ୍ ଦେଖିବାକୁ ଯୋଗାଣକାରୀ ବାଛନ୍ତୁ।",
+  "Choose the organisation's explicit stock unit. This slice does not convert bags, truckloads, tonnes, or other units.":
+    "କମ୍ପାନୀର ସ୍ଥିର ଷ୍ଟକ୍ ଏକକ ବାଛନ୍ତୁ। ଏଠାରେ ବସ୍ତା, ଟ୍ରକ୍, ଟନ୍ ଇତ୍ୟାଦି ବଦଳାଯାଏ ନାହିଁ।",
+  Clear: "ସଫା କରନ୍ତୁ",
+  "Codes are stored only as a fingerprint, work once, expire, and repeated wrong codes are blocked.":
+    "କୋଡ୍ କେବଳ ଫିଙ୍ଗରପ୍ରିଣ୍ଟ ଭାବେ ରଖାଯାଏ, ଥରେ ଚାଲେ, ସମୟରେ ସରେ, ବାରମ୍ବାର ଭୁଲ କୋଡ୍ ଅଟକାଯାଏ।",
+  "Contingency (%)": "ଆକସ୍ମିକ ଖର୍ଚ୍ଚ (%)",
+  Contingency: "ଆକସ୍ମିକ ଖର୍ଚ୍ଚ",
+  "Control note": "ନିୟନ୍ତ୍ରଣ ନୋଟ୍",
+  Cost: "ଖର୍ଚ୍ଚ",
+  "Cost for one unit (₹)": "ଗୋଟିଏ ଏକକର ଖର୍ଚ୍ଚ (₹)",
+  "{count} bar marks": "{count} ବାର୍ ମାର୍କ",
+  "{count} calculators for site work: quantities, steel, estimates, water and more.":
+    "ସାଇଟ୍ କାମ ପାଇଁ {count} କ୍ୟାଲକୁଲେଟର: ପରିମାଣ, ରଡ୍, ଆକଳନ, ପାଣି ଓ ଅଧିକ।",
+  "{count} items": "{count} ଆଇଟମ୍",
+  "{count} items in stock": "ଷ୍ଟକରେ {count} ଆଇଟମ୍",
+  "{count} tasks from {date}; the line is today": "{date} ରୁ {count} କାମ; ରେଖା ଆଜି",
+  "Create planned task": "ଯୋଜନା କାମ ତିଆରି କରନ୍ତୁ",
+  "Create the workspace": "ୱର୍କସ୍ପେସ୍ ତିଆରି କରନ୍ତୁ",
+  "Cumulative % of work, weighted by task duration": "କାମର ମୋଟ %, କାମ ଅବଧି ଅନୁସାରେ",
+  "Cut (mm)": "କଟିଂ (mm)",
+  "Cutting length": "କଟିଂ ଲମ୍ବ",
+  Day: "ଦିନ",
+  "Days with a DPR in this period": "ଏହି ଅବଧିରେ DPR ଥିବା ଦିନ",
+  "Delivery note / challan reference (optional)": "ଡେଲିଭରି ନୋଟ୍ / ଚାଲାନ୍ ନମ୍ବର (ଇଚ୍ଛାଧୀନ)",
+  "Depends on (optional)": "କାହା ଉପରେ ନିର୍ଭର (ଇଚ୍ଛାଧୀନ)",
+  Dia: "ବ୍ୟାସ",
+  "Diameter (mm)": "ବ୍ୟାସ (mm)",
+  "due {date}": "{date} ସୁଦ୍ଧା ଦେୟ",
+  "Each file lists the organisation, sites, period, time generated and row count. Every export is recorded in the audit trail.":
+    "ପ୍ରତି ଫାଇଲରେ କମ୍ପାନୀ, ସାଇଟ୍, ଅବଧି, ତିଆରି ସମୟ ଓ ଧାଡ଼ି ସଂଖ୍ୟା ଥାଏ। ପ୍ରତି ଏକ୍ସପୋର୍ଟ ଅଡିଟରେ ଲେଖାଯାଏ।",
+  "e.g. 12.500": "ଯେପରି 12.500",
+  "e.g. 50000000": "ଯେପରି 50000000",
+  "e.g. 850.00": "ଯେପରି 850.00",
+  "e.g. bag, m³, kg": "ଯେପରି ବସ୍ତା, m³, kg",
+  "e.g. Balugaon Pump House": "ଯେପରି ବାଲୁଗାଁ ପମ୍ପ ହାଉସ୍",
+  "e.g. Chainage 2+350, near valve chamber": "ଯେପରି ଚେନେଜ୍ 2+350, ଭାଲ୍ଭ ଚାମ୍ବର ପାଖରେ",
+  "e.g. Civil, Accounts": "ଯେପରି ସିଭିଲ୍, ଆକାଉଣ୍ଟସ୍",
+  "e.g. Government building works, 2 sites, 40 labourers, we buy cement and steel ourselves, accounts done by CA":
+    "ଯେପରି ସରକାରୀ ଭବନ କାମ, 2 ସାଇଟ୍, 40 ଶ୍ରମିକ, ସିମେଣ୍ଟ-ରଡ୍ ଆମେ କିଣୁ, ହିସାବ CA କରନ୍ତି",
+  "e.g. Install delivery main, chainage 0–250 m": "ଯେପରି ଡେଲିଭରି ମେନ୍ ବିଛାଇବା, ଚେନେଜ୍ 0–250 m",
+  "e.g. Khurda Rural Water Supply": "ଯେପରି ଖୋର୍ଦ୍ଧା ଗ୍ରାମୀଣ ଜଳ ଯୋଗାଣ",
+  "e.g. Sipun Behera": "ଯେପରି ସିପୁନ୍ ବେହେରା",
+  "Estimate abstract — JP Infracon": "ଆକଳନ ସାରାଂଶ — JP Infracon",
+  "Estimated from attendance and rates": "ହାଜିରା ଓ ଦରରୁ ଆକଳନ",
+  "Estimated from attendance and rates; {count} marks have no rate":
+    "ହାଜିରା ଓ ଦରରୁ ଆକଳନ; {count} ହାଜିରାରେ ଦର ନାହିଁ",
+  "Estimated from task status and the latest DPR quantities. Not a basis for payment.":
+    "କାମ ସ୍ଥିତି ଓ ଶେଷ DPR ପରିମାଣରୁ ଆକଳନ। ଦେୟର ଆଧାର ନୁହେଁ।",
+  "Every delegation and revocation is recorded in the audit trail. Delegated people still work only on the chosen site or project.":
+    "ପ୍ରତି ଅଧିକାର ଦେବା ଓ ଫେରାଇବା ଅଡିଟରେ ଲେଖାଯାଏ। ଅଧିକାର ପାଇଥିବା ଲୋକେ କେବଳ ବଛା ସାଇଟ୍ ବା ପ୍ରକଳ୍ପରେ କାମ କରନ୍ତି।",
+  "Everyone eligible is already on this site. Create a new login from Team accounts first.":
+    "ସବୁ ଯୋଗ୍ୟ ଲୋକ ପୂର୍ବରୁ ଏହି ସାଇଟରେ। ପ୍ରଥମେ ଦଳ ଖାତାରୁ ନୂଆ ଲଗଇନ୍ ତିଆରି କରନ୍ତୁ।",
+  "Flags the issue as STOP WORK for every site lead until it is resolved.":
+    "ସମାଧାନ ପର୍ଯ୍ୟନ୍ତ ପ୍ରତି ସାଇଟ୍ ନେତାଙ୍କ ପାଇଁ 'କାମ ବନ୍ଦ' ଚିହ୍ନିତ କରେ।",
+  "G+3 residential building, Patia": "G+3 ଆବାସିକ ଭବନ, ପାଟିଆ",
+  "Go back and choose a tool.": "ଫେରି ଯାଇ ଟୁଲ୍ ବାଛନ୍ତୁ।",
+  "GST (%)": "GST (%)",
+  "Impact strategy": "ପ୍ରଭାବ ପଦ୍ଧତି",
+  "Initial KYC state · authorised review": "ପ୍ରାରମ୍ଭିକ KYC ସ୍ଥିତି · ଅଧିକୃତ ଯାଞ୍ଚ",
+  "Initial planned end": "ପ୍ରାରମ୍ଭିକ ଯୋଜନା ଶେଷ",
+  "Internal ledger entry only · not bank-verified":
+    "କେବଳ ଆଭ୍ୟନ୍ତରୀଣ ଖାତା ଏଣ୍ଟ୍ରି · ବ୍ୟାଙ୍କ ଯାଞ୍ଚ ନୁହେଁ",
+  "Internal supplier-invoice ledger only. “Posted” is not a bank/UPI transfer or independent confirmation. Only Posted allocations reduce the approved invoice amount shown as available; advances, credit/debit notes, retention, evidence and actual payment execution are not included.":
+    "କେବଳ ଆଭ୍ୟନ୍ତରୀଣ ଯୋଗାଣକାରୀ-ବିଲ୍ ଖାତା। “ପୋଷ୍ଟ” ମାନେ ବ୍ୟାଙ୍କ/UPI ଦେୟ ନୁହେଁ। କେବଳ ପୋଷ୍ଟ ବଣ୍ଟନ ଅନୁମୋଦିତ ବିଲର ବାକି କମାଏ; ଆଗୁଆ, କ୍ରେଡିଟ/ଡେବିଟ୍ ନୋଟ୍, ରିଟେନସନ୍ ଓ ପ୍ରକୃତ ଦେୟ ସାମିଲ ନୁହେଁ।",
+  "Invoice approval is review only. Only Posted internal supplier allocations reduce invoice availability. Petty-cash balances are calculated from Posted fund movements, not physical cash counts. The app does not execute or verify bank/card/UPI transfers and does not claim overall supplier dues, worker payables, or reimbursement liabilities.":
+    "ବିଲ୍ ଅନୁମୋଦନ କେବଳ ଯାଞ୍ଚ। କେବଳ ପୋଷ୍ଟ ବଣ୍ଟନ ବିଲ୍ ବାକି କମାଏ। ଛୋଟ ନଗଦ ବାଲାନ୍ସ ପୋଷ୍ଟ ଏଣ୍ଟ୍ରିରୁ, ଗଣା ନଗଦରୁ ନୁହେଁ। ଆପ୍ ବ୍ୟାଙ୍କ/କାର୍ଡ/UPI ଦେୟ କରେ ନାହିଁ।",
+  "Invoice draft saved": "ବିଲ୍ ଡ୍ରାଫ୍ଟ ସେଭ୍ ହେଲା",
+  "Item description": "ଆଇଟମ୍ ବିବରଣୀ",
+  "KYC status is read-only for this account; a separate authorised reviewer is required.":
+    "ଏହି ଖାତା ପାଇଁ KYC ସ୍ଥିତି କେବଳ ଦେଖିବାକୁ; ଅଲଗା ଅଧିକୃତ ଯାଞ୍ଚକାରୀ ଦରକାର।",
+  "Lay the bill flat, in good light, whole page in frame.":
+    "ବିଲ୍ ସିଧା ରଖନ୍ତୁ, ଭଲ ଆଲୁଅରେ, ପୂରା ପୃଷ୍ଠା ଫ୍ରେମରେ।",
+  "Loading approved invoice balances…": "ଅନୁମୋଦିତ ବିଲ୍ ବାଲାନ୍ସ ଲୋଡ୍ ହେଉଛି…",
+  "Loading authorised reports…": "ରିପୋର୍ଟ ଲୋଡ୍ ହେଉଛି…",
+  "Loading authorised requests…": "ଅନୁରୋଧ ଲୋଡ୍ ହେଉଛି…",
+  "Loading eligible assigned accounts…": "ଯୋଗ୍ୟ ଖାତା ଲୋଡ୍ ହେଉଛି…",
+  "Loading invoice allocations…": "ବିଲ୍ ବଣ୍ଟନ ଲୋଡ୍ ହେଉଛି…",
+  "Loading invoice items…": "ବିଲ୍ ଆଇଟମ୍ ଲୋଡ୍ ହେଉଛି…",
+  "Loading members…": "ସଦସ୍ୟ ଲୋଡ୍ ହେଉଛି…",
+  "Loading movement ledger…": "ଗତିବିଧି ଖାତା ଲୋଡ୍ ହେଉଛି…",
+  "Loading permitted audit events…": "ଅଡିଟ୍ ଘଟଣା ଲୋଡ୍ ହେଉଛି…",
+  "Loading Posted expense balances…": "ପୋଷ୍ଟ ଖର୍ଚ୍ଚ ବାଲାନ୍ସ ଲୋଡ୍ ହେଉଛି…",
+  "Loading site funds…": "ସାଇଟ୍ ପାଣ୍ଠି ଲୋଡ୍ ହେଉଛି…",
+  "Loading site invoices…": "ସାଇଟ୍ ବିଲ୍ ଲୋଡ୍ ହେଉଛି…",
+  "Loading site payment ledger…": "ସାଇଟ୍ ଦେୟ ଖାତା ଲୋଡ୍ ହେଉଛି…",
+  "Loading site stock and ledger…": "ସାଇଟ୍ ଷ୍ଟକ୍ ଓ ଖାତା ଲୋଡ୍ ହେଉଛି…",
+  "Loading supplier directory…": "ଯୋଗାଣକାରୀ ତାଲିକା ଲୋଡ୍ ହେଉଛି…",
+  "Loading suppliers…": "ଯୋଗାଣକାରୀ ଲୋଡ୍ ହେଉଛି…",
+  "Make the area safe first. This app records the issue; it does not certify that a hazard is safe.":
+    "ପ୍ରଥମେ ସ୍ଥାନ ସୁରକ୍ଷିତ କରନ୍ତୁ। ଆପ୍ ସମସ୍ୟା ଲେଖେ; ଏହା ବିପଦକୁ ସୁରକ୍ଷିତ ପ୍ରମାଣିତ କରେ ନାହିଁ।",
+  "Manual KYC decision": "ହାତରେ KYC ନିଷ୍ପତ୍ତି",
+  Mark: "ମାର୍କ",
+  "Mark attendance for this day first. The labour report cannot be submitted without it.":
+    "ପ୍ରଥମେ ଏହି ଦିନର ହାଜିରା ଦିଅନ୍ତୁ। ଏହା ବିନା ଶ୍ରମିକ ରିପୋର୍ଟ ଦାଖଲ ହେବ ନାହିଁ।",
+  "Material + labour + plant": "ସାମଗ୍ରୀ + ମଜୁରି + ଯନ୍ତ୍ର",
+  "Material / base unit": "ସାମଗ୍ରୀ / ମୂଳ ଏକକ",
+  "Material name": "ସାମଗ୍ରୀ ନାମ",
+  "Material workflow": "ସାମଗ୍ରୀ ପ୍ରକ୍ରିୟା",
+  "Measured value against the work order value": "ୱର୍କ ଅର୍ଡର ମୂଲ୍ୟ ସାମ୍ନାରେ ମାପ ହୋଇଥିବା ମୂଲ୍ୟ",
+  "Most owed": "ସବୁଠୁ ଅଧିକ ବାକି",
+  "Movement type *": "ଗତିବିଧି ପ୍ରକାର *",
+  "Movement type": "ଗତିବିଧି ପ୍ରକାର",
+  "Named site custodian *": "ନାମିତ ସାଇଟ୍ ସଂରକ୍ଷକ *",
+  "Never enter card, bank-account or login details. Write the bill or receipt number, or why there is none. Posted entries change the balance and cannot be edited or deleted.":
+    "କେବେ କାର୍ଡ, ବ୍ୟାଙ୍କ ଖାତା ବା ଲଗଇନ୍ ବିବରଣୀ ଦିଅନ୍ତୁ ନାହିଁ। ବିଲ୍/ରସିଦ ନମ୍ବର ଲେଖନ୍ତୁ, ବା କାହିଁକି ନାହିଁ। ପୋଷ୍ଟ ଏଣ୍ଟ୍ରି ବାଲାନ୍ସ ବଦଳାଏ ଓ ବଦଳାଯାଇ ବା ଲିଭାଯାଇ ପାରିବ ନାହିଁ।",
+  "New profiles are inactive Drafts. A reviewer must explicitly activate them. Profile capture is online-only; failed server confirmation retains the same mutation key for a safe retry.":
+    "ନୂଆ ପ୍ରୋଫାଇଲ୍ ନିଷ୍କ୍ରିୟ ଡ୍ରାଫ୍ଟ। ଯାଞ୍ଚକାରୀ ସେଗୁଡ଼ିକୁ ଚାଲୁ କରନ୍ତୁ। ପ୍ରୋଫାଇଲ୍ ପାଇଁ ଇଣ୍ଟରନେଟ୍ ଦରକାର; ବିଫଳ ହେଲେ ସୁରକ୍ଷିତ ପୁଣି ଚେଷ୍ଟା ହୁଏ।",
+  "New profiles default to Pending. Only an authorised KYC reviewer may choose or change a different initial status.":
+    "ନୂଆ ପ୍ରୋଫାଇଲ୍ 'ବାକି' ସ୍ଥିତିରେ। କେବଳ ଅଧିକୃତ KYC ଯାଞ୍ଚକାରୀ ଅନ୍ୟ ସ୍ଥିତି ବାଛିପାରିବେ।",
+  "New supplier invoice": "ନୂଆ ଯୋଗାଣକାରୀ ବିଲ୍",
+  "No active eligible site assignee is available. Add/activate an authorised site account first; a free-text custodian is not accepted.":
+    "କୌଣସି ଯୋଗ୍ୟ ସାଇଟ୍ ବ୍ୟକ୍ତି ନାହାନ୍ତି। ପ୍ରଥମେ ଅଧିକୃତ ସାଇଟ୍ ଖାତା ଯୋଡ଼ନ୍ତୁ/ଚାଲୁ କରନ୍ତୁ; ହାତ ଲେଖା ନାମ ଚାଲିବ ନାହିଁ।",
+  "No active supplier is loaded on this page. Add/locate a supplier before creating an invoice.":
+    "ଏହି ପୃଷ୍ଠାରେ କୌଣସି ସକ୍ରିୟ ଯୋଗାଣକାରୀ ନାହାନ୍ତି। ବିଲ୍ ପୂର୍ବରୁ ଯୋଗାଣକାରୀ ଯୋଡ଼ନ୍ତୁ/ଖୋଜନ୍ତୁ।",
+  "No attendance marked yet": "ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ହାଜିରା ନାହିଁ",
+  "No bank credentials are collected in this register.":
+    "ଏହି ରେଜିଷ୍ଟରରେ କୌଣସି ବ୍ୟାଙ୍କ ବିବରଣୀ ନିଆଯାଏ ନାହିଁ।",
+  "No invoice allocations are recorded.": "କୌଣସି ବିଲ୍ ବଣ୍ଟନ ଲେଖାଯାଇନାହିଁ।",
+  "No issues from the store in this period.": "ଏହି ଅବଧିରେ ଷ୍ଟୋରରୁ କିଛି ବାହାରିନାହିଁ।",
+  "No money went out in this period.": "ଏହି ଅବଧିରେ କୌଣସି ଟଙ୍କା ଯାଇନାହିଁ।",
+  "No Posted expense with a remaining returnable amount exists in this fund.":
+    "ଏହି ପାଣ୍ଠିରେ ଫେରାଇବା ଯୋଗ୍ୟ ବାକି ଥିବା କୌଣସି ପୋଷ୍ଟ ଖର୍ଚ୍ଚ ନାହିଁ।",
+  "No raw bank credentials are collected. Uploading evidence, supplier advances, reversals, retention, notes, petty cash and reimbursements are not part of this slice.":
+    "କୌଣସି ବ୍ୟାଙ୍କ ବିବରଣୀ ନିଆଯାଏ ନାହିଁ। ପ୍ରମାଣ, ଯୋଗାଣକାରୀ ଆଗୁଆ, ଫେରସ୍ତ, ରିଟେନସନ୍, ନୋଟ୍, ଛୋଟ ନଗଦ ଓ ଭରଣା ଏଠାରେ ସାମିଲ ନୁହେଁ।",
+  "No receipts in this period.": "ଏହି ଅବଧିରେ କୌଣସି ପ୍ରାପ୍ତି ନାହିଁ।",
+  // Screen sweep 2
+  "No sites in this project yet.": "ଏହି ପ୍ରକଳ୍ପରେ ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସାଇଟ୍ ନାହିଁ।",
+  "No supplier is available on this page. Add or locate an active organisation supplier in the Suppliers section.":
+    "ଏହି ପୃଷ୍ଠାରେ କୌଣସି ଯୋଗାଣକାରୀ ନାହାନ୍ତି। ଯୋଗାଣକାରୀ ଭାଗରେ ସକ୍ରିୟ ଯୋଗାଣକାରୀ ଯୋଡ଼ନ୍ତୁ ବା ଖୋଜନ୍ତୁ।",
+  "Nothing is at or below its reorder level.": "କିଛି ପୁଣି ମଗାଇବା ସ୍ତରରେ ବା ତଳେ ନାହିଁ।",
+  "Nothing yet.": "ଏପର୍ଯ୍ୟନ୍ତ କିଛି ନାହିଁ।",
+  "No tool matches your search.": "କୌଣସି ଟୁଲ୍ ମିଳିଲା ନାହିଁ।",
+  "No work lines were recorded.": "କୌଣସି କାମ ଲାଇନ୍ ଲେଖାଯାଇନାହିଁ।",
+  "Number of members": "ଅଂଶ ସଂଖ୍ୟା",
+  "On — alerts come to this device.": "ଚାଲୁ — ଆଲର୍ଟ ଏହି ଡିଭାଇସରେ ଆସିବ।",
+  "Online submission only. No stock changes until another authorised user posts this movement; the server rechecks available stock for outbound movements.":
+    "କେବଳ ଅନଲାଇନ୍ ଦାଖଲ। ଅନ୍ୟ ଅଧିକୃତ ବ୍ୟକ୍ତି ପୋଷ୍ଟ ନକଲେ ଷ୍ଟକ୍ ବଦଳେ ନାହିଁ; ବାହାରକୁ ଗଲେ ସର୍ଭର ଷ୍ଟକ୍ ପୁଣି ଯାଞ୍ଚ କରେ।",
+  "Online, the request is submitted for review. Offline, it stays on this device. Neither state is an approval or an order.":
+    "ଅନଲାଇନରେ ଅନୁରୋଧ ଯାଞ୍ଚ ପାଇଁ ଯାଏ। ଅଫଲାଇନରେ ଏହି ଡିଭାଇସରେ ରହେ। କୌଣସିଟି ଅନୁମୋଦନ ବା ଅର୍ଡର ନୁହେଁ।",
+  "Only a different authorised user can review this submitted invoice.":
+    "ଏହି ବିଲ୍ କେବଳ ଅନ୍ୟ ଅଧିକୃତ ବ୍ୟକ୍ତି ଯାଞ୍ଚ କରିପାରିବେ।",
+  "Only an authorised reviewer may approve, return, or reject a submitted request.":
+    "କେବଳ ଅଧିକୃତ ଯାଞ୍ଚକାରୀ ଅନୁରୋଧ ଅନୁମୋଦନ, ଫେରସ୍ତ ବା ନାମଞ୍ଜୁର କରିପାରିବେ।",
+  "Only the accepted quantity is recorded here. Supplier, rejected quantity, purchase order, and delivery evidence are not captured in this slice.":
+    "ଏଠାରେ କେବଳ ଗ୍ରହଣ ପରିମାଣ ଲେଖାଯାଏ। ଯୋଗାଣକାରୀ, ନାମଞ୍ଜୁର ପରିମାଣ, କ୍ରୟ ଆଦେଶ ଓ ଡେଲିଭରି ପ୍ରମାଣ ଏଠାରେ ନାହିଁ।",
+  "Only the owner, a director or an admin can change modules.":
+    "କେବଳ ମାଲିକ, ନିର୍ଦ୍ଦେଶକ ବା ଆଡମିନ୍ ମଡ୍ୟୁଲ୍ ବଦଳାଇପାରିବେ।",
+  "On — your phone watches your site boundaries.": "ଚାଲୁ — ଆପଣଙ୍କ ଫୋନ୍ ସାଇଟ୍ ସୀମା ଉପରେ ନଜର ରଖେ।",
+  "OPC 53 grade": "OPC 53 ଗ୍ରେଡ୍",
+  "OPC 53 grade cement": "OPC 53 ଗ୍ରେଡ୍ ସିମେଣ୍ଟ",
+  "Open Finance to attach the bill photo and submit it for review.":
+    "ବିଲ୍ ଫଟୋ ଲଗାଇବା ଓ ଯାଞ୍ଚ ପାଇଁ ପଠାଇବାକୁ ଫାଇନାନ୍ସ ଖୋଲନ୍ତୁ।",
+  "Opening an item takes you to its register, where your access is checked again.":
+    "ଆଇଟମ୍ ଖୋଲିଲେ ତାର ରେଜିଷ୍ଟର ଖୋଲେ, ଯେଉଁଠି ଆପଣଙ୍କ ପ୍ରବେଶ ପୁଣି ଯାଞ୍ଚ ହୁଏ।",
+  "Optional site work task": "ଇଚ୍ଛାଧୀନ ସାଇଟ୍ କାମ",
+  "Organisation-level supplier records are shared across sites. Payment account/bank details are intentionally not collected.":
+    "କମ୍ପାନୀ ସ୍ତରର ଯୋଗାଣକାରୀ ରେକର୍ଡ ସବୁ ସାଇଟରେ ସାଝା। ବ୍ୟାଙ୍କ ବିବରଣୀ ଜାଣିଶୁଣି ନିଆଯାଏ ନାହିଁ।",
+  "Original Posted expense *": "ମୂଳ ପୋଷ୍ଟ ଖର୍ଚ୍ଚ *",
+  "{overdue} overdue · {blocked} blocked": "{overdue} ବିଳମ୍ବ · {blocked} ଅଟକା",
+  "Overhead & profit (%)": "ଓଭରହେଡ୍ ଓ ଲାଭ (%)",
+  "Overhead & profit": "ଓଭରହେଡ୍ ଓ ଲାଭ",
+  "Overtime is priced at the base hourly rate (daily rate ÷ 8 h) and only once approved. Check local labour rules before paying.":
+    "ଓଭରଟାଇମ୍ ମୂଳ ଘଣ୍ଟା ଦର (ଦିନ ଦର ÷ 8) ରେ ଓ ଅନୁମୋଦନ ପରେ। ଦେୟ ପୂର୍ବରୁ ସ୍ଥାନୀୟ ଶ୍ରମ ନିୟମ ଦେଖନ୍ତୁ।",
+  "Paid by piece/measurement/contract — not priced from attendance":
+    "ଖଣ୍ଡ/ମାପ/ଠିକା ଅନୁସାରେ ଦେୟ — ହାଜିରାରୁ ନୁହେଁ",
+  "Past their planned end and not completed": "ଯୋଜନା ଶେଷ ପରେ ମଧ୍ୟ ସମ୍ପୂର୍ଣ୍ଣ ନୁହେଁ",
+  "Payment mode *": "ଦେୟ ପଦ୍ଧତି *",
+  "Payment mode · Cash (fixed for return to fund)": "ଦେୟ ପଦ୍ଧତି · ନଗଦ (ପାଣ୍ଠିକୁ ଫେରସ୍ତ ପାଇଁ ସ୍ଥିର)",
+  "People who worked in this period": "ଏହି ଅବଧିରେ କାମ କରିଥିବା ଲୋକ",
+  "Planned %": "ଯୋଜନା %",
+  "Planned dates from tasks; actual from the progress in daily reports.":
+    "ଯୋଜନା ତାରିଖ ଟାସ୍କରୁ; ପ୍ରକୃତ ଦୈନିକ ରିପୋର୍ଟ ପ୍ରଗତିରୁ।",
+  "Posted balance per fund": "ପ୍ରତି ପାଣ୍ଠିର ପୋଷ୍ଟ ବାଲାନ୍ସ",
+  "Posted entries only": "କେବଳ ପୋଷ୍ଟ ଏଣ୍ଟ୍ରି",
+  "Posted ledger balance": "ପୋଷ୍ଟ ଖାତା ବାଲାନ୍ସ",
+  "Powered by Google Gemini on the server. AI can misread — always compare with the paper bill. Nothing is saved until you press Save.":
+    "ସର୍ଭରରେ Google Gemini ଦ୍ୱାରା। AI ଭୁଲ ପଢ଼ିପାରେ — ସବୁବେଳେ କାଗଜ ବିଲ୍ ସହ ମିଳାନ୍ତୁ। 'ସେଭ୍' ନ ଦବାଇବା ପର୍ଯ୍ୟନ୍ତ କିଛି ସେଭ୍ ହୁଏ ନାହିଁ।",
+  "Present (half day counts ½)": "ହାଜିର (ଅଧା ଦିନ ½ ଗଣା)",
+  Priority: "ପ୍ରାଥମିକତା",
+  "Private to people with access to this record. Files cannot be replaced once added.":
+    "କେବଳ ଏହି ରେକର୍ଡରେ ପ୍ରବେଶ ଥିବା ଲୋକଙ୍କ ପାଇଁ। ଯୋଡ଼ା ଫାଇଲ୍ ବଦଳାଯାଇପାରିବ ନାହିଁ।",
+  "Profile status": "ପ୍ରୋଫାଇଲ୍ ସ୍ଥିତି",
+  "Propose an effective-dated rate": "ତାରିଖରୁ ଲାଗୁ ଦର ପ୍ରସ୍ତାବ",
+  "Propose a new start date": "ନୂଆ ଆରମ୍ଭ ତାରିଖ ପ୍ରସ୍ତାବ",
+  "Propose rate": "ଦର ପ୍ରସ୍ତାବ",
+  "Purpose / note (optional)": "ଉଦ୍ଦେଶ୍ୟ / ନୋଟ୍ (ଇଚ୍ଛାଧୀନ)",
+  Rate: "ଦର",
+  "Rate = material + labour + tools & plant, + water charges, + overhead & profit. Use your SOR / DSR figures.":
+    "ଦର = ସାମଗ୍ରୀ + ମଜୁରି + ଉପକରଣ ଓ ଯନ୍ତ୍ର, + ପାଣି ଶୁଳ୍କ, + ଓଭରହେଡ୍ ଓ ଲାଭ। ଆପଣଙ୍କ SOR / DSR ସଂଖ୍ୟା ଦିଅନ୍ତୁ।",
+  "Rate basis": "ଦରର ଆଧାର",
+  "Rate build-up": "ଦର ହିସାବ",
+  "Rate per": "ଦର ପ୍ରତି",
+  "Rates take effect only after a different authorised person approves them. A rate on its own is not a payment due.":
+    "ଅନ୍ୟ ଅଧିକୃତ ବ୍ୟକ୍ତି ଅନୁମୋଦନ କଲେ ଦର ଲାଗୁ ହୁଏ। କେବଳ ଦର ଦେୟ ନୁହେଁ।",
+  "Reconciliation period *": "ମେଳ ଅବଧି *",
+  "Records a movement from this site petty-cash fund only (not personal spending). It saves as a Draft; a different authorised person posts it. No money is sent.":
+    "କେବଳ ଏହି ସାଇଟ୍ ଛୋଟ ନଗଦରୁ ଗତିବିଧି ଲେଖେ (ବ୍ୟକ୍ତିଗତ ଖର୍ଚ୍ଚ ନୁହେଁ)। ଡ୍ରାଫ୍ଟରେ ସେଭ୍; ଅନ୍ୟ ଅଧିକୃତ ବ୍ୟକ୍ତି ପୋଷ୍ଟ କରନ୍ତି। ଟଙ୍କା ପଠାଯାଏ ନାହିଁ।",
+  "Records in your site scope": "ଆପଣଙ୍କ ସାଇଟ୍ ପରିସରର ରେକର୍ଡ",
+  "Record supplier payment": "ଯୋଗାଣକାରୀ ଦେୟ ଲେଖନ୍ତୁ",
+  "Record type": "ରେକର୍ଡ ପ୍ରକାର",
+  "reorder at {qty}": "{qty} ରେ ପୁଣି ମଗାନ୍ତୁ",
+  "Reorder threshold (optional, base unit)": "ପୁଣି ମଗାଇବା ସୀମା (ଇଚ୍ଛାଧୀନ, ମୂଳ ଏକକ)",
+  "Request ≠ purchase": "ଅନୁରୋଧ ≠ କ୍ରୟ",
+  "Requested quantity": "ମଗାଯାଇଥିବା ପରିମାଣ",
+  "Request for review": "ଯାଞ୍ଚ ପାଇଁ ପଠାନ୍ତୁ",
+  "Reschedule previews are re-computed on the server under a site schedule lock. Conflicts block applying. Workday calendars, resource assignment conflicts, calendar views, and approval routing remain future work.":
+    "ତାରିଖ ବଦଳ ପୂର୍ବାବଲୋକନ ସର୍ଭରରେ ପୁଣି ଗଣାଯାଏ। ଦ୍ୱନ୍ଦ୍ୱ ଥିଲେ ଲାଗୁ ହୁଏ ନାହିଁ।",
+  "Resolving inventory access…": "ଷ୍ଟୋର ପ୍ରବେଶ ଯାଞ୍ଚ ହେଉଛି…",
+  "Review invoice": "ବିଲ୍ ଯାଞ୍ଚ କରନ୍ତୁ",
+  "Review & post": "ଯାଞ୍ଚ ଓ ପୋଷ୍ଟ କରନ୍ତୁ",
+  "Review the affected dates. Applying this change requires a second tap and records a reason and each old/new date.":
+    "ପ୍ରଭାବିତ ତାରିଖ ଦେଖନ୍ତୁ। ଲାଗୁ କରିବାକୁ ଦ୍ୱିତୀୟ ଥର ଦବାନ୍ତୁ; କାରଣ ଓ ପ୍ରତି ପୁରୁଣା/ନୂଆ ତାରିଖ ଲେଖାଯାଏ।",
+  "Saving a catalogue item creates no opening balance and does not change available stock.":
+    "ଆଇଟମ୍ ସେଭ୍ କଲେ ପ୍ରାରମ୍ଭିକ ବାଲାନ୍ସ ହୁଏ ନାହିଁ ଓ ଷ୍ଟକ୍ ବଦଳେ ନାହିଁ।",
+  "Saving records the invoice for review. It does not pay the supplier or decide tax treatment — enter tax and charges exactly as printed on the bill.":
+    "ସେଭ୍ କଲେ ବିଲ୍ ଯାଞ୍ଚ ପାଇଁ ଲେଖାଯାଏ। ଏଥିରେ ଯୋଗାଣକାରୀଙ୍କୁ ଦେୟ ହୁଏ ନାହିଁ — ଟିକସ ଓ ଶୁଳ୍କ ବିଲରେ ଯେପରି ଛପା ସେପରି ଦିଅନ୍ତୁ।",
+  "Schedule history": "ସିଡ୍ୟୁଲ୍ ଇତିହାସ",
+  "Search tools": "ଟୁଲ୍ ଖୋଜନ୍ତୁ",
+  "Select invoice allocations that sum exactly to the payment. Balances are derived from approved invoices minus Posted internal-ledger allocations only.":
+    "ଏପରି ବିଲ୍ ବାଛନ୍ତୁ ଯାହାର ଯୋଗ ଦେୟ ସହ ସମାନ। ବାଲାନ୍ସ ଅନୁମୋଦିତ ବିଲ୍ ମାଇନସ୍ ପୋଷ୍ଟ ବଣ୍ଟନରୁ।",
+  "Server-calculated from line amounts + entered tax/charges":
+    "ଲାଇନ୍ ପରିମାଣ + ଟିକସ/ଶୁଳ୍କରୁ ସର୍ଭରରେ ହିସାବ",
+  "Sites that are not Active stay readable, but new reports, requests and entries are blocked until they are reactivated.":
+    "ନିଷ୍କ୍ରିୟ ସାଇଟ୍ ପଢ଼ିହେବ, କିନ୍ତୁ ପୁଣି ଚାଲୁ ନହେବା ପର୍ଯ୍ୟନ୍ତ ନୂଆ ରିପୋର୍ଟ, ଅନୁରୋଧ ଓ ଏଣ୍ଟ୍ରି ବନ୍ଦ।",
+  "Skill category": "ଦକ୍ଷତା ଶ୍ରେଣୀ",
+  "Specification / grade (optional)": "ବିବରଣୀ / ଗ୍ରେଡ୍ (ଇଚ୍ଛାଧୀନ)",
+  "Stock changes only when a different authorised person posts an entry. The oldest pending entries are listed first, followed by the latest posted and rejected entries.":
+    "ଅନ୍ୟ ଅଧିକୃତ ବ୍ୟକ୍ତି ଏଣ୍ଟ୍ରି ପୋଷ୍ଟ କଲେ ଷ୍ଟକ୍ ବଦଳେ। ପୁରୁଣା ବାକି ଏଣ୍ଟ୍ରି ପ୍ରଥମେ, ତାପରେ ନୂଆ ପୋଷ୍ଟ ଓ ନାମଞ୍ଜୁର।",
+  "Sub-total": "ଉପ-ଯୋଗ",
+  "Supplier-stated gross amount": "ଯୋଗାଣକାରୀ କହିଥିବା ମୋଟ ପରିମାଣ",
+  "Supplier type": "ଯୋଗାଣକାରୀ ପ୍ରକାର",
+  "Task creation is online-only. A Finish-to-Start predecessor must finish before this task starts. No worker/team is assigned and no stock or cost is posted.":
+    "କାମ ତିଆରି ପାଇଁ ଇଣ୍ଟରନେଟ୍ ଦରକାର। ପୂର୍ବ କାମ ସରିଲେ ଏହା ଆରମ୍ଭ ହେବ। କୌଣସି ଶ୍ରମିକ/ଦଳ, ଷ୍ଟକ୍ ବା ଖର୍ଚ୍ଚ ଯୋଡ଼ାଯାଏ ନାହିଁ।",
+  "Task status": "କାମ ସ୍ଥିତି",
+  "TDS %": "TDS %",
+  "The balance counts Posted funding, expenses and cash returns only — drafts and pending entries never change cash. Enter site petty-cash spending only, not personal out-of-pocket costs. No money is sent from this app.":
+    "ବାଲାନ୍ସରେ କେବଳ ପୋଷ୍ଟ ପାଣ୍ଠି, ଖର୍ଚ୍ଚ ଓ ନଗଦ ଫେରସ୍ତ ଗଣାଯାଏ — ଡ୍ରାଫ୍ଟରେ ନଗଦ ବଦଳେ ନାହିଁ। କେବଳ ସାଇଟ୍ ଛୋଟ ନଗଦ ଖର୍ଚ୍ଚ ଦିଅନ୍ତୁ, ବ୍ୟକ୍ତିଗତ ନୁହେଁ। ଆପରୁ ଟଙ୍କା ଯାଏ ନାହିଁ।",
+  "The budget counts only after another person with approval rights approves it.":
+    "ଅନୁମୋଦନ ଅଧିକାର ଥିବା ଅନ୍ୟ ଜଣେ ଅନୁମୋଦନ କଲେ ବଜେଟ୍ ଗଣାଯାଏ।",
+  "The file is being read for search. Pull to refresh in a moment.":
+    "ଖୋଜା ପାଇଁ ଫାଇଲ୍ ପଢ଼ାଯାଉଛି। ଟିକେ ପରେ ଟାଣି ରିଫ୍ରେସ୍ କରନ୍ତୁ।",
+  "The line marks where the plan says each site should be today":
+    "ରେଖା ଦେଖାଏ ଯୋଜନା ଅନୁସାରେ ପ୍ରତି ସାଇଟ୍ ଆଜି କେଉଁଠି ରହିବା କଥା",
+  "The movement form uses active materials on this catalogue page. Page to an item's entry before recording its movement.":
+    "ଗତିବିଧି ଫର୍ମ ଏହି ପୃଷ୍ଠାର ସକ୍ରିୟ ସାମଗ୍ରୀ ନିଏ। ଗତିବିଧି ପୂର୍ବରୁ ସେହି ଆଇଟମ୍ ପୃଷ୍ଠାକୁ ଯାଆନ୍ତୁ।",
+  "The reconciliation period is saved with the fund for the custodian and reviewers.":
+    "ମେଳ ଅବଧି ପାଣ୍ଠି ସହ ସଂରକ୍ଷକ ଓ ଯାଞ୍ଚକାରୀଙ୍କ ପାଇଁ ସେଭ୍ ହୁଏ।",
+  "There is no editable stock total. Submitted or rejected movements do not change the balance. Quantities use the catalogue base unit; no conversions are assumed.":
+    "ଷ୍ଟକ୍ ମୋଟ ହାତରେ ବଦଳାଯାଇପାରିବ ନାହିଁ। ଦାଖଲ ବା ନାମଞ୍ଜୁର ଗତିବିଧିରେ ବାଲାନ୍ସ ବଦଳେ ନାହିଁ। ପରିମାଣ ମୂଳ ଏକକରେ।",
+  "This creates a real site finance record with a derived zero balance. The selected custodian must acknowledge; no starting cash is seeded.":
+    "ଏହା ଶୂନ ବାଲାନ୍ସ ଥିବା ପ୍ରକୃତ ସାଇଟ୍ ପାଣ୍ଠି ତିଆରି କରେ। ବଛା ସଂରକ୍ଷକ ସ୍ୱୀକାର କରିବେ; ପ୍ରାରମ୍ଭିକ ନଗଦ ଦିଆଯାଏ ନାହିଁ।",
+  "This creates organisation, project, and site records and gives the authenticated owner an organisation role. Enter the real operational details for the client workspace.":
+    "ଏହା କମ୍ପାନୀ, ପ୍ରକଳ୍ପ ଓ ସାଇଟ୍ ତିଆରି କରେ ଓ ମାଲିକଙ୍କୁ କମ୍ପାନୀ ଭୂମିକା ଦିଏ। ପ୍ରକୃତ ବିବରଣୀ ଦିଅନ୍ତୁ।",
+  "This records a human reviewer’s status only. The app does not authenticate identity documents or perform automated KYC.":
+    "ଏହା କେବଳ ଯାଞ୍ଚକାରୀଙ୍କ ସ୍ଥିତି ଲେଖେ। ଆପ୍ ପରିଚୟ ଦଲିଲ ଯାଞ୍ଚ ବା ସ୍ୱୟଂଚାଳିତ KYC କରେ ନାହିଁ।",
+  "This saves a Draft ledger record only. It does not send money or prove payment.":
+    "ଏହା କେବଳ ଡ୍ରାଫ୍ଟ ଖାତା ରେକର୍ଡ ସେଭ୍ କରେ। ଟଙ୍କା ପଠାଏ ନାହିଁ, ଦେୟ ପ୍ରମାଣ କରେ ନାହିଁ।",
+  "This saves a Draft proposal, not a payable. On approval, an overlapping earlier active rate is closed the day before this start; conflicting future rates are rejected rather than overwritten.":
+    "ଏହା ଡ୍ରାଫ୍ଟ ପ୍ରସ୍ତାବ, ଦେୟ ନୁହେଁ। ଅନୁମୋଦନରେ ପୁରୁଣା ଦର ଏହି ଆରମ୍ଭର ଗୋଟିଏ ଦିନ ପୂର୍ବରୁ ବନ୍ଦ ହୁଏ; ଦ୍ୱନ୍ଦ୍ୱ ଥିବା ଭବିଷ୍ୟତ ଦର ନାମଞ୍ଜୁର।",
+  "Tool not found": "ଟୁଲ୍ ମିଳିଲା ନାହିଁ",
+  "Tools & plant": "ଉପକରଣ ଓ ଯନ୍ତ୍ର",
+  "Total budget": "ମୋଟ ବଜେଟ୍",
+  "Wastage (%)": "ନଷ୍ଟ (%)",
+  "Water charges (%)": "ପାଣି ଶୁଳ୍କ (%)",
+  "Water charges": "ପାଣି ଶୁଳ୍କ",
+  "What they can do": "ସେମାନେ କଣ କରିପାରିବେ",
+  "with wastage": "ନଷ୍ଟ ସହ",
+  "Workers, hours and overtime are recorded in Attendance for this site and day. Use this report for the day's labour summary and notes.":
+    "ଶ୍ରମିକ, ଘଣ୍ଟା ଓ ଓଭରଟାଇମ୍ ଏହି ସାଇଟ୍ ଓ ଦିନର ହାଜିରାରେ ଲେଖାଯାଏ। ଏହି ରିପୋର୍ଟ ଦିନର ଶ୍ରମିକ ସାରାଂଶ ଓ ନୋଟ୍ ପାଇଁ।",
+  "Your role and site assignments are checked by the server on every request. Payments recorded here are internal ledger entries, not bank transfers.":
+    "ଆପଣଙ୍କ ଭୂମିକା ଓ ସାଇଟ୍ ପ୍ରତିଥର ସର୍ଭର ଯାଞ୍ଚ କରେ। ଏଠାରେ ଲେଖା ଦେୟ ଆଭ୍ୟନ୍ତରୀଣ ଖାତା ଏଣ୍ଟ୍ରି, ବ୍ୟାଙ୍କ ଟ୍ରାନ୍ସଫର ନୁହେଁ।",
+  "SMS is only used for urgent alerts. “Details” off sends just the title on WhatsApp and SMS, with no photo or document.":
+    "SMS କେବଳ ଜରୁରୀ ଆଲର୍ଟ ପାଇଁ। “ବିବରଣୀ” ବନ୍ଦ ଥିଲେ WhatsApp ଓ SMS ରେ କେବଳ ଶୀର୍ଷକ ଯାଏ, ଫଟୋ ବା ଦଲିଲ ନୁହେଁ।",
 };
 
 const dictionaries: Record<Language, Dictionary> = { en: {}, hi, or };

@@ -192,8 +192,9 @@ function IssueForm({
         >
           <MaterialIcons name="health-and-safety" size={18} color={colors.error} />
           <Text style={[styles.safetyText, { color: colors.foreground }]}>
-            Make the area safe first. This app records the issue; it does not certify that a hazard
-            is safe.
+            {t(
+              "Make the area safe first. This app records the issue; it does not certify that a hazard is safe.",
+            )}
           </Text>
         </View>
       ) : null}
@@ -240,7 +241,7 @@ function IssueForm({
               {t("Stop work in this area")}
             </Text>
             <Text style={[styles.stopText, { color: colors.muted }]}>
-              Flags the issue as STOP WORK for every site lead until it is resolved.
+              {t("Flags the issue as STOP WORK for every site lead until it is resolved.")}
             </Text>
           </View>
         </Pressable>

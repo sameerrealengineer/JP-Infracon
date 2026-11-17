@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -68,6 +69,7 @@ function Form({
   initial: Draft;
   channels: { whatsapp: string | null; sms: string | null; push: string };
 }) {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const update = trpc.jp.notifications.updatePreferences.useMutation();
@@ -172,7 +174,7 @@ function Form({
         <View style={{ flex: 1, gap: 8 }}>
           <View style={styles.channelRow}>
             <Text style={[styles.meta, { color: colors.foreground, flex: 1 }]}>
-              App notifications (Expo push)
+              {t("App notifications (Expo push)")}
             </Text>
             <StatusPill label="Ready" tone="success" compact />
           </View>
@@ -195,8 +197,9 @@ function Form({
         </View>
       </Card>
       <Text style={[styles.note, { color: colors.muted }]}>
-        Alerts never include money amounts or ID numbers. Unofficial WhatsApp gateways (WAHA,
-        Evolution API) can get a number blocked by WhatsApp; use a separate business number.
+        {t(
+          "Alerts never include money amounts or ID numbers. Unofficial WhatsApp gateways (WAHA, Evolution API) can get a number blocked by WhatsApp; use a separate business number.",
+        )}
       </Text>
     </>
   );
@@ -447,6 +450,7 @@ function DeliveryLog() {
 
 /** Web app only: turn on notifications for this browser (iPhone: after Add to Home Screen). */
 function BrowserPush() {
+  const { t } = useT();
   const colors = useColors();
   const key = trpc.jp.notifications.webPushKey.useQuery(undefined, {
     enabled: Platform.OS === "web",
@@ -517,7 +521,7 @@ function BrowserPush() {
       {error ? <InlineError message={error} title="Notifications" /> : null}
       {state === "on" ? (
         <Text style={[styles.meta, { color: colors.success }]}>
-          On — alerts come to this device.
+          {t("On — alerts come to this device.")}
         </Text>
       ) : null}
     </>
@@ -525,6 +529,7 @@ function BrowserPush() {
 }
 
 function SiteArrivalAlerts() {
+  const { t } = useT();
   const colors = useColors();
   const fences = trpc.jp.presence.myFences.useQuery();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -573,7 +578,7 @@ function SiteArrivalAlerts() {
       {error ? <InlineError message={error} title="Site alerts" /> : null}
       {enabled ? (
         <Text style={[styles.meta, { color: colors.success }]}>
-          On — your phone watches your site boundaries.
+          {t("On — your phone watches your site boundaries.")}
         </Text>
       ) : null}
     </>

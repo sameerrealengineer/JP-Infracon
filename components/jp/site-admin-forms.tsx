@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { AiFormFill } from "@/components/jp/voice-assist";
 import { Text, View } from "react-native";
 import { ChipGroup, Field, PrimaryButton, Sheet, InlineError } from "@/components/jp/ui";
@@ -337,6 +338,7 @@ export function StatusSheet({
 }
 
 function StatusForm({ target, onClose }: { target: StatusTarget; onClose: () => void }) {
+  const { t } = useT();
   const colors = useColors();
   const invalidate = useInvalidateAdmin();
   const projectStatus = trpc.jp.sitesAdmin.setProjectStatus.useMutation();
@@ -384,8 +386,9 @@ function StatusForm({ target, onClose }: { target: StatusTarget; onClose: () => 
       {error ? <InlineError message={error} title="Not changed" /> : null}
       <ChipGroup label="New status" options={options} value={status} onChange={setStatus} />
       <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginBottom: 12 }}>
-        Sites that are not Active stay readable, but new reports, requests and entries are blocked
-        until they are reactivated.
+        {t(
+          "Sites that are not Active stay readable, but new reports, requests and entries are blocked until they are reactivated.",
+        )}
       </Text>
       <Field
         label="Reason (recorded in the audit trail)"
@@ -409,6 +412,7 @@ export function AssignMemberSheet({
 }
 
 function AssignForm({ siteId, onClose }: { siteId: string; onClose: () => void }) {
+  const { t } = useT();
   const colors = useColors();
   const invalidate = useInvalidateAdmin();
   const candidates = trpc.jp.sitesAdmin.assignmentCandidates.useQuery({ siteId });
@@ -453,10 +457,12 @@ function AssignForm({ siteId, onClose }: { siteId: string; onClose: () => void }
       {error ? <InlineError message={error} title="Not assigned" /> : null}
       {candidates.error ? <InlineError message={candidates.error.message} /> : null}
       {candidates.isLoading ? (
-        <Text style={{ color: colors.muted, marginBottom: 12 }}>Loading members…</Text>
+        <Text style={{ color: colors.muted, marginBottom: 12 }}>{t("Loading members…")}</Text>
       ) : people.length === 0 ? (
         <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19, marginBottom: 12 }}>
-          Everyone eligible is already on this site. Create a new login from Team accounts first.
+          {t(
+            "Everyone eligible is already on this site. Create a new login from Team accounts first.",
+          )}
         </Text>
       ) : (
         <ChipGroup

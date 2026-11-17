@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ProgressBar, ProgressCard, percentText } from "@/components/jp/place-visual";
 import {
@@ -40,6 +41,7 @@ export function ScheduleDashboard({
   siteId: string;
   onOpenTask?: (taskId: string) => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const query = trpc.jp.places.schedule.useQuery({ siteId }, { enabled: Boolean(siteId) });
   const [mode, setMode] = useState<View_>("Timeline");
@@ -74,7 +76,7 @@ export function ScheduleDashboard({
             >
               <View style={styles.axis}>
                 <Text style={[styles.axisText, { color: colors.muted }]}>{data.range.start}</Text>
-                <Text style={[styles.axisText, { color: colors.error }]}>Today</Text>
+                <Text style={[styles.axisText, { color: colors.error }]}>{t("Today")}</Text>
                 <Text style={[styles.axisText, { color: colors.muted }]}>{data.range.end}</Text>
               </View>
               {tasks.map((task) => (

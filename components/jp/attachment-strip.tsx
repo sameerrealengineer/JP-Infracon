@@ -366,7 +366,7 @@ export function AttachmentStrip({
         </View>
       ) : null}
       <Text style={[styles.note, { color: colors.muted }]}>
-        Private to people with access to this record. Files cannot be replaced once added.
+        {t("Private to people with access to this record. Files cannot be replaced once added.")}
       </Text>
     </View>
   );

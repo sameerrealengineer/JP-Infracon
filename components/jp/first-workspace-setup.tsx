@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { centeredColumn } from "@/constants/layout";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -15,6 +16,7 @@ export function FirstWorkspaceSetup({
   onClose: () => void;
   onComplete: () => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const [organizationName, setOrganizationName] = useState("");
@@ -96,7 +98,9 @@ export function FirstWorkspaceSetup({
           <View style={styles.header}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.kicker, { color: colors.primary }]}>FIRST-TIME SETUP</Text>
-              <Text style={[styles.title, { color: colors.foreground }]}>Create the workspace</Text>
+              <Text style={[styles.title, { color: colors.foreground }]}>
+                {t("Create the workspace")}
+              </Text>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -107,8 +111,9 @@ export function FirstWorkspaceSetup({
             </Pressable>
           </View>
           <Text style={[styles.intro, { color: colors.muted }]}>
-            This creates organisation, project, and site records and gives the authenticated owner
-            an organisation role. Enter the real operational details for the client workspace.
+            {t(
+              "This creates organisation, project, and site records and gives the authenticated owner an organisation role. Enter the real operational details for the client workspace.",
+            )}
           </Text>
           <ScrollView
             keyboardShouldPersistTaps="handled"

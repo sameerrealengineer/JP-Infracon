@@ -142,7 +142,7 @@ export function ProgressCard({
         <Stat value={summary.total} label={t("Tasks")} />
       </View>
       <Text style={[styles.note, { color: colors.muted }]}>
-        Estimated from task status and the latest DPR quantities. Not a basis for payment.
+        {t("Estimated from task status and the latest DPR quantities. Not a basis for payment.")}
       </Text>
     </Card>
   );

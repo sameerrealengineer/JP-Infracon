@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AuthGate } from "@/components/jp/auth-gate";
@@ -34,6 +35,7 @@ import { trpc } from "@/lib/trpc";
 const durationIds = Object.keys(delegationDurations) as DelegationDuration[];
 
 export default function DelegationScreen() {
+  const { t } = useT();
   const colors = useColors();
   const overview = trpc.jp.sitesAdmin.overview.useQuery();
   const orgs = overview.data ?? [];
@@ -150,8 +152,9 @@ export default function DelegationScreen() {
             ))}
           </View>
           <Text style={[styles.note, { color: colors.muted }]}>
-            Every delegation and revocation is recorded in the audit trail. Delegated people still
-            work only on the chosen site or project.
+            {t(
+              "Every delegation and revocation is recorded in the audit trail. Delegated people still work only on the chosen site or project.",
+            )}
           </Text>
         </ScrollView>
         {organizationId ? (
@@ -175,6 +178,7 @@ function DelegateSheet({
   organizationId: string;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const candidates = trpc.jp.delegation.candidates.useQuery({ organizationId });
@@ -263,12 +267,12 @@ function DelegateSheet({
             />
           ) : (
             <Text style={[styles.meta, { color: colors.warning, marginBottom: 12 }]}>
-              Assign this person to a site first (Projects & sites → site → Assign).
+              {t("Assign this person to a site first (Projects & sites → site → Assign).")}
             </Text>
           )}
         </>
       ) : null}
-      <Text style={[styles.label, { color: colors.foreground }]}>What they can do</Text>
+      <Text style={[styles.label, { color: colors.foreground }]}>{t("What they can do")}</Text>
       {delegationBundleIds.map((bundle) => {
         const on = bundles.includes(bundle);
         return (

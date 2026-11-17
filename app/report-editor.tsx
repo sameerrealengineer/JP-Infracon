@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -175,6 +176,7 @@ function ExistingReport({ reportId }: { reportId: string }) {
 type ReportDetail = inferRouterOutputs<AppRouter>["jp"]["reports"]["detail"];
 
 function ReportView({ data }: { data: ReportDetail }) {
+  const { t } = useT();
   const colors = useColors();
   const { report, items } = data;
   return (
@@ -196,7 +198,7 @@ function ReportView({ data }: { data: ReportDetail }) {
           <SectionHeader title={`Work done (${items.length})`} />
           {items.length === 0 ? (
             <Text style={[styles.muted, { color: colors.muted }]}>
-              No work lines were recorded.
+              {t("No work lines were recorded.")}
             </Text>
           ) : (
             items.map((item) => (
@@ -274,6 +276,7 @@ function ReportForm({
   aiText?: string;
   initial?: Initial;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const router = useRouter();
   const utils = trpc.useUtils();
@@ -535,7 +538,7 @@ function ReportForm({
         />
         {initial?.returnReason ? (
           <Card accent="warning">
-            <Text style={[styles.metaLabel, { color: colors.muted }]}>Returned because</Text>
+            <Text style={[styles.metaLabel, { color: colors.muted }]}>{t("Returned because")}</Text>
             <Text style={[styles.metaValue, { color: colors.foreground }]}>
               {initial.returnReason}
             </Text>
@@ -741,8 +744,9 @@ function ReportForm({
               <View style={styles.lineHead}>
                 <MaterialIcons name="how-to-reg" size={18} color={colors.primary} />
                 <Text style={[styles.muted, { color: colors.muted, flex: 1 }]}>
-                  Workers, hours and overtime are recorded in Attendance for this site and day. Use
-                  this report for the day&apos;s labour summary and notes.
+                  {t(
+                    "Workers, hours and overtime are recorded in Attendance for this site and day. Use this report for the day's labour summary and notes.",
+                  )}
                 </Text>
               </View>
               {site ? (

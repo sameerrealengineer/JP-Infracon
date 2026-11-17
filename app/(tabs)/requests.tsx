@@ -71,6 +71,7 @@ export default function RequestsScreenTab() {
 }
 
 export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
+  const { t } = useT();
   const colors = useColors();
   const me = trpc.auth.me.useQuery(undefined, { retry: false });
   const utils = trpc.useUtils();
@@ -278,7 +279,9 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
         <View style={styles.topAction}>
           <View style={styles.actionCopy}>
             <Text style={[styles.kicker, { color: colors.muted }]}>REQUEST REGISTER</Text>
-            <Text style={[styles.subheading, { color: colors.foreground }]}>Material workflow</Text>
+            <Text style={[styles.subheading, { color: colors.foreground }]}>
+              {t("Material workflow")}
+            </Text>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -307,11 +310,12 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.policyTitle, { color: colors.foreground }]}>
-              Request ≠ purchase
+              {t("Request ≠ purchase")}
             </Text>
             <Text style={[styles.policyDetail, { color: colors.muted }]}>
-              Approval, supplier evidence, receipt, and stock posting are separate controlled steps.
-              This build does not place orders.
+              {t(
+                "Approval, supplier evidence, receipt, and stock posting are separate controlled steps. This build does not place orders.",
+              )}
             </Text>
           </View>
         </View>
@@ -345,7 +349,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
           <View style={styles.loading}>
             <ActivityIndicator color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.muted }]}>
-              Loading authorised requests…
+              {t("Loading authorised requests…")}
             </Text>
           </View>
         ) : requestsQuery.isError ? null : visibleRequests.length === 0 ? (
@@ -379,7 +383,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
         <View style={styles.auditNote}>
           <MaterialIcons name="lock-outline" size={16} color={colors.primary} />
           <Text style={[styles.auditText, { color: colors.muted }]}>
-            Only an authorised reviewer may approve, return, or reject a submitted request.
+            {t("Only an authorised reviewer may approve, return, or reject a submitted request.")}
           </Text>
         </View>
       </ScrollView>
@@ -403,7 +407,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                   NEW MATERIAL REQUEST
                 </Text>
                 <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  Request for review
+                  {t("Request for review")}
                 </Text>
               </View>
               <Pressable
@@ -444,7 +448,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                   ) : null}
                 </View>
               ) : null}
-              <Text style={[styles.inputLabel, { color: colors.muted }]}>Material</Text>
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Material")}</Text>
               <TextInput
                 value={title}
                 onChangeText={setTitle}
@@ -459,7 +463,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                   },
                 ]}
               />
-              <Text style={[styles.inputLabel, { color: colors.muted }]}>Quantity</Text>
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Quantity")}</Text>
               <TextInput
                 value={quantity}
                 onChangeText={setQuantity}
@@ -475,7 +479,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                   },
                 ]}
               />
-              <Text style={[styles.inputLabel, { color: colors.muted }]}>Unit</Text>
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Unit")}</Text>
               <TextInput
                 value={unitCode}
                 onChangeText={setUnitCode}
@@ -490,7 +494,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                   },
                 ]}
               />
-              <Text style={[styles.inputLabel, { color: colors.muted }]}>Site</Text>
+              <Text style={[styles.inputLabel, { color: colors.muted }]}>{t("Site")}</Text>
               <ScrollView style={styles.siteChoiceScroll} nestedScrollEnabled>
                 {siteOptions.map((site) => (
                   <Pressable
@@ -518,7 +522,7 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
                 ))}
               </ScrollView>
               <Text style={[styles.inputLabel, { color: colors.muted }]}>
-                Purpose / note (optional)
+                {t("Purpose / note (optional)")}
               </Text>
               <TextInput
                 value={purpose}
@@ -544,8 +548,9 @@ export function RequestsScreen({ inTabs = false }: { inTabs?: boolean }) {
               >
                 <MaterialIcons name="info-outline" size={18} color={colors.warning} />
                 <Text style={[styles.draftCalloutText, { color: colors.foreground }]}>
-                  Online, the request is submitted for review. Offline, it stays on this device.
-                  Neither state is an approval or an order.
+                  {t(
+                    "Online, the request is submitted for review. Offline, it stays on this device. Neither state is an approval or an order.",
+                  )}
                 </Text>
               </View>
               <PrimaryButton
@@ -596,11 +601,11 @@ function RequestCard({
       </View>
       <View style={styles.requestMeta}>
         <View>
-          <Text style={[styles.metaLabel, { color: colors.muted }]}>Requested quantity</Text>
+          <Text style={[styles.metaLabel, { color: colors.muted }]}>{t("Requested quantity")}</Text>
           <Text style={[styles.metaValue, { color: colors.foreground }]}>{request.quantity}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.metaLabel, { color: colors.muted }]}>Control note</Text>
+          <Text style={[styles.metaLabel, { color: colors.muted }]}>{t("Control note")}</Text>
           <Text style={[styles.metaValue, { color: colors.foreground }]}>
             {request.approvalNote}
           </Text>

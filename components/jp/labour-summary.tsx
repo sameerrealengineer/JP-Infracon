@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useT } from "@/lib/i18n";
 
 import { Card } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
@@ -6,14 +7,19 @@ import type { LabourSummary } from "@/lib/jp/dlr-domain";
 
 /** The day's attendance by trade, as recorded in Attendance (the DLR's source of truth). */
 export function LabourSummaryCard({ summary }: { summary: LabourSummary }) {
+  const { t } = useT();
   const colors = useColors();
   const { totals } = summary;
   if (totals.marked === 0)
     return (
       <Card accent="warning">
-        <Text style={[styles.title, { color: colors.foreground }]}>No attendance marked yet</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          {t("No attendance marked yet")}
+        </Text>
         <Text style={[styles.muted, { color: colors.muted }]}>
-          Mark attendance for this day first. The labour report cannot be submitted without it.
+          {t(
+            "Mark attendance for this day first. The labour report cannot be submitted without it.",
+          )}
         </Text>
       </Card>
     );

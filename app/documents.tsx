@@ -1,4 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useT } from "@/lib/i18n";
 import { HelpButton } from "@/components/jp/help";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
@@ -322,6 +323,7 @@ function UploadSheet({
   onClose: () => void;
   onDone: (documentId: string) => void;
 }) {
+  const { t } = useT();
   const colors = useColors();
   const upload = trpc.jp.documents.upload.useMutation();
   const uploadSites = sites.filter((site) => site.canUpload);
@@ -420,8 +422,9 @@ function UploadSheet({
         maxLength={4000}
       />
       <Text style={[styles.cardMeta, { color: colors.muted }]}>
-        After upload, the file is read so it can be found by what is inside it. AI suggestions are
-        shown for checking; they never change amounts or approvals.
+        {t(
+          "After upload, the file is read so it can be found by what is inside it. AI suggestions are shown for checking; they never change amounts or approvals.",
+        )}
       </Text>
       {error ? <InlineError message={error} /> : null}
       <PrimaryButton
