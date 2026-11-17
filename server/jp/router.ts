@@ -66,6 +66,7 @@ import { accessReviewRouter } from "./access-review";
 import { dailySummaryRouter } from "./daily-summary";
 import { analyticsRouter } from "./analytics";
 import { journeyRouter } from "./journey";
+import { todayRouter } from "./today";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -229,6 +230,7 @@ export const jpRouter = router({
   dailySummary: dailySummaryRouter,
   analytics: analyticsRouter,
   journey: journeyRouter,
+  today: todayRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

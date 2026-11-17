@@ -74,6 +74,7 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `s-curve.ts` | Planned vs actual S-curve points and Gantt rows from tasks and DPR progress history |
 | `analytics.ts` | Dashboard helpers: ranges, day/week buckets, paise sums per series, top-N, ageing buckets, short rupee labels (L / Cr) |
 | `journey.ts` | Step-by-step mode: 7 steps (modules per step, goal counted on real records), extras opened only by a leader, `journeyLevel`, `lockedByJourney`, `journeyView` |
+| `capture.ts` | The "+ Capture" actions (attendance, DPR, DLR, photo, expense, bill scan, material request, stock, issue, measurement, add worker, leave), each with its permissions and site route |
 | `permission-plan.ts` | Permissions asked up front after sign-in, per platform and in order (notifications first), status mapping, which to ask and which are blocked |
 
 ## Conventions

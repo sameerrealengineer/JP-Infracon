@@ -35,7 +35,7 @@ A Husky pre commit hook runs lint-staged (`eslint --fix` and Prettier on staged 
 
 ## Specs
 
-Feature scope: `docs/scope/`. Build specs go in `docs/specs/NNNN-title.md` when `/architect` writes one (none yet). Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
+Feature scope: `docs/scope/`. Build specs go in `docs/specs/NNNN-title.md` (0001 RBAC, 0002 production-grade redesign in 7 phases: shell & Today, site diary, tender/contract/BG, department MB & RA bill, quality & materials, plant & machinery, money control). Product requirements: `docs/JP_Infracon_Production_Ready_PRD.md`. Progress and open acceptance criteria: `TODO.md` (authoritative). Design decisions: `plan.md`.
 
 ## Rules
 
@@ -51,7 +51,7 @@ Feature scope: `docs/scope/`. Build specs go in `docs/specs/NNNN-title.md` when 
 
 ## Gotchas
 
-- Production data lives in the MySQL 8.4 container on the Azure VM (`deploy/docker-compose.yml`, nightly backup to `~/backups`). Each deploy (`scripts/deploy-azure.sh`) backs it up, then applies every pending migration on start (`RUN_MIGRATIONS=true`). Never point tests at it, seed demo data, or run destructive cleanup. For local work use the demo server (SQLite) or a throwaway MySQL.
+- Production data lives in the MySQL 8.4 container on the Azure VM (`deploy/docker-compose.yml`, nightly backup to `~/backups`). Each deploy (`scripts/deploy-azure.sh`) backs it up, then applies every pending migration on start (`RUN_MIGRATIONS=true`). Never point tests at it, seed demo data, or run destructive cleanup. For local work use the demo server (SQLite) or a throwaway MySQL. The live server was wiped on 18 November 2026 at the client's request and must stay free of seed, demo or sample data: do not run `scripts/seed-client-data.sh` against it.
 - Payments and cash entries are internal ledger records only. Do not add bank or payment execution without explicit permission. Do not publish to Google Play (personal APK only).
 - Never put secrets (for example `JP_SUPERADMIN_BOOTSTRAP_SECRET`) in source, logs, chat, or Git. The normal build has no demo logins; the first Super Admin comes from the one time bootstrap flow. Only the offline demo build (below) has built in demo accounts, and they exist only on the phone.
 - `react-native-css-interop` is a direct dependency so the web bundle (`expo export`, `pnpm test:e2e`) can resolve NativeWind's `jsx-runtime`; keep it pinned to the version NativeWind uses.

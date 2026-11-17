@@ -76,8 +76,8 @@ export default function SitesScreen() {
         <AppHeader
           right={<HelpButton topicKey="sites" />}
           eyebrow={t("Portfolio")}
-          title={t("Sites")}
-          subtitle="Every site you can access, with status and your role."
+          title={t("Projects & sites")}
+          subtitle="Every project and site you can access, with status and your role."
         />
         <OfflineBanner
           pendingCount={pending.length}

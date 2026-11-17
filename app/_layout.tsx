@@ -258,6 +258,7 @@ export default function RootLayout() {
           {/* in order for ios apps tab switching to work properly, use presentation: "fullScreenModal" for login page, whenever you decide to use presentation: "modal*/}
           <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="capture" options={{ animation: "slide_from_bottom" }} />
           </Stack>
           <StatusBar style="auto" />
         </PersistQueryClientProvider>

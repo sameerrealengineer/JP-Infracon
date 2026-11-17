@@ -1,14 +1,13 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useEffect, type ComponentProps } from "react";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
-import { Platform, StyleSheet, View, type ColorValue } from "react-native";
+import { Platform, Pressable, StyleSheet, View, type ColorValue } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { AuthGate } from "@/components/jp/auth-gate";
 import { useColors } from "@/hooks/use-colors";
-import { trpc } from "@/lib/trpc";
 import { usePushRegistration } from "@/hooks/use-push-registration";
 import { useT } from "@/lib/i18n";
 
@@ -43,14 +42,7 @@ export default function TabLayout() {
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
-  const capabilities = trpc.jp.workspace.myCapabilities.useQuery();
-  const canOpenReports =
-    capabilities.data?.some(
-      (item) => item["dpr.view"] || item["dpr.create"] || item["dlr.view"] || item["dlr.create"],
-    ) ?? false;
-  const canOpenRequests =
-    capabilities.data?.some((item) => item["material.request.view"] || item["material.request"]) ??
-    false;
+  const router = useRouter();
 
   return (
     <AuthGate>
@@ -75,38 +67,51 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: t("Home"),
+            title: t("Today"),
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon name="space-dashboard" color={color} focused={focused} />
+              <TabIcon name="today" color={color} focused={focused} />
             ),
           }}
         />
         <Tabs.Screen
           name="sites"
           options={{
-            title: t("Sites"),
+            title: t("Projects"),
             tabBarIcon: ({ color, focused }) => (
               <TabIcon name="location-city" color={color} focused={focused} />
             ),
           }}
         />
         <Tabs.Screen
-          name="reports"
+          name="capture"
           options={{
-            href: canOpenReports ? undefined : null,
-            title: t("Reports"),
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon name="assignment" color={color} focused={focused} />
+            title: t("Capture"),
+            tabBarAccessibilityLabel: t("Capture"),
+            tabBarButton: () => (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t("Capture")}
+                onPress={() => router.push("/capture" as never)}
+                style={styles.captureSlot}
+              >
+                <View
+                  style={[
+                    styles.captureButton,
+                    { backgroundColor: colors.primary, shadowColor: colors.primary },
+                  ]}
+                >
+                  <MaterialIcons name="add" size={32} color={colors.background} />
+                </View>
+              </Pressable>
             ),
           }}
         />
         <Tabs.Screen
-          name="requests"
+          name="money"
           options={{
-            href: canOpenRequests ? undefined : null,
-            title: t("Requests"),
+            title: t("Money"),
             tabBarIcon: ({ color, focused }) => (
-              <TabIcon name="local-shipping" color={color} focused={focused} />
+              <TabIcon name="account-balance-wallet" color={color} focused={focused} />
             ),
           }}
         />
@@ -119,12 +124,28 @@ export default function TabLayout() {
             ),
           }}
         />
+        {/* Still reachable from Capture, Today and More; no longer in the tab bar. */}
+        <Tabs.Screen name="reports" options={{ href: null, title: t("Reports") }} />
+        <Tabs.Screen name="requests" options={{ href: null, title: t("Requests") }} />
       </Tabs>
     </AuthGate>
   );
 }
 
 const styles = StyleSheet.create({
+  captureSlot: { flex: 1, alignItems: "center", justifyContent: "flex-start" },
+  captureButton: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -22,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
   iconWrap: {
     width: 48,
     height: 30,
