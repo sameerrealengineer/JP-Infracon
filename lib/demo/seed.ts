@@ -95,9 +95,11 @@ export async function seedDemoData(db: DemoDb): Promise<void> {
     clientMutationId: mutationId(),
   });
   // The demo shows every module (a real company starts with the A-Class set).
-  await db
-    .insert(organizationSettings)
-    .values({ organizationId: first.organizationId, disabledModules: "[]" });
+  await db.insert(organizationSettings).values({
+    organizationId: first.organizationId,
+    disabledModules: "[]",
+    journeyState: '{"mode":"all"}',
+  });
   const workspace: DemoWorkspace = {
     organizationId: first.organizationId,
     projectId: first.projectId,

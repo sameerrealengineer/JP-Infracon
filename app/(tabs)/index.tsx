@@ -38,6 +38,7 @@ import { getSiteStatusTone, type SiteStatus } from "@/lib/jp/domain";
 import { prettyRole } from "@/lib/jp/site-admin-policy";
 import { inboxMeta } from "@/components/jp/inbox-meta";
 import { delegationBundles, timeLeft } from "@/lib/jp/delegation-policy";
+import { JourneyCard } from "@/components/jp/journey-card";
 import { badgeCounts, quickActions, visibleGroups, type HomeModule } from "@/lib/jp/home-layout";
 import { trpc } from "@/lib/trpc";
 import { useT } from "@/lib/i18n";
@@ -142,6 +143,8 @@ export default function HomeScreen() {
             </Text>
           </Card>
         ))}
+
+        <JourneyCard />
 
         <HeroCard>
           <Text style={styles.heroKicker}>{t("TODAY'S BRIEF")}</Text>

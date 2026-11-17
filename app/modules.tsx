@@ -20,6 +20,7 @@ import {
 } from "@/components/jp/ui";
 import { useColors } from "@/hooks/use-colors";
 import type { ModuleKey } from "@/lib/jp/modules";
+import { JOURNEY } from "@/lib/jp/journey";
 import { trpc } from "@/lib/trpc";
 
 type Suggestion = {
@@ -30,11 +31,18 @@ type Suggestion = {
   reasons: { module: ModuleKey; reason: string }[];
 };
 
+/** The journey step a module belongs to (null for extras). */
+function stepOf(key: string) {
+  return JOURNEY.find((step) => (step.modules as readonly string[]).includes(key))?.level ?? null;
+}
+
 export default function ModulesScreen() {
   const { t } = useT();
   const colors = useColors();
   const utils = trpc.useUtils();
   const settings = trpc.jp.modules.settings.useQuery();
+  const journey = trpc.jp.journey.status.useQuery(undefined, { retry: false });
+  const setMode = trpc.jp.journey.setMode.useMutation();
   const update = trpc.jp.modules.update.useMutation();
   const suggest = trpc.jp.modules.suggest.useMutation();
   // The assistant can propose a change (?turnOn=crm&turnOff=issues); it shows as unsaved
@@ -121,6 +129,38 @@ export default function ModulesScreen() {
             title={t("Modules")}
             subtitle="Use only what your company needs. A module turned off is hidden for everyone; its records stay safe and come back when you turn it on."
           />
+          {journey.data?.canManage ? (
+            <Card>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "800" }}>
+                    {t("Step-by-step mode")}
+                  </Text>
+                  <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18 }}>
+                    {journey.data.mode === "guided"
+                      ? t(
+                          "On: modules open one step at a time as your team uses the app (step {level} of {total}).",
+                          {
+                            level: journey.data.level,
+                            total: journey.data.total,
+                          },
+                        )
+                      : t("Off: every module switched on below is open now.")}
+                  </Text>
+                </View>
+                <Switch
+                  accessibilityLabel={t("Step-by-step mode")}
+                  value={journey.data.mode === "guided"}
+                  disabled={setMode.isPending}
+                  onValueChange={(on) =>
+                    void setMode
+                      .mutateAsync({ mode: on ? "guided" : "all" })
+                      .then(() => utils.invalidate())
+                  }
+                />
+              </View>
+            </Card>
+          ) : null}
           {settings.error ? (
             <InlineError message={settings.error.message} onRetry={() => void settings.refetch()} />
           ) : null}
@@ -219,6 +259,15 @@ export default function ModulesScreen() {
                           {row.title}
                         </Text>
                         <Text style={[styles.meta, { color: colors.muted }]}>{row.detail}</Text>
+                        {journey.data?.mode === "guided" && !row.enabled && stepOf(row.key) ? (
+                          <Text style={[styles.meta, { color: colors.accent }]}>
+                            {stepOf(row.key)! > journey.data.level
+                              ? t("🔒 Opens at step {level}; switch on to open now", {
+                                  level: stepOf(row.key)!,
+                                })
+                              : ""}
+                          </Text>
+                        ) : null}
                         <Text style={[styles.meta, { color: colors.muted }]}>
                           {row.actionsLast30Days
                             ? `${row.actionsLast30Days} actions in the last 30 days`

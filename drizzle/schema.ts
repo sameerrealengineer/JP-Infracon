@@ -1944,6 +1944,8 @@ export const organizationSettings = mysqlTable("organization_settings", {
     .references(() => organizations.id, { onDelete: "restrict" }),
   /** JSON array of module keys that are turned off (see lib/jp/modules.ts). */
   disabledModules: text("disabledModules"),
+  /** Step-by-step mode (lib/jp/journey.ts): JSON {mode, early}; null = guided. */
+  journeyState: text("journeyState"),
   updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -13,7 +13,8 @@ import {
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { aiJson, geminiKey, rateLimit, sarvamKey } from "./ai";
-import { disabledModulesFor, forgetModuleSettings } from "./module-settings";
+import { disabledModulesFor, forgetModuleSettings, journeyFor } from "./module-settings";
+import { EXTRA_MODULES, lockedByJourney } from "../../lib/jp/journey";
 import {
   MODULES,
   MODULE_KEYS,
@@ -176,8 +177,22 @@ export const modulesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = requireDb(await getDb());
       const membership = await requireLeader(db, ctx.user.id);
-      const disabled = cleanModuleList(input.disabled);
+      const wanted = cleanModuleList(input.disabled);
       const before = await disabledModulesFor(membership.organizationId);
+      // Step-by-step mode: modules still waiting for their step are not the leader's own "off";
+      // ones the leader switches on now are opened early.
+      const journey = await journeyFor(membership.organizationId);
+      const waiting =
+        journey.journey.mode === "guided" ? lockedByJourney(journey.level, journey.journey) : [];
+      const early = cleanModuleList([
+        ...journey.journey.early,
+        ...waiting.filter((key) => !wanted.includes(key)),
+      ]);
+      const disabled = wanted.filter(
+        // Extras the leader leaves off stay their own choice (also if the mode is switched off).
+        (key) => !waiting.includes(key) || EXTRA_MODULES.includes(key),
+      );
+      const journeyState = JSON.stringify({ mode: journey.journey.mode, early });
       const [anySite] = await db
         .select({ id: sites.id })
         .from(sites)
@@ -190,10 +205,15 @@ export const modulesRouter = router({
           .values({
             organizationId: membership.organizationId,
             disabledModules: JSON.stringify(disabled),
+            journeyState,
             updatedBy: ctx.user.id,
           })
           .onDuplicateKeyUpdate({
-            set: { disabledModules: JSON.stringify(disabled), updatedBy: ctx.user.id },
+            set: {
+              disabledModules: JSON.stringify(disabled),
+              journeyState,
+              updatedBy: ctx.user.id,
+            },
           });
         await tx.insert(auditEvents).values({
           id: randomUUID(),
