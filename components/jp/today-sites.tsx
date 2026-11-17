@@ -58,6 +58,16 @@ export function TodaySites() {
             <Text style={[styles.project, { color: colors.muted }]} numberOfLines={1}>
               {site.project}
             </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push(`/site-diary?siteId=${site.siteId}` as never)}
+              style={styles.step}
+            >
+              <MaterialIcons name="menu-book" size={20} color={colors.primary} />
+              <Text style={[styles.stepText, { color: colors.primary }]}>
+                {t("Open site diary")}
+              </Text>
+            </Pressable>
             {steps.map((step) => (
               <Pressable
                 key={step.label}

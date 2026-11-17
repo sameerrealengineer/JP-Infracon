@@ -18,6 +18,14 @@ const q = (siteId: string) => `siteId=${encodeURIComponent(siteId)}`;
 
 export const CAPTURE_ACTIONS: readonly CaptureAction[] = [
   {
+    key: "diary",
+    title: "Site diary",
+    hint: "Today's page: reports, people, notes",
+    icon: "menu-book",
+    anyOf: ["dpr.view", "dpr.create"],
+    route: (s) => `/site-diary?${q(s)}`,
+  },
+  {
     key: "attendance",
     title: "Attendance",
     hint: "Who came today",
@@ -80,6 +88,14 @@ export const CAPTURE_ACTIONS: readonly CaptureAction[] = [
     icon: "inventory",
     anyOf: ["inventory.transact"],
     route: (s) => `/inventory?${q(s)}`,
+  },
+  {
+    key: "hindrance",
+    title: "Hindrance",
+    hint: "Work stopped or slowed",
+    icon: "block",
+    anyOf: ["dpr.create"],
+    route: (s) => `/hindrances?${q(s)}`,
   },
   {
     key: "issue",

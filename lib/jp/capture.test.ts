@@ -14,7 +14,14 @@ describe("capture actions", () => {
     const actions = captureActionsFor(
       new Set(["site.view", "attendance.mark", "dpr.create", "material.request"]),
     );
-    expect(actions.map((a) => a.key)).toEqual(["attendance", "dpr", "material", "leave"]);
-    expect(actions[1]!.route("abc")).toBe("/report-editor?siteId=abc&kind=DPR");
+    expect(actions.map((a) => a.key)).toEqual([
+      "diary",
+      "attendance",
+      "dpr",
+      "material",
+      "hindrance",
+      "leave",
+    ]);
+    expect(actions[2]!.route("abc")).toBe("/report-editor?siteId=abc&kind=DPR");
   });
 });

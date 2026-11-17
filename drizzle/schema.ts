@@ -3438,3 +3438,67 @@ export const approvalLimits = mysqlTable(
     ),
   }),
 );
+
+// Hindrance register (lib/jp/hindrance-domain.ts): what stopped or slowed the work and for how
+// long, with the letter to the department — the basis for an extension of time.
+export const hindrances = mysqlTable(
+  "hindrances",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    code: varchar("code", { length: 40 }).notNull(),
+    category: varchar("category", { length: 40 }).notNull(),
+    description: text("description").notNull(),
+    startDate: date("startDate", { mode: "string" }).notNull(),
+    endDate: date("endDate", { mode: "string" }),
+    affectsWork: mysqlEnum("affectsWork", ["Full stop", "Partial"]).default("Full stop").notNull(),
+    letterReference: varchar("letterReference", { length: 160 }),
+    letterDate: date("letterDate", { mode: "string" }),
+    status: mysqlEnum("status", ["Open", "Closed"]).default("Open").notNull(),
+    closeNote: text("closeNote"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    closedBy: int("closedBy").references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    hindranceSiteCodeUnique: uniqueIndex("hindrance_site_code_uq").on(table.siteId, table.code),
+    hindranceSiteStartIndex: index("hindrance_site_start_idx").on(table.siteId, table.startDate),
+  }),
+);
+
+// Site diary notes: visitors, instructions from the department engineer, meetings and general
+// notes for a site and day (the site order book on the phone).
+export const siteDiaryNotes = mysqlTable(
+  "site_diary_notes",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    noteDate: date("noteDate", { mode: "string" }).notNull(),
+    kind: mysqlEnum("kind", ["Visitor", "Instruction", "Meeting", "Weather", "General"]).notNull(),
+    personName: varchar("personName", { length: 180 }),
+    personRole: varchar("personRole", { length: 120 }),
+    text: text("text").notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    diaryNoteSiteDateIndex: index("diary_note_site_date_idx").on(table.siteId, table.noteDate),
+  }),
+);

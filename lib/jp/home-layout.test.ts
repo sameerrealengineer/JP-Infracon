@@ -11,8 +11,8 @@ describe("home layout", () => {
   it("shows only modules the person's permissions allow", () => {
     const groups = visibleGroups(access(["dpr.create", "issue.view"]));
     const keys = groups.flatMap((group) => group.modules.map((module) => module.key));
-    expect(keys).toEqual(["reports", "issues"]);
-    expect(groups.map((group) => group.key)).toEqual(["site"]);
+    expect(keys).toEqual(["site-diary", "reports", "issues"]);
+    expect(groups.map((group) => group.key)).toEqual(["insights", "site"]);
     expect(visibleGroups(access(["crm.view", "billing.view"])).map((group) => group.key)).toEqual([
       "business",
     ]);
@@ -39,5 +39,10 @@ describe("home layout", () => {
     expect(
       badgeCounts(["report.review", "report.returned", "task.overdue", "cash.post", "unknown"]),
     ).toEqual({ reports: 2, schedule: 1, finance: 1 });
+  });
+
+  it("shows the insight tools to anyone on a site", () => {
+    const keys = visibleGroups(access(["site.view"])).flatMap((g) => g.modules.map((m) => m.key));
+    expect(keys).toEqual(expect.arrayContaining(["analytics", "civil-tools", "day-summary"]));
   });
 });
