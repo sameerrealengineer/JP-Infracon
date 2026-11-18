@@ -59,6 +59,20 @@ const MONEY_LINKS: {
     anyOf: ["purchase.view"],
   },
   {
+    title: "Tenders & contracts",
+    detail: "EMD, bank guarantees, deposits, extensions",
+    icon: "gavel",
+    route: "/contracts",
+    anyOf: ["contract.view"],
+  },
+  {
+    title: "Department MB",
+    detail: "Measurements signed by the department",
+    icon: "straighten",
+    route: "/department-mb",
+    anyOf: ["billing.view"],
+  },
+  {
     title: "Client billing",
     detail: "RA bills to the department, receipts",
     icon: "request-quote",

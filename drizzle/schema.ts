@@ -3502,3 +3502,160 @@ export const siteDiaryNotes = mysqlTable(
     diaryNoteSiteDateIndex: index("diary_note_site_date_idx").on(table.siteId, table.noteDate),
   }),
 );
+
+// Tenders (lib/jp/contract-domain.ts): NIT, estimate, EMD, dates, quoted value and result.
+export const tenders = mysqlTable(
+  "tenders",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    code: varchar("code", { length: 32 }).notNull(),
+    nitNumber: varchar("nitNumber", { length: 120 }).notNull(),
+    department: varchar("department", { length: 180 }).notNull(),
+    workName: varchar("workName", { length: 300 }).notNull(),
+    location: varchar("location", { length: 180 }),
+    estimateMinor: money("estimateMinor"),
+    quotedMinor: money("quotedMinor"),
+    bidDueDate: date("bidDueDate", { mode: "string" }),
+    bidOpeningDate: date("bidOpeningDate", { mode: "string" }),
+    bidValidityDate: date("bidValidityDate", { mode: "string" }),
+    status: mysqlEnum("status", [
+      "Preparing",
+      "Submitted",
+      "Opened",
+      "Won",
+      "Lost",
+      "Withdrawn",
+      "Cancelled",
+    ])
+      .default("Preparing")
+      .notNull(),
+    rank: varchar("rank", { length: 20 }),
+    resultNote: text("resultNote"),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    tenderOrgCodeUnique: uniqueIndex("tender_org_code_uq").on(table.organizationId, table.code),
+  }),
+);
+
+// Guarantees and deposits: EMD, performance guarantee, security deposit, advance BG — money
+// locked until released, with the expiry that must be renewed in time.
+export const guarantees = mysqlTable(
+  "guarantees",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    tenderId: varchar("tenderId", { length: 36 }).references(() => tenders.id, {
+      onDelete: "restrict",
+    }),
+    projectId: varchar("projectId", { length: 36 }).references(() => projects.id, {
+      onDelete: "restrict",
+    }),
+    kind: varchar("kind", { length: 40 }).notNull(),
+    instrument: varchar("instrument", { length: 40 }).notNull(),
+    bankName: varchar("bankName", { length: 160 }),
+    instrumentNumber: varchar("instrumentNumber", { length: 120 }),
+    beneficiary: varchar("beneficiary", { length: 180 }),
+    amountMinor: money("amountMinor").notNull(),
+    issueDate: date("issueDate", { mode: "string" }).notNull(),
+    expiryDate: date("expiryDate", { mode: "string" }),
+    claimDate: date("claimDate", { mode: "string" }),
+    status: mysqlEnum("status", ["Active", "Released", "Encashed"]).default("Active").notNull(),
+    closedOn: date("closedOn", { mode: "string" }),
+    note: text("note"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    guaranteeOrgExpiryIndex: index("guarantee_org_expiry_idx").on(
+      table.organizationId,
+      table.expiryDate,
+    ),
+  }),
+);
+
+// Extensions of time asked from and granted by the department, per project.
+export const timeExtensions = mysqlTable("time_extensions", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  organizationId: varchar("organizationId", { length: 36 })
+    .notNull()
+    .references(() => organizations.id, { onDelete: "restrict" }),
+  projectId: varchar("projectId", { length: 36 })
+    .notNull()
+    .references(() => projects.id, { onDelete: "restrict" }),
+  stipulatedCompletion: date("stipulatedCompletion", { mode: "string" }).notNull(),
+  requestedDays: int("requestedDays").notNull(),
+  grantedDays: int("grantedDays"),
+  basis: text("basis").notNull(),
+  letterReference: varchar("letterReference", { length: 160 }),
+  requestDate: date("requestDate", { mode: "string" }).notNull(),
+  decisionDate: date("decisionDate", { mode: "string" }),
+  decisionReference: varchar("decisionReference", { length: 160 }),
+  status: mysqlEnum("status", ["Requested", "Granted", "Rejected"]).default("Requested").notNull(),
+  clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+  createdBy: int("createdBy")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+// Department measurement book (lib/jp/dept-mb.ts): work measured against the contract BOQ and
+// signed by the department's engineer; only signed quantities may be billed to the department.
+export const deptMeasurements = mysqlTable(
+  "dept_measurements",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    contractItemId: varchar("contractItemId", { length: 36 })
+      .notNull()
+      .references(() => contractItems.id, { onDelete: "restrict" }),
+    measuredOn: date("measuredOn", { mode: "string" }).notNull(),
+    location: varchar("location", { length: 200 }).notNull(),
+    nos: varchar("nos", { length: 20 }),
+    length: varchar("length", { length: 20 }),
+    breadth: varchar("breadth", { length: 20 }),
+    depth: varchar("depth", { length: 20 }),
+    deduction: mysqlEnum("deduction", ["Yes", "No"]).default("No").notNull(),
+    quantityThousandths: money("quantityThousandths").notNull(),
+    status: mysqlEnum("status", ["Recorded", "Signed", "Rejected"]).default("Recorded").notNull(),
+    mbReference: varchar("mbReference", { length: 80 }),
+    signedByName: varchar("signedByName", { length: 180 }),
+    signedByDesignation: varchar("signedByDesignation", { length: 120 }),
+    signedOn: date("signedOn", { mode: "string" }),
+    rejectReason: text("rejectReason"),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    signedRecordedBy: int("signedRecordedBy").references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    deptMbProjectItemIndex: index("dept_mb_project_item_idx").on(
+      table.projectId,
+      table.contractItemId,
+    ),
+  }),
+);

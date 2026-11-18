@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { approverRole, assertWithinLimit } from "./approval-limits";
+import { signedMbLimits } from "./dept-mb";
+import { signedLimitProblem } from "../../lib/jp/dept-mb";
 import { and, asc, desc, eq, inArray, like, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -528,6 +530,8 @@ const billsRouter = router({
           .from(contractItems)
           .where(and(eq(contractItems.projectId, project.id), eq(contractItems.status, "Active")));
         const billed = await billedToDate(db, project.id);
+        // A project that keeps its department MB in the app bills only signed quantities.
+        const signedLimits = await signedMbLimits(db, project.id);
         const seen = new Set<string>();
         const lines = input.lines.map((line, index) => {
           const item = items.find((row) => row.id === line.contractItemId);
@@ -543,6 +547,15 @@ const billsRouter = router({
             thisBill: quantity,
           });
           if (problem) bad(problem.message);
+          if (signedLimits) {
+            const limit = signedLimitProblem({
+              description: `${item.itemCode} ${item.description}`,
+              signed: signedLimits.get(item.id) ?? 0n,
+              previouslyBilled: billed.get(item.id) ?? 0n,
+              thisBill: quantity,
+            });
+            if (limit) bad(limit);
+          }
           return { item, quantity, rate: BigInt(item.rateMinor) };
         });
         const totals = billTotals({

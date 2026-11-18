@@ -68,6 +68,8 @@ import { analyticsRouter } from "./analytics";
 import { journeyRouter } from "./journey";
 import { todayRouter } from "./today";
 import { diaryRouter } from "./diary";
+import { contractsRouter } from "./contracts";
+import { deptMbRouter } from "./dept-mb";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -233,6 +235,8 @@ export const jpRouter = router({
   journey: journeyRouter,
   today: todayRouter,
   diary: diaryRouter,
+  contracts: contractsRouter,
+  deptMb: deptMbRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

@@ -56,6 +56,7 @@ export function isCompanyLevel(key: string) {
     key === "user.manage" ||
     key.startsWith("crm.") ||
     key.startsWith("billing.") ||
+    key.startsWith("contract.") ||
     key.startsWith("accounts.")
   );
 }

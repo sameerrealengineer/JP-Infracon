@@ -69,6 +69,8 @@ export function formatDailySummary(input: {
   date: string;
   sites: SiteDay[];
   waitingForYou: number;
+  /** Company alerts for leaders, e.g. guarantees expiring. */
+  alerts?: string[];
 }): string {
   const out: string[] = [`JP Infracon — day summary ${input.date}`, `For ${input.personName}`];
   let moneyAll = 0n;
@@ -94,6 +96,10 @@ export function formatDailySummary(input: {
   }
   if (!input.sites.length) out.push("", "No sites to report.");
   out.push("");
+  if (input.alerts?.length) {
+    for (const alert of input.alerts) out.push(`⚠ ${alert}`);
+    out.push("");
+  }
   if (moneyAll > 0n) out.push(`Money out today: ${rupees(moneyAll)}`);
   out.push(
     input.waitingForYou

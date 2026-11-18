@@ -101,6 +101,12 @@ export const MODULES = [
     detail: "Contracts, RA bills with GST, receipts, receivables",
     prefixes: ["billing."],
   },
+  {
+    key: "contracts",
+    title: "Tenders & contracts",
+    detail: "Tenders, EMD, bank guarantees, security deposits, time extensions",
+    prefixes: ["contract."],
+  },
 ] as const;
 
 export type ModuleKey = (typeof MODULES)[number]["key"];
@@ -137,6 +143,7 @@ export const A_CLASS_ON: readonly ModuleKey[] = [
   "payroll",
   "documents",
   "billing",
+  "contracts",
 ];
 
 /** Modules off for a company that has never saved its own choice. */
@@ -161,7 +168,7 @@ export function isPermissionDisabled(permissionKey: string, disabled: readonly M
 }
 
 const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
-  reports: ["report."],
+  reports: ["report.", "diary.", "hindrance."],
   materials: ["material_request."],
   issues: ["issue."],
   attendance: ["attendance."],
@@ -177,6 +184,7 @@ const AUDIT_PREFIXES: Record<ModuleKey, readonly string[]> = {
   accounts: ["statutory_deposit."],
   crm: ["crm."],
   billing: ["billing."],
+  contracts: ["tender.", "guarantee.", "extension."],
 };
 
 /** Which module an audit action belongs to, for usage counts. */

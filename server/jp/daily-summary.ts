@@ -19,6 +19,7 @@ import {
 import {
   formatDailySummary,
   istClock,
+  rupees,
   summaryDue,
   type MoneyLine,
   type SiteDay,
@@ -29,6 +30,7 @@ import { getDb } from "../db";
 import { getAccessibleSites } from "./access";
 import { siteCapabilities } from "./capabilities";
 import { buildInbox } from "./inbox";
+import { guaranteesNeedingAction } from "./contracts";
 import { sendWhatsAppText } from "./notify";
 
 const LEADERS = ["owner", "director", "admin"];
@@ -165,11 +167,30 @@ export async function summaryFor(db: Db, user: User, date: string): Promise<stri
     };
   });
   const inbox = await buildInbox(db, user.id, caps, { inboxVersion: 3 }).catch(() => null);
+  // Leaders also hear about guarantees that expire within 30 days or have expired.
+  const alerts: string[] = [];
+  const orgIds = [
+    ...new Set(
+      chosen
+        .filter(
+          (site) => user.role === "super_admin" || LEADERS.includes(String(site.organizationRole)),
+        )
+        .map((site) => site.organizationId),
+    ),
+  ];
+  for (const organizationId of orgIds) {
+    const due = await guaranteesNeedingAction({ db, organizationId }).catch(() => []);
+    for (const row of due.slice(0, 5))
+      alerts.push(
+        `${row.kind} ${rupees(row.amountMinor)}${row.bank ? ` (${row.bank})` : ""} ${row.state === "Expired" ? "has expired" : "expires"} on ${row.expiryDate}`,
+      );
+  }
   return formatDailySummary({
     personName: user.name ?? "you",
     date,
     sites: days,
     waitingForYou: inbox?.items.length ?? 0,
+    alerts,
   });
 }
 

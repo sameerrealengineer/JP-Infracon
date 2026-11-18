@@ -31,8 +31,9 @@ export const JOURNEY: readonly JourneyStep[] = [
   {
     level: 1,
     title: "Site and people",
-    about: "Add your site and onboard labour, mistri, supervisor and driver.",
-    modules: ["workforce"],
+    about:
+      "Add your site, onboard labour, mistri, supervisor and driver, and keep tenders and guarantees.",
+    modules: ["workforce", "contracts"],
     goal: { label: "Add 3 workers", count: (c) => (c.sites > 0 ? c.workers : 0), target: 3 },
   },
   {

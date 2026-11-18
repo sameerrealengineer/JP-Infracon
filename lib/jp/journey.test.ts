@@ -28,7 +28,7 @@ describe("step-by-step journey", () => {
   it("starts at step 1 with only Workforce open", () => {
     expect(journeyLevel(zero)).toBe(1);
     const locked = lockedByJourney(1, parseJourney(null));
-    expect(MODULE_KEYS.filter((key) => !locked.includes(key))).toEqual(["workforce"]);
+    expect(MODULE_KEYS.filter((key) => !locked.includes(key))).toEqual(["workforce", "contracts"]);
   });
 
   it("opens each step only after the previous goal is met, in order", () => {

@@ -84,6 +84,22 @@ export const HOME_GROUPS: readonly HomeGroup[] = [
     title: "Business",
     modules: [
       {
+        key: "contracts",
+        title: "Tenders & contracts",
+        icon: "gavel",
+        tone: "accent",
+        route: "/contracts",
+        anyOf: ["contract.view"],
+      },
+      {
+        key: "department-mb",
+        title: "Department MB",
+        icon: "straighten",
+        tone: "success",
+        route: "/department-mb",
+        anyOf: ["billing.view"],
+      },
+      {
         key: "crm",
         title: "Clients & leads",
         icon: "handshake",

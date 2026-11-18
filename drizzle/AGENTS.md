@@ -44,6 +44,8 @@ pnpm db:push   # drizzle-kit generate + migrate against DATABASE_URL in one step
 - Migration 0036 (15 November 2026) adds `project_assignments` (person on a whole project with a role, Active/Revoked, effective dated) and `approval_limits` (ceiling in paise per company, role and area; unique company+role+area). New tables only; code reading them tolerates their absence before the migration runs.
 - Migration 0037 (17 November 2026) adds nullable `journeyState` (text) to `organization_settings` for step-by-step mode. Code reading it falls back to the old columns before the migration runs.
 - Migration 0038 (18 November 2026) adds `hindrances` (hindrance register, unique site+code) and `site_diary_notes` (new tables only).
+- Migration 0039 (18 November 2026) adds `tenders`, `guarantees` and `time_extensions` (new tables only).
+- Migration 0040 (18 November 2026) adds `dept_measurements` (department MB; new table only).
 - Do not run `pnpm db:push` casually: it generates and migrates against whatever `DATABASE_URL` points at in one step. Production migrations go through a deploy, never `db:push`.
 - `RUN_MIGRATIONS=true` (`server/_core/migrate.ts`) applies every pending migration in `drizzle/` when the API starts. Production sets it in `deploy/docker-compose.yml`, and `scripts/deploy-azure.sh` takes a backup first. Use it elsewhere only on a database you have backed up.
 - The database exposes no CHECK constraints, so value rules live in the API.
