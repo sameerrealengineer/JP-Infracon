@@ -19,6 +19,7 @@ describe("capture actions", () => {
       "attendance",
       "dpr",
       "material",
+      "cubes",
       "hindrance",
       "leave",
     ]);

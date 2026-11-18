@@ -216,3 +216,16 @@ Delivered in source (typecheck, lint with 0 errors, 121 unit tests, API build, w
 - Android Studio/Expo project opens and builds from documented instructions; debug APK and signed release APK/AAB are delivery artifacts only after actual builds succeed with client credentials. Document target Android SDK/minimum OS before release QA; do not claim device testing absent evidence.
 - Automated tests cover permission resolver, balance calculators, payment allocations, stock movements, rescheduling, status transitions, currency formatting, offline queue, API authorisation/validation/idempotency, database constraints/transactions, Android UI states, and representative end-to-end workflows.
 - Obtain legal/accounting/compliance review for applicable privacy, Aadhaar, payroll/labour, tax, retention, safety and accounting requirements before production; this product build does not constitute legal or tax validation.
+
+## 13. Production-grade redesign (spec 0002) — BUILT, awaiting client use
+
+Built and tested on 18 Nov 2026; live check with real client records still pending (the live server was wiped at the client's request and holds no sample data).
+
+- Phase 1 shell: Today / Projects / + Capture / Money / More; Today on site (`lib/demo/today.test.ts`, `lib/jp/capture.test.ts`).
+- Phase 2 site diary and hindrance register with EOT days (`lib/demo/diary.test.ts`, `lib/jp/hindrance-domain.test.ts`).
+- Phase 3 tenders, guarantees (30-day expiry warning, 11 PM summary), time extensions (`lib/demo/contracts.test.ts`, `lib/jp/contract-domain.test.ts`).
+- Phase 4 department MB with the engineer's signature; RA bills refuse unsigned quantities (`lib/demo/dept-mb.test.ts`, `lib/jp/dept-mb.test.ts`).
+- Phase 5 quality test register (cubes 7/28 days, IS 456 per-set check) and cement/steel reconciliation (`lib/demo/quality.test.ts`, `lib/jp/quality-domain.test.ts`).
+- Phase 6 plant & machinery: logsheets, fuel vs norm, hire, service (`lib/demo/plant.test.ts`, `lib/jp/plant-domain.test.ts`).
+- Phase 7 cash-flow forecast by week (`lib/demo/cashflow.test.ts`, `lib/jp/cashflow.test.ts`).
+- Open: real-device check of the new screens with the client; Hindi/Odia review by a native speaker.

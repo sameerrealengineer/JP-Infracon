@@ -64,8 +64,8 @@ export const JOURNEY: readonly JourneyStep[] = [
   {
     level: 5,
     title: "Materials",
-    about: "Ask for material from site and keep stock in the store.",
-    modules: ["materials", "inventory"],
+    about: "Ask for material from site, keep stock in the store, and log machines and fuel.",
+    modules: ["materials", "inventory", "plant"],
     goal: { label: "Send a material request", count: (c) => c.materialRequests, target: 1 },
   },
   {

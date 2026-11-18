@@ -1,6 +1,6 @@
 # 0002 — Production-grade redesign (A-Class works contractor)
 
-Status: proposed (18 Nov 2026). Data on the live server was wiped on 18 Nov 2026 at the
+Status: all 7 phases built (18 Nov 2026). Data on the live server was wiped on 18 Nov 2026 at the
 user's request (backup `~/backups/jp-2026-11-17.sql.gz`, files archive
 `~/backups/files-before-reset-2026-11-18.tar.gz`). No seed, demo or sample data goes onto the
 live server from now on.

@@ -3659,3 +3659,141 @@ export const deptMeasurements = mysqlTable(
     ),
   }),
 );
+
+// Quality test register (lib/jp/quality-domain.ts): cube sets (7 and 28 days), slump, steel,
+// bricks, soil, water tests per site, with due dates and recorded results.
+export const qualityTests = mysqlTable(
+  "quality_tests",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    setId: varchar("setId", { length: 36 }),
+    testType: varchar("testType", { length: 60 }).notNull(),
+    grade: varchar("grade", { length: 20 }),
+    location: varchar("location", { length: 200 }).notNull(),
+    sampledOn: date("sampledOn", { mode: "string" }).notNull(),
+    dueDate: date("dueDate", { mode: "string" }),
+    minValue: varchar("minValue", { length: 20 }),
+    maxValue: varchar("maxValue", { length: 20 }),
+    results: varchar("results", { length: 200 }),
+    pass: mysqlEnum("pass", ["Yes", "No"]),
+    verdict: varchar("verdict", { length: 300 }),
+    labName: varchar("labName", { length: 160 }),
+    reportReference: varchar("reportReference", { length: 120 }),
+    status: mysqlEnum("status", ["Pending", "Done"]).default("Pending").notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    resultBy: int("resultBy").references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    qualitySiteDueIndex: index("quality_site_due_idx").on(table.siteId, table.dueDate),
+  }),
+);
+
+// Cement and steel consumption per unit of a contract item, for reconciliation.
+export const materialCoefficients = mysqlTable(
+  "material_coefficients",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    projectId: varchar("projectId", { length: 36 })
+      .notNull()
+      .references(() => projects.id, { onDelete: "restrict" }),
+    contractItemId: varchar("contractItemId", { length: 36 })
+      .notNull()
+      .references(() => contractItems.id, { onDelete: "restrict" }),
+    material: mysqlEnum("material", ["Cement", "Steel"]).notNull(),
+    perUnitThousandths: money("perUnitThousandths").notNull(),
+    updatedBy: int("updatedBy").references(() => users.id, { onDelete: "restrict" }),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    coefficientItemMaterialUnique: uniqueIndex("coefficient_item_material_uq").on(
+      table.contractItemId,
+      table.material,
+    ),
+  }),
+);
+
+// Plant & machinery (lib/jp/plant-domain.ts): owned or hired equipment with hire terms, fuel norm
+// and service interval; one logsheet per machine per day.
+export const equipment = mysqlTable(
+  "equipment",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    code: varchar("code", { length: 20 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    equipmentType: varchar("equipmentType", { length: 60 }).notNull(),
+    registrationNumber: varchar("registrationNumber", { length: 40 }),
+    ownership: mysqlEnum("ownership", ["Owned", "Hired"]).notNull(),
+    ownerName: varchar("ownerName", { length: 180 }),
+    hireBasis: mysqlEnum("hireBasis", ["Hour", "Day", "Month"]),
+    hireRateMinor: money("hireRateMinor"),
+    hireFrom: date("hireFrom", { mode: "string" }),
+    hireTo: date("hireTo", { mode: "string" }),
+    fuelNormThousandths: money("fuelNormThousandths"),
+    serviceIntervalHours: int("serviceIntervalHours"),
+    lastServiceMeterThousandths: money("lastServiceMeterThousandths"),
+    siteId: varchar("siteId", { length: 36 }).references(() => sites.id, { onDelete: "restrict" }),
+    status: mysqlEnum("status", ["Working", "Idle", "Breakdown", "Off-hired", "Disposed"])
+      .default("Working")
+      .notNull(),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    equipmentOrgCodeUnique: uniqueIndex("equipment_org_code_uq").on(
+      table.organizationId,
+      table.code,
+    ),
+  }),
+);
+
+export const equipmentLogs = mysqlTable(
+  "equipment_logs",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    organizationId: varchar("organizationId", { length: 36 })
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    equipmentId: varchar("equipmentId", { length: 36 })
+      .notNull()
+      .references(() => equipment.id, { onDelete: "restrict" }),
+    siteId: varchar("siteId", { length: 36 })
+      .notNull()
+      .references(() => sites.id, { onDelete: "restrict" }),
+    logDate: date("logDate", { mode: "string" }).notNull(),
+    startMeterThousandths: money("startMeterThousandths").notNull(),
+    endMeterThousandths: money("endMeterThousandths").notNull(),
+    idleThousandths: money("idleThousandths").notNull(),
+    fuelThousandths: money("fuelThousandths").notNull(),
+    operatorName: varchar("operatorName", { length: 160 }),
+    workDone: varchar("workDone", { length: 300 }),
+    clientMutationId: varchar("clientMutationId", { length: 64 }).notNull().unique(),
+    createdBy: int("createdBy")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    equipmentLogDayUnique: uniqueIndex("equipment_log_day_uq").on(table.equipmentId, table.logDate),
+  }),
+);

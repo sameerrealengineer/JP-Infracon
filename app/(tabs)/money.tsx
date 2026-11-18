@@ -59,6 +59,13 @@ const MONEY_LINKS: {
     anyOf: ["purchase.view"],
   },
   {
+    title: "Cash-flow forecast",
+    detail: "Money in and out by week, where cash runs short",
+    icon: "waterfall-chart",
+    route: "/cashflow",
+    anyOf: ["contract.view"],
+  },
+  {
     title: "Tenders & contracts",
     detail: "EMD, bank guarantees, deposits, extensions",
     icon: "gavel",

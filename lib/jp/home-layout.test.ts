@@ -14,6 +14,7 @@ describe("home layout", () => {
     expect(keys).toEqual(["site-diary", "reports", "issues"]);
     expect(groups.map((group) => group.key)).toEqual(["insights", "site"]);
     expect(visibleGroups(access(["crm.view", "billing.view"])).map((group) => group.key)).toEqual([
+      "insights",
       "business",
     ]);
   });

@@ -90,12 +90,28 @@ export const CAPTURE_ACTIONS: readonly CaptureAction[] = [
     route: (s) => `/inventory?${q(s)}`,
   },
   {
+    key: "cubes",
+    title: "Cube test",
+    hint: "Cubes cast, test results",
+    icon: "science",
+    anyOf: ["dpr.create"],
+    route: (s) => `/quality?${q(s)}`,
+  },
+  {
     key: "hindrance",
     title: "Hindrance",
     hint: "Work stopped or slowed",
     icon: "block",
     anyOf: ["dpr.create"],
     route: (s) => `/hindrances?${q(s)}`,
+  },
+  {
+    key: "machine",
+    title: "Machine logsheet",
+    hint: "Hours, fuel, operator",
+    icon: "agriculture",
+    anyOf: ["plant.log"],
+    route: () => "/plant",
   },
   {
     key: "issue",

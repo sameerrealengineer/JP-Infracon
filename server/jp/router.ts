@@ -70,6 +70,9 @@ import { todayRouter } from "./today";
 import { diaryRouter } from "./diary";
 import { contractsRouter } from "./contracts";
 import { deptMbRouter } from "./dept-mb";
+import { qualityRouter } from "./quality";
+import { plantRouter } from "./plant";
+import { cashflowRouter } from "./cashflow";
 import { workerRouter } from "./worker";
 import { reportsRouter } from "./reports";
 import { buildInbox } from "./inbox";
@@ -237,6 +240,9 @@ export const jpRouter = router({
   diary: diaryRouter,
   contracts: contractsRouter,
   deptMb: deptMbRouter,
+  quality: qualityRouter,
+  plant: plantRouter,
+  cashflow: cashflowRouter,
   worker: workerRouter,
   feedback: reportsRouter,
   workspace: router({

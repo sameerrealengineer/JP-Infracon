@@ -78,6 +78,9 @@ Pure TypeScript rules shared by the mobile client and the API: money and quantit
 | `hindrance-domain.ts` | Hindrance causes, inclusive days, merged days (overlaps once), EOT summary (full stop vs partial), input checks, HIN-SITE-NNN codes |
 | `contract-domain.ts` | Tender statuses and forward-only moves, guarantee kinds/instruments, guarantee state with 30-day expiry warning, money locked by kind, input checks, extended completion date, TND codes, quoted % vs estimate |
 | `dept-mb.ts` | Department MB: net quantity per item by status (deductions subtract), abstract (contract, measured, signed, billed, to bill), refusal text for billing past the signed quantity |
+| `quality-domain.ts` | Test types, cube due dates (7/28 days), IS 456 per-set cube verdict, range verdict, test state (Due/Overdue/Passed/Failed), theoretical consumption and reconciliation variance (cement ±2%, steel ±3%) |
+| `plant-domain.ts` | Equipment types, hire basis, hours from meter readings, fuel vs norm (>10% flagged), hire charge by hour/day/month, service hours left, EQ codes |
+| `cashflow.ts` | Expected dates and the weekly forecast (overdue bucket, running balance, lowest point, shortfall) |
 | `permission-plan.ts` | Permissions asked up front after sign-in, per platform and in order (notifications first), status mapping, which to ask and which are blocked |
 
 ## Conventions

@@ -482,8 +482,22 @@ const payrollRoleDefaults: Record<BusinessRole, readonly string[]> = {
   site_engineer: ["payroll.view", "payroll.advance"],
 };
 
+/** Plant & machinery: equipment register, daily logsheets, fuel and hire (site scoped). */
+const plantRoleDefaults: Record<BusinessRole, readonly string[]> = {
+  owner: ["plant.view", "plant.log", "plant.manage"],
+  director: ["plant.view", "plant.log", "plant.manage"],
+  admin: ["plant.view", "plant.log", "plant.manage"],
+  project_manager: ["plant.view", "plant.log", "plant.manage"],
+  site_engineer: ["plant.view", "plant.log", "plant.manage"],
+  supervisor: ["plant.view", "plant.log"],
+  accounts: ["plant.view"],
+  storekeeper: ["plant.view", "plant.log"],
+  auditor: ["plant.view"],
+};
+
 export function roleAllows(role: BusinessRole, permissionKey: string): boolean {
   return (
+    plantRoleDefaults[role].includes(permissionKey) ||
     payrollRoleDefaults[role].includes(permissionKey) ||
     subcontractRoleDefaults[role].includes(permissionKey) ||
     purchaseRoleDefaults[role].includes(permissionKey) ||
